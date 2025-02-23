@@ -14,6 +14,7 @@ def main(video_path: str, video_capture_device: Union[str, int] = 0):
         video_capture_device: the device id for your camera connected to the computer in OpenCV format.
 
     """
+    print(video_capture_device)
     cap = cv2.VideoCapture(video_capture_device)
 
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

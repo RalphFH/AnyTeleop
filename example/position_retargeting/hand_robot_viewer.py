@@ -40,6 +40,7 @@ class RobotHandDatasetSAPIENViewer(HandDatasetSAPIENViewer):
 
             # Add 6-DoF dummy joint at the root of each robot to make them move freely in the space
             override = dict(add_dummy_free_joint=True)
+            print(f"Loading robot from {config_path}")
             config = RetargetingConfig.load_from_file(config_path, override=override)
             retargeting = config.build()
             robot_file_name = Path(config.urdf_path).stem
@@ -48,6 +49,7 @@ class RobotHandDatasetSAPIENViewer(HandDatasetSAPIENViewer):
 
             # Build robot
             urdf_path = Path(config.urdf_path)
+
             if "glb" not in urdf_path.stem:
                 urdf_path = urdf_path.with_stem(urdf_path.stem + "_glb")
             robot_urdf = urdf.URDF.load(str(urdf_path), add_dummy_free_joints=True, build_scene_graph=False)
@@ -118,9 +120,15 @@ class RobotHandDatasetSAPIENViewer(HandDatasetSAPIENViewer):
             )
 
         # Warm start
-        hand_pose_start = hand_pose[start_frame]
-        wrist_quat = rotations.quaternion_from_compact_axis_angle(hand_pose_start[0, 0:3])
-        vertex, joint = self._compute_hand_geometry(hand_pose_start)
+        hand_pose_start = hand_pose[start_frame] # The start frame where human hand is detected, shape: (1, 51)
+        """
+        The MANO need an input of 61-dim.
+        Here is the 51 dims of the input, where the first 48-dim is the axis-angle of the 16 hand joints(expect for the 5 tips).
+        the last 3-dim is the translation of the hand.
+        """
+        wrist_quat = rotations.quaternion_from_compact_axis_angle(hand_pose_start[0, 0:3]) # Unit quaternion to represent rotation: (w, x, y, z)
+        vertex, joint = self._compute_hand_geometry(hand_pose_start) # vertex: (778, 3), joint: (21, 3)
+        print(joint.shape)
         for robot, retargeting, retarget2sapien in zip(self.robots, self.retargetings, self.retarget2sapien):
             retargeting.warm_start(
                 joint[0, :],
@@ -139,9 +147,10 @@ class RobotHandDatasetSAPIENViewer(HandDatasetSAPIENViewer):
             # Update poses for YCB objects
             for k in range(num_ycb_objects):
                 pos_quat = object_pose_frame[k]
-
+                # print(pos_quat)
                 # Quaternion convention: xyzw -> wxyz
                 pose = self.camera_pose * sapien.Pose(pos_quat[4:], np.concatenate([pos_quat[3:4], pos_quat[:3]]))
+                # print(pose)
                 self.objects[k].set_pose(pose)
                 for copy_ind in range(num_copy):
                     self.objects[k + copy_ind * num_ycb_objects].set_pose(pose_offsets[copy_ind] * pose)
@@ -153,6 +162,7 @@ class RobotHandDatasetSAPIENViewer(HandDatasetSAPIENViewer):
             for robot, retargeting, retarget2sapien in zip(self.robots, self.retargetings, self.retarget2sapien):
                 indices = retargeting.optimizer.target_link_human_indices
                 ref_value = joint[indices, :]
+                # ref_value = ref_value - joint[0, :]
                 qpos = retargeting.retarget(ref_value)[retarget2sapien]
                 robot.set_qpos(qpos)
 

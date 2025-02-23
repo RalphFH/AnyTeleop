@@ -73,7 +73,7 @@ Before proceeding to retargeting, we can first visualize the original dataset in
 computed via manopth.
 
 ```shell
-python visualize_hand_object.py --dexycb-dir=PATH_TO_YOUR_DEXYCB_DIR_ROOT
+python visualize_hand_object.py --dexycb-dir=data
 # Close the viewer window to quit
 ```
 
@@ -82,6 +82,6 @@ python visualize_hand_object.py --dexycb-dir=PATH_TO_YOUR_DEXYCB_DIR_ROOT
 Visualize the retargeting results for multiple robot hands along with the human hand.
 
 ```shell
-python visualize_hand_object.py --dexycb-dir=PATH_TO_YOUR_DEXYCB_DIR_ROOT --robots allegro shadow svh
+python visualize_hand_object.py --dexycb-dir=data --robots allegro shadow svh
 # Close the viewer window to quit
 ```

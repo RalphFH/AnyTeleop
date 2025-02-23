@@ -6,6 +6,8 @@ from mediapipe.python.solutions import hands_connections
 from mediapipe.python.solutions.drawing_utils import DrawingSpec
 from mediapipe.python.solutions.hands import HandLandmark
 
+
+
 OPERATOR2MANO_RIGHT = np.array(
     [
         [0, 0, -1],
@@ -13,6 +15,7 @@ OPERATOR2MANO_RIGHT = np.array(
         [0, 1, 0],
     ]
 )
+
 
 OPERATOR2MANO_LEFT = np.array(
     [
@@ -80,9 +83,11 @@ class SingleHandDetector:
         keypoint_2d = results.multi_hand_landmarks[desired_hand_num]
         num_box = len(results.multi_hand_landmarks)
 
+
         # Parse 3d keypoint from MediaPipe hand detector
         keypoint_3d_array = self.parse_keypoint_3d(keypoint_3d)
         keypoint_3d_array = keypoint_3d_array - keypoint_3d_array[0:1, :]
+
         mediapipe_wrist_rot = self.estimate_frame_from_hand_points(keypoint_3d_array)
         joint_pos = keypoint_3d_array @ mediapipe_wrist_rot @ self.operator2mano
 

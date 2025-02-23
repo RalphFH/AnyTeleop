@@ -23,12 +23,12 @@ OPERATOR2MANO_LEFT = np.array(
 
 class RobotName(enum.Enum):
     allegro = enum.auto()
-    shadow = enum.auto()
+    shadow = enum.auto() # 5 fingers
     svh = enum.auto()
-    leap = enum.auto()
+    leap = enum.auto() # 4 fingers
     ability = enum.auto()
     inspire = enum.auto()
-    panda = enum.auto()
+    panda = enum.auto() # 2 fingers
 
 
 class RetargetingType(enum.Enum):

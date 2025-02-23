@@ -68,7 +68,7 @@ class SeqRetargeting:
         operator2mano = OPERATOR2MANO[hand_type] if is_mano_convention else np.eye(3)
         robot = self.optimizer.robot
         target_wrist_pose = np.eye(4)
-        target_wrist_pose[:3, :3] = rotations.matrix_from_quaternion(wrist_quat) @ operator2mano.T
+        target_wrist_pose[:3, :3] = rotations.matrix_from_quaternion(wrist_quat) @ operator2mano.T 
         target_wrist_pose[:3, 3] = wrist_pos
 
         name_list = [
@@ -81,6 +81,10 @@ class SeqRetargeting:
         ]
         wrist_link_id = robot.get_joint_parent_child_frames(name_list[5])[1]
 
+        test_id = robot.get_joint_parent_child_frames(name_list[2])[1]
+        print("test id: ", test_id)
+        print("pose: ", robot.get_link_pose(test_id))
+
         # Set the dummy joints angles to zero
         old_qpos = robot.q0
         new_qpos = old_qpos.copy()
@@ -90,7 +94,7 @@ class SeqRetargeting:
 
         robot.compute_forward_kinematics(new_qpos)
         root2wrist = robot.get_link_pose_inv(wrist_link_id)
-        target_root_pose = target_wrist_pose @ root2wrist
+        target_root_pose = target_wrist_pose @ root2wrist 
 
         euler = rotations.euler_from_matrix(target_root_pose[:3, :3], 0, 1, 2, extrinsic=False)
         pose_vec = np.concatenate([target_root_pose[:3, 3], euler])
@@ -111,6 +115,7 @@ class SeqRetargeting:
             fixed_qpos=fixed_qpos.astype(np.float32),
             last_qpos=np.clip(self.last_qpos, self.joint_limits[:, 0], self.joint_limits[:, 1]),
         )
+        # print("qpos", qpos[:7])
         self.accumulated_time += time.perf_counter() - tic
         self.num_retargeting += 1
         self.last_qpos = qpos

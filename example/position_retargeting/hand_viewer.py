@@ -166,6 +166,7 @@ class HandDatasetSAPIENViewer:
             camera_mat = self.camera_pose.to_transformation_matrix()
             vertex = vertex @ camera_mat[:3, :3].T + camera_mat[:3, 3]
             vertex = np.ascontiguousarray(vertex)
+            print("cam mat", camera_mat)    
             joint = joint @ camera_mat[:3, :3].T + camera_mat[:3, 3]
             joint = np.ascontiguousarray(joint)
 

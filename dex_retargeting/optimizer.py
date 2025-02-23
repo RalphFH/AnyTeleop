@@ -28,9 +28,13 @@ class Optimizer:
                 raise ValueError(f"Joint {target_joint_name} given does not appear to be in robot XML.")
             idx_pin2target.append(joint_names.index(target_joint_name))
         self.target_joint_names = target_joint_names
+
         self.idx_pin2target = np.array(idx_pin2target)
 
         self.idx_pin2fixed = np.array([i for i in range(robot.dof) if i not in idx_pin2target], dtype=int)
+
+        # print(f"Fixed joint index: {self.idx_pin2fixed}")
+
         self.opt = nlopt.opt(nlopt.LD_SLSQP, len(idx_pin2target))
         self.opt_dof = len(idx_pin2target)  # This dof includes the mimic joints
 
@@ -109,12 +113,13 @@ class PositionOptimizer(Optimizer):
         target_link_human_indices: np.ndarray,
         huber_delta=0.02,
         norm_delta=4e-3,
+        scaling=1.0,
     ):
         super().__init__(robot, target_joint_names, target_link_human_indices)
         self.body_names = target_link_names
         self.huber_loss = torch.nn.SmoothL1Loss(beta=huber_delta)
         self.norm_delta = norm_delta
-
+        self.scaling = scaling
         # Sanity check and cache link indices
         self.target_link_indices = self.get_link_indices(target_link_names)
 
@@ -123,7 +128,7 @@ class PositionOptimizer(Optimizer):
     def get_objective_function(self, target_pos: np.ndarray, fixed_qpos: np.ndarray, last_qpos: np.ndarray):
         qpos = np.zeros(self.num_joints)
         qpos[self.idx_pin2fixed] = fixed_qpos
-        torch_target_pos = torch.as_tensor(target_pos)
+        torch_target_pos = torch.as_tensor(target_pos) * self.scaling
         torch_target_pos.requires_grad_(False)
 
         def objective(x: np.ndarray, grad: np.ndarray) -> float:

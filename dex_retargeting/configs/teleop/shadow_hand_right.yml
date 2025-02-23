@@ -13,3 +13,4 @@ retargeting:
 
   # A smaller alpha means stronger filtering, i.e. more smooth but also larger latency
   low_pass_alpha: 0.2
+

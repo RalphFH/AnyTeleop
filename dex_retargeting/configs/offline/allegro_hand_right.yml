@@ -8,6 +8,7 @@ retargeting:
 
   target_link_human_indices: [ 4, 8, 12, 16, 2, 6, 10, 14 ]
   add_dummy_free_joint: True
+  scaling_factor: 1.6
 
   # A smaller alpha means stronger filtering, i.e. more smooth but also larger latency
   # 1 means no filter while 0 means not moving

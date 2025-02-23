@@ -149,6 +149,7 @@ class RetargetingConfig:
         import tempfile
 
         # Process the URDF with yourdfpy to better find file path
+        print("urdf_path:",self.urdf_path)
         robot_urdf = urdf.URDF.load(
             self.urdf_path, add_dummy_free_joints=self.add_dummy_free_joint, build_scene_graph=False
         )
@@ -159,6 +160,7 @@ class RetargetingConfig:
 
         # Load pinocchio model
         robot = RobotWrapper(temp_path)
+
 
         # Add 6D dummy joint to target joint names so that it will also be optimized
         if self.add_dummy_free_joint and self.target_joint_names is not None:
@@ -173,6 +175,7 @@ class RetargetingConfig:
                 target_link_human_indices=self.target_link_human_indices,
                 norm_delta=self.normal_delta,
                 huber_delta=self.huber_delta,
+                scaling=self.scaling_factor,
             )
         elif self.type == "vector":
             optimizer = VectorOptimizer(
@@ -184,7 +187,7 @@ class RetargetingConfig:
                 scaling=self.scaling_factor,
                 norm_delta=self.normal_delta,
                 huber_delta=self.huber_delta,
-            )
+            ) 
         elif self.type == "dexpilot":
             optimizer = DexPilotOptimizer(
                 robot,
@@ -196,6 +199,8 @@ class RetargetingConfig:
                 project_dist=self.project_dist,
                 escape_dist=self.escape_dist,
             )
+            # print("self:target_link_human_indices:",self.target_link_human_indices)
+            # print("optimizer:target_link_human_indices:",optimizer.target_link_human_indices)
         else:
             raise RuntimeError()
 
