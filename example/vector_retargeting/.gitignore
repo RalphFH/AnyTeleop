@@ -1,4 +1,2 @@
 # Examples
-data/
-data/human_hand_video.mp4
-data/realtime_example.webp
+data/*.pkl
