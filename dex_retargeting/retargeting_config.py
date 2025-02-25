@@ -149,7 +149,7 @@ class RetargetingConfig:
         import tempfile
 
         # Process the URDF with yourdfpy to better find file path
-        print("urdf_path:",self.urdf_path)
+        print("loading pinocchio model from urdf:",self.urdf_path)
         robot_urdf = urdf.URDF.load(
             self.urdf_path, add_dummy_free_joints=self.add_dummy_free_joint, build_scene_graph=False
         )
@@ -160,7 +160,7 @@ class RetargetingConfig:
 
         # Load pinocchio model
         robot = RobotWrapper(temp_path)
-
+        print("pinocchio | robot.dof_joint_names:",robot.dof_joint_names)
 
         # Add 6D dummy joint to target joint names so that it will also be optimized
         if self.add_dummy_free_joint and self.target_joint_names is not None:
@@ -211,6 +211,14 @@ class RetargetingConfig:
 
         # Parse mimic joints and set kinematics adaptor for optimizer
         has_mimic_joints, source_names, mimic_names, multipliers, offsets = parse_mimic_joint(robot_urdf)
+        """
+        panda_gripper:
+        has_mimic_joints: True
+        source_names: ['panda_finger_joint1']
+        mimic_names: ['panda_finger_joint2']
+        multipliers: [1.0]
+        offsets: [0.0]
+        """
         if has_mimic_joints and not self.ignore_mimic_joint:
             adaptor = MimicJointKinematicAdaptor(
                 robot,

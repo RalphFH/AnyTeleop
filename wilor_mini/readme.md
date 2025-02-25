@@ -1,2 +1,0 @@
-1. scaled_focal_length需匹配自身摄像头的fx/fy
-2. 注意scaling_factor在optimizer中的缩放作用

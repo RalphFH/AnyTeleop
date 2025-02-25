@@ -50,7 +50,6 @@ keyboard.
 ### Real-time Visualization of Hand Retargeting via Webcam
 
 ```bash
-pip install loguru
 python3 show_realtime_retargeting.py \
   --robot-name allegro \
   --retargeting-type dexpilot \

@@ -58,7 +58,7 @@ class HandDetector:
                 pred_keypoints_3d = out["wilor_preds"]["pred_keypoints_3d"][0] # (1, 21, 3) -> (21, 3)
                 pred_cam_t_full = out["wilor_preds"]['pred_cam_t_full'][0] # (1, 3) -> (3,)
                 # print("pred_cam_t_full",pred_cam_t_full)
-                pred_cam_t_full[2] = pred_cam_t_full[2] -0.6
+                pred_cam_t_full[2] = pred_cam_t_full[2] -0.7
                 pred_cam_t_full[1] = pred_cam_t_full[1] -0.2 
                 pred_keypoints_3d = pred_keypoints_3d + pred_cam_t_full
                 joints = pred_keypoints_3d @ self.operator2mano.T

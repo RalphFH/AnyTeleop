@@ -213,12 +213,20 @@ def main(
     producer_process = multiprocessing.Process(target=produce_frame, args=(event,queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(event,queue, str(robot_dir), str(config_path)))
 
-    producer_process.start()
-    consumer_process.start()
 
-    producer_process.join()
-    consumer_process.join()
-    time.sleep(3)
+    try:
+        producer_process.start()
+        consumer_process.start()
+
+        producer_process.join()
+        consumer_process.join()
+    except KeyboardInterrupt:
+        logger.info("收到中断信号，停止进程.")
+    finally:
+        producer_process.terminate()
+        consumer_process.terminate()
+        producer_process.join()
+        consumer_process.join()
 
     print("done")
 
