@@ -4,11 +4,20 @@ from ultralytics import YOLO
 import cv2
 from wilor_mini.pipelines.wilor_hand_pose3d_estimation_pipeline import WiLorHandPose3dEstimationPipeline
 
+
 OPERATOR2MANO = np.array(
     [
-        [0, 0, 1],
-        [-1, 0, 0],
+        [0, 0, -1],
+        [1, 0, 0],
         [0, -1, 0],
+    ]
+)
+
+HAND_ROTATE = np.array(
+    [
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, -1, 0]
     ]
 )
 
@@ -27,6 +36,11 @@ class HandDetector:
         self.pipe = WiLorHandPose3dEstimationPipeline(device=device, dtype=dtype, verbose=False)
         self.detected_hand_type = hand_type
         self.operator2mano = OPERATOR2MANO
+        self.init_position = None
+        self.keypoints_2d = None
+        self.origin_2d = None
+        self.axes_2d = None
+        
 
     def detect(self, bgr_image: np.array):
         """
@@ -43,35 +57,45 @@ class HandDetector:
         
         outputs = self.pipe.predict(bgr_image)
         is_detected_hand = 0
-        joints = None
-        pred_keypoints_2d = None
+        points = None
+        
 
-        if len(outputs) == 0:
-            return 0, None, None
+        if len(outputs) == 0:                
+            return 0, None
 
         for out in outputs:
+            # self.detected_hand_type = "right"
             is_right = out['is_right']  # float, 1 for right hand, 0 for left hand
             if (is_right == 1 and self.detected_hand_type == "Left") or (is_right == 0 and self.detected_hand_type == "Right"):
                 continue
             else:
-                pred_keypoints_2d = out["wilor_preds"]["pred_keypoints_2d"][0]  # (1, 21, 2) -> (21, 2)
+                self.keypoints_2d = out["wilor_preds"]["pred_keypoints_2d"][0]  # (1, 21, 2) -> (21, 2)
                 pred_keypoints_3d = out["wilor_preds"]["pred_keypoints_3d"][0] # (1, 21, 3) -> (21, 3)
                 pred_cam_t_full = out["wilor_preds"]['pred_cam_t_full'][0] # (1, 3) -> (3,)
-                # print("pred_cam_t_full",pred_cam_t_full)
-                pred_cam_t_full[2] = pred_cam_t_full[2] -0.7
-                pred_cam_t_full[1] = pred_cam_t_full[1] -0.2 
-                pred_keypoints_3d = pred_keypoints_3d + pred_cam_t_full
-                joints = pred_keypoints_3d @ self.operator2mano.T
+
+                if self.init_position is None:
+                    self.init_position = pred_cam_t_full
+
+                cam_t_full = pred_cam_t_full - self.init_position
+
+
+                pred_keypoints_3d = pred_keypoints_3d + 1.2 * cam_t_full
+                points = pred_keypoints_3d @ self.operator2mano.T
+
+                points[:,2] = points[:,2] + 0.08 # the z position of the wrist you want (Note: there is another scaling factor in Optimizer)
+                points[:,0] = points[:,0] + 0.2 # the x position of the wrist you want
+    
+
                 is_detected_hand = 1
+                
                 break
 
-        return is_detected_hand, joints, pred_keypoints_2d
+
+        return is_detected_hand, points
 
 
-    @staticmethod
-    def draw_skeleton_on_image(image, keypoints_2d, style="default"):
-    
-        if keypoints_2d is None:
+    def draw_skeleton_on_image(self, image, style="default"):
+        if self.keypoints_2d is None:
             return image
 
         # 复制图像，避免修改原始图像
@@ -87,13 +111,31 @@ class HandDetector:
 
         # 画骨架连接线
         for connection in HAND_CONNECTIONS:
-            pt1 = tuple(keypoints_2d[connection[0]].astype(int))
-            pt2 = tuple(keypoints_2d[connection[1]].astype(int))
+            pt1 = tuple(self.keypoints_2d[connection[0]].astype(int))
+            pt2 = tuple(self.keypoints_2d[connection[1]].astype(int))
             cv2.line(img_copy, pt1, pt2, line_color, 2)
 
         # 画关键点
-        for i, keypoint in enumerate(keypoints_2d):
+        for i, keypoint in enumerate(self.keypoints_2d):
             x, y = int(keypoint[0]), int(keypoint[1])
             cv2.circle(img_copy, (x, y), radius=4, color=point_color, thickness=-1)
-
+        
+            
         return img_copy
+    
+
+    @staticmethod
+    def project_full_img(points, cam_trans, focal_length=512):
+        # img size: 640,480
+        camera_center = [320, 240]
+        K = torch.eye(3) 
+        K[0,0] = focal_length
+        K[1,1] = focal_length
+        K[0,2] = camera_center[0]
+        K[1,2] = camera_center[1]
+        points = points + cam_trans
+        points = points / points[..., -1:] 
+        
+        V_2d = (K @ points.T).T 
+        return V_2d[..., :-1]
+    

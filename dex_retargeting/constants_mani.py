@@ -67,16 +67,16 @@ def get_default_config_path(
 
     robot_name_str = ROBOT_NAME_MAP[robot_name]
     hand_type_str = hand_type.name
-    if "gripper" in robot_name_str:  # For gripper robots, only use gripper config file.
-        if retargeting_type == RetargetingType.dexpilot:
-            config_name = f"{robot_name_str}_dexpilot.yml"
-        else:
-            config_name = f"{robot_name_str}.yml"
+    # if "gripper" in robot_name_str:  # For gripper robots, only use gripper config file.
+    #     if retargeting_type == RetargetingType.dexpilot:
+    #         config_name = f"{robot_name_str}_dexpilot.yml"
+    #     else:
+    #         config_name = f"{robot_name_str}.yml"
+    
+    if retargeting_type == RetargetingType.dexpilot:
+        config_name = f"{robot_name_str}_{hand_type_str}_dexpilot.yml"
     else:
-        if retargeting_type == RetargetingType.dexpilot:
-            config_name = f"{robot_name_str}_{hand_type_str}_dexpilot.yml"
-        else:
-            config_name = f"{robot_name_str}_{hand_type_str}.yml"
+        config_name = f"{robot_name_str}_{hand_type_str}.yml"
     return config_path / config_name
 
 

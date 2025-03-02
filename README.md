@@ -26,16 +26,20 @@ For the hand detector and 3D estimation part, I implement with [WiLor-mini](http
 pip install git+https://github.com/warmshao/WiLoR-mini
 ```
 
+And during my experiment, I met an error message, but I just remember its solution:
+```shell
+export LD_LIBRARY_PATH=$HOME/anaconda3/envs/retarget/lib/python3.9/site-packages/cmeel.prefix/lib:$LD_LIBRARY_PATH
+```
+
 ## Examples
 
-### Teleoperating For the single free robot hand
-[Tutorial on retargeting from human hand to a single free robot hand](wilor_mini/README.md)
+### Teleoperating For a single fly robot hand
+[Tutorial on retargeting from human hand to a single fly robot hand](wilor_mini/README.md)
 
-tips: Free means there is a free 6D dummy joint of the hand but without arm.
 
-### Teleoperating in the maniskill env
+### Teleoperating task in the maniskill env (recommended)
+[Tutorial on retargeting from human hand to the maniskill robot to complete some tasks](manitask/README.md)
 
-coding...
 
 ## Retargeting examples from [dex-retargeting project](https://github.com/yzqin/dex-hand-teleop) [Optional reading section]
 

@@ -39,6 +39,17 @@ class SeqRetargeting:
 
         # Warm started
         self.is_warm_started = False
+    
+    def warm_start_panda(self):
+        self.last_qpos = [  -1.6834,
+                            1.7638,
+                            0.91396,
+                            -2.4655,
+                            -1.0516,
+                            3.7535,
+                            -0.50402,
+                            0.04]
+        self.is_warm_started = True
 
     def warm_start(
         self,

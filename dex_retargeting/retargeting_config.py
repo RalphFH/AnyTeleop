@@ -168,6 +168,7 @@ class RetargetingConfig:
         joint_names = self.target_joint_names if self.target_joint_names is not None else robot.dof_joint_names
 
         if self.type == "position":
+            print("joint_names:",joint_names)
             optimizer = PositionOptimizer(
                 robot,
                 joint_names,

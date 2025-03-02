@@ -24,15 +24,16 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
     RetargetingConfig.set_default_urdf_dir(str(robot_dir))
     logger.info(f"Start retargeting with config {config_path}")
     
-    retargeting = RetargetingConfig.load_from_file(config_path).build()
-
+    config = RetargetingConfig.load_from_file(config_path)
+    retargeting = config.build()
+    
     hand_type = "Right" if "right" in config_path.lower() else "Left"
     detector = SingleHandDetector(hand_type=hand_type, selfie=False)
 
     sapien.render.set_viewer_shader_dir("default")
     sapien.render.set_camera_shader_dir("default")
 
-    config = RetargetingConfig.load_from_file(config_path)
+    
 
     # Setup
     scene = sapien.Scene()
@@ -61,12 +62,12 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
     viewer.control_window.toggle_camera_lines(False)
     viewer.set_camera_pose(cam.get_local_pose())
 
-    # Load robot and set it to a good pose to take picture
-    loader = scene.create_urdf_loader()
+  
     filepath = Path(config.urdf_path)
 
-
+    loader = scene.create_urdf_loader()
     robot_name = filepath.stem
+
     loader.load_multiple_collisions_from_file = True
     if "ability" in robot_name:
         loader.scale = 1.5
@@ -88,9 +89,8 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
     else:
         filepath = str(filepath)
 
-    
+    # Load robot and set it to a good pose to take picture 
     robot = loader.load(str(filepath))
-
 
     if "ability" in robot_name:
         robot.set_pose(sapien.Pose([0, 0, -0.15]))

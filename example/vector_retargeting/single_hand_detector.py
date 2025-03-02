@@ -87,9 +87,10 @@ class SingleHandDetector:
         # Parse 3d keypoint from MediaPipe hand detector
         keypoint_3d_array = self.parse_keypoint_3d(keypoint_3d)
         keypoint_3d_array = keypoint_3d_array - keypoint_3d_array[0:1, :]
+        # print("keypoint_3d_array[8]",keypoint_3d_array[8])
 
         mediapipe_wrist_rot = self.estimate_frame_from_hand_points(keypoint_3d_array)
-        joint_pos = keypoint_3d_array @ mediapipe_wrist_rot @ self.operator2mano
+        joint_pos = keypoint_3d_array @   mediapipe_wrist_rot  @ self.operator2mano
 
         return num_box, joint_pos, keypoint_2d, mediapipe_wrist_rot
 

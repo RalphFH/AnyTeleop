@@ -1,5 +1,5 @@
 ## Setup
-- scaled_focal_length需匹配自身摄像头的fx/fy
+- 在安装的`wilor_mini`包中，将`site-packages/wilor_mini/pipelines/wilor_hand_pose3d_estimation_pipeline.py` 中的scaled_focal_length修改自身摄像头的fx
 - 注意scaling_factor在optimizer中的缩放作用,这个缩放因子用于从人手的大小匹配到机器手的大小，如果使用自己的机器人模型需注意
 
 
