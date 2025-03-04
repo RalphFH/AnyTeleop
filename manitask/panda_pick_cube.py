@@ -9,6 +9,7 @@ import numpy as np
 import tyro
 from loguru import logger
 import sapien
+import pyrealsense2 as rs
 
 from dex_retargeting.constants_mani import RobotName, RetargetingType, HandType, get_default_config_path
 from dex_retargeting.retargeting_config import RetargetingConfig
@@ -263,20 +264,42 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
 
 def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Optional[str] = None):
-    if camera_path is None:
-        cap = cv2.VideoCapture(0)
+    if camera_path == "rs":
+        # Initialize RealSense pipeline
+        pipe = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 60)
+        pipe.start(config)
     else:
-        cap = cv2.VideoCapture(camera_path)
+        if camera_path is None:
+            cap = cv2.VideoCapture(0)
+        else:
+            cap = cv2.VideoCapture(camera_path)
 
     isStart.wait()
-    while cap.isOpened() and not(isEnd.is_set()):
-        success, image = cap.read()
-        time.sleep(1 / 15.0)
-        if not success:
-            continue
-        queue.put(image)
-    
-    
+    try:
+        while not(isEnd.is_set()):
+            if camera_path == "rs":
+                frames = pipe.wait_for_frames()
+                color_frame = frames.get_color_frame()
+                if not color_frame:
+                    continue
+                image = np.asanyarray(color_frame.get_data())
+            else:
+                if not cap.isOpened():
+                    break
+                success, image = cap.read()
+                if not success:
+                    continue
+            
+            time.sleep(1 / 30.0)
+            queue.put(image)
+    finally:
+        if camera_path == "rs":
+            pipe.stop()
+        else:
+            cap.release()
+
 
 def main(
     robot_name: RobotName, retargeting_type: RetargetingType, hand_type: HandType, camera_path: Optional[str] = None

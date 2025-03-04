@@ -11,6 +11,7 @@ import tyro
 from loguru import logger
 from sapien.asset import create_dome_envmap
 from sapien.utils import Viewer
+import pyrealsense2 as rs
 
 from dex_retargeting.constants import RobotName, RetargetingType, HandType, get_default_config_path
 from dex_retargeting.retargeting_config import RetargetingConfig
@@ -176,18 +177,41 @@ def start_retargeting(event,queue: multiprocessing.Queue, robot_dir: str, config
 
 
 def produce_frame(event,queue: multiprocessing.Queue, camera_path: Optional[str] = None):
-    if camera_path is None:
-        cap = cv2.VideoCapture(0)
+    if camera_path == "rs":
+        # Initialize RealSense pipeline
+        pipe = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 60)
+        pipe.start(config)
     else:
-        cap = cv2.VideoCapture(camera_path)
+        if camera_path is None:
+            cap = cv2.VideoCapture(0)
+        else:
+            cap = cv2.VideoCapture(camera_path)
 
     event.wait()
-    while cap.isOpened():
-        success, image = cap.read()
-        time.sleep(1 / 15.0)
-        if not success:
-            continue
-        queue.put(image)
+    try:
+        while True:
+            if camera_path == "rs":
+                frames = pipe.wait_for_frames()
+                color_frame = frames.get_color_frame()
+                if not color_frame:
+                    continue
+                image = np.asanyarray(color_frame.get_data())
+            else:
+                if not cap.isOpened():
+                    break
+                success, image = cap.read()
+                if not success:
+                    continue
+            
+            time.sleep(1 / 120.0)
+            queue.put(image)
+    finally:
+        if camera_path == "rs":
+            pipe.stop()
+        else:
+            cap.release()
 
 
 

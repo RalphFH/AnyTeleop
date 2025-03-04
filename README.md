@@ -17,7 +17,6 @@ Then clone this repository and install some dependecies about dex-retargeting.
 
 ```shell
 git clone https://github.com/Ralph-cong/AnyTeleop.git
-cd dex-retargeting
 pip install -e ".[example]"
 ```
 For the hand detector and 3D estimation part, I implement with [WiLor-mini](https://github.com/warmshao/WiLoR-mini), so you should install some package about it.
