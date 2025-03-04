@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 import tyro
 from loguru import logger
+import sapien
 
 from dex_retargeting.constants_mani import RobotName, RetargetingType, HandType, get_default_config_path
 from dex_retargeting.retargeting_config import RetargetingConfig
@@ -77,6 +78,8 @@ def draw_points_on_tiled_image(tiled_image, world_points, camera_extrinsics, cam
     Returns:
         Image with projected points drawn on it
     """
+    if world_points is None:
+        return tiled_image
     # Make a copy of the tiled image
     img_points = tiled_image.copy()
 
@@ -137,7 +140,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     logger.info(f"Start retargeting with config {config_path}")
     
     # Load retargeting optimizer
-    # override = dict(add_dummy_free_joint=True)
+    override = dict(add_dummy_free_joint=True)
     config = RetargetingConfig.load_from_file(config_path)
     retargeting = config.build()
     retargeting.warm_start_panda()
@@ -168,12 +171,6 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         camera_extrinsics[cam_name] = params["extrinsic_cv"].squeeze(0).detach().cpu().numpy()
         # camera_extrinsics[cam_name] = params["cam2world_gl"].squeeze(0).detach().cpu().numpy()
         camera_intrinsics[cam_name] = params["intrinsic_cv"].squeeze(0).detach().cpu().numpy()
-
-
-    # Different robot loader may have different orders for joints, compute retargeting_to_sapien for the mapping
-    # sapien_joint_names = [joint.get_name() for joint in robot.active_joints()]
-    # retargeting_joint_names = retargeting.joint_names
-    # retargeting_to_sapien = np.array([retargeting_joint_names.index(name) for name in sapien_joint_names]).astype(int)
 
     filter = Filter(
             filter_type="exponential",  # "moving_average" "exponential", "median", "none"
@@ -213,11 +210,13 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         # 2. Drawing skeleton
         detect_img = detector.draw_skeleton_on_image(bgr, style="default")
         cv2.imshow("realtime_retargeting", detect_img)
-        
-        # print("predict key points",keypoints_pos.shape)
+
         # 3. Retargeting 
+        keypoints_3d = None
+        done = False
         if keypoints_pos is None:
             logger.warning(f"{hand_type} hand is not detected.")
+
         else:
             indices = retargeting.optimizer.target_link_human_indices
             if retargeting_type == "POSITION":
@@ -254,7 +253,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     
 
-        if done:
+        if cv2.waitKey(2) & done :
             isEnd.set()
             cv2.destroyAllWindows()
             break
@@ -272,7 +271,7 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
     isStart.wait()
     while cap.isOpened() and not(isEnd.is_set()):
         success, image = cap.read()
-        time.sleep(1 / 12.0)
+        time.sleep(1 / 15.0)
         if not success:
             continue
         queue.put(image)

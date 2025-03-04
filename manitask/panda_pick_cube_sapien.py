@@ -14,7 +14,7 @@ from sapien.utils import Viewer
 
 from dex_retargeting.constants_mani import RobotName, RetargetingType, HandType, get_default_config_path
 from dex_retargeting.retargeting_config import RetargetingConfig
-from manitask.hand_detector_relative import HandDetector
+from hand_detector_relative import HandDetector
 
 from dex_retargeting import yourdfpy as urdf
 import tempfile
@@ -97,7 +97,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         robot_urdf.write_xml_file(temp_path)
         robot = loader.load(temp_path)
     else:
-        robot = loader.load((filepath))
+        robot = loader.load(str(filepath))
 
     if "ability" in robot_name:
         robot.set_pose(sapien.Pose([0, 0, -0.15]))
@@ -131,14 +131,14 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
         # 1. Hand Detection and 3D Pose Estimation
         # detect_start_time = time.time()
-        _, joint_pos, keypoint_2d = detector.detect(rgb)
+        _, joint_pos = detector.detect(rgb)
         # detect_end_time = time.time()
         # detect_duration = detect_end_time - detect_start_time
         # logger.info(f"Time taken for detection: {detect_duration:.4f} seconds")
         
         # 2. Drawing skeleton
-        detect_img = detector.draw_skeleton_on_image(bgr, keypoint_2d, style="default")
-        cv2.imshow("realtime_retargeting_demo", detect_img)
+        detect_img = detector.draw_skeleton_on_image(bgr, style="default")
+        cv2.imshow("realtime_retargeting_demo", bgr)
         
         # 3. Retargeting 
         if joint_pos is None:

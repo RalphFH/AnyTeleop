@@ -137,28 +137,28 @@ env.reset()
 
 
 
-# try:
-#     while True:
-#         img = env.render().squeeze(0)  # 获取环境渲染的图像
+try:
+    while True:
+        img = env.render().squeeze(0)  # 获取环境渲染的图像
         
-#         # 如果图像是 Torch Tensor，转换为 NumPy
-#         if isinstance(img, torch.Tensor):
-#             img = img.cpu().numpy()
+        # 如果图像是 Torch Tensor，转换为 NumPy
+        if isinstance(img, torch.Tensor):
+            img = img.cpu().numpy()
 
-#         # OpenAI Gym 的 render() 通常返回 RGB 图像 (H, W, 3)，但 cv2 需要 BGR
-#         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
+        # OpenAI Gym 的 render() 通常返回 RGB 图像 (H, W, 3)，但 cv2 需要 BGR
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
 
-#         # 显示图像
-#         cv2.imshow("Environment", img)
+        # 显示图像
+        cv2.imshow("Environment", img)
 
-#         # `waitKey(1)` 控制帧率，按 `q` 退出
-#         if cv2.waitKey(1) & 0xFF == ord('q'):
-#             break
-# except KeyboardInterrupt:
-#     pass
-# finally:
-#     env.close()
-#     cv2.destroyAllWindows()  # 关闭窗口
+        # `waitKey(1)` 控制帧率，按 `q` 退出
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+except KeyboardInterrupt:
+    pass
+finally:
+    env.close()
+    cv2.destroyAllWindows()  # 关闭窗口
 
 # human_render_cameras = env.unwrapped.scene.human_render_cameras
 
@@ -198,9 +198,10 @@ env.reset()
 # controller = agent.controller # <class 'mani_skill.agents.controllers.base_controller.CombinedController'>
 # print(controller.controllers.values())
 
-robot = env.unwrapped.agent.robot
-root_pose=robot.links_map["panda_link0"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-print("root_pose",root_pose)
+# robot = env.unwrapped.agent.robot
+# root_pose=robot.links_map["panda_link0"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+# print("root_pose",root_pose)
+
 # print("active joint",type(robot.active_joints))
 
 

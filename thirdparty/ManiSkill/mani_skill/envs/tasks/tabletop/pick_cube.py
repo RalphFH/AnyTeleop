@@ -66,17 +66,7 @@ class PickCubeEnv(BaseEnv):
                     far=100,
                     entity_uid="panda_hand",
                 ),
-                CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
-                CameraConfig(
-                    uid="render_camera",
-                    pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
-                    width=512,
-                    height=512,
-                    fov=1.57,
-                    near=0.01,
-                    far=100,
-                    entity_uid="panda_hand",
-                )
+                CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100)
                 ]
 
     def _load_agent(self, options: dict):

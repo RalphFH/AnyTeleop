@@ -45,15 +45,15 @@ class Filter:
             return True, points
         
         # Outlier detection
-        is_outlier = False
-        if self.last_points is not None:
-            # Calculate maximum displacement of joints
-            max_displacement = np.max(np.linalg.norm(points - self.last_points, axis=1))
-            is_outlier = max_displacement > self.jump_threshold
+        # is_outlier = False
+        # if self.last_points is not None:
+        #     # Calculate maximum displacement of joints
+        #     max_displacement = np.max(np.linalg.norm(points - self.last_points, axis=1))
+        #     is_outlier = max_displacement > self.jump_threshold
         
-        if is_outlier and self.last_points is not None:
-            # If outlier detected, keep using previous frame
-            return True, self.last_points
+        # if is_outlier and self.last_points is not None:
+        #     # If outlier detected, keep using previous frame
+        #     return True, self.last_points
         
         if self.filter_type == "moving_average":
             # Moving average filter
