@@ -30,7 +30,7 @@ HAND_CONNECTIONS = [
 ]
 
 class HandDetector:
-    def __init__(self, hand_type="Right"):
+    def __init__(self, hand_type="Right",trans_scale=1.0):
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         dtype = torch.float16
         self.pipe = WiLorHandPose3dEstimationPipeline(device=device, dtype=dtype, verbose=False)
@@ -40,6 +40,7 @@ class HandDetector:
         self.keypoints_2d = None
         self.origin_2d = None
         self.axes_2d = None
+        self.trans_scale = trans_scale
         
 
     def detect(self, bgr_image: np.array):
@@ -79,13 +80,9 @@ class HandDetector:
                 cam_t_full = pred_cam_t_full - self.init_position
 
 
-                pred_keypoints_3d = pred_keypoints_3d + 1.2 * cam_t_full
+                pred_keypoints_3d = pred_keypoints_3d + self.trans_scale * cam_t_full
                 points = pred_keypoints_3d @ self.operator2mano.T
-
-                points[:,2] = points[:,2] + 0.08 # the z position of the wrist you want (Note: there is another scaling factor in Optimizer)
-                points[:,0] = points[:,0] + 0.2 # the x position of the wrist you want
     
-
                 is_detected_hand = 1
                 
                 break

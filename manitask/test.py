@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import cv2
 import torch
 import numpy as np
+import time
 
 """
 ['pd_joint_delta_pos', 'pd_joint_pos', 'pd_ee_delta_pos',
@@ -124,7 +125,7 @@ env = gym.make(
     obs_mode="rgb", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
-    render_mode="rgb_array", # rgb_array | human 
+    render_mode="human", # rgb_array | human 
 )
 
 # """
@@ -135,30 +136,32 @@ env = gym.make(
 
 env.reset()
 
+while True:
+    env.render()
+    time.sleep(0.1)
 
-
-try:
-    while True:
-        img = env.render().squeeze(0)  # 获取环境渲染的图像
+# try:
+#     while True:
+#         img = env.render().squeeze(0)  # 获取环境渲染的图像
         
-        # 如果图像是 Torch Tensor，转换为 NumPy
-        if isinstance(img, torch.Tensor):
-            img = img.cpu().numpy()
+#         # 如果图像是 Torch Tensor，转换为 NumPy
+#         if isinstance(img, torch.Tensor):
+#             img = img.cpu().numpy()
 
-        # OpenAI Gym 的 render() 通常返回 RGB 图像 (H, W, 3)，但 cv2 需要 BGR
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
+#         # OpenAI Gym 的 render() 通常返回 RGB 图像 (H, W, 3)，但 cv2 需要 BGR
+#         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)  
 
-        # 显示图像
-        cv2.imshow("Environment", img)
+#         # 显示图像
+#         cv2.imshow("Environment", img)
 
-        # `waitKey(1)` 控制帧率，按 `q` 退出
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-except KeyboardInterrupt:
-    pass
-finally:
-    env.close()
-    cv2.destroyAllWindows()  # 关闭窗口
+#         # `waitKey(1)` 控制帧率，按 `q` 退出
+#         if cv2.waitKey(1) & 0xFF == ord('q'):
+#             break
+# except KeyboardInterrupt:
+#     pass
+# finally:
+#     env.close()
+#     cv2.destroyAllWindows()  # 关闭窗口
 
 # human_render_cameras = env.unwrapped.scene.human_render_cameras
 
