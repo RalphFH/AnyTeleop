@@ -12,7 +12,7 @@ retargeting:
   # 1 means no filter while 0 means not moving
   low_pass_alpha: 0.6
 
-  scaling_factor: 1.3
+  scaling_factor: 1
 
   # To ignore the mimic joint tags in the URDF, set it to True
   ignore_mimic_joint: False

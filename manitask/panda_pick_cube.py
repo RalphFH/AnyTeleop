@@ -245,10 +245,17 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             obs, reward, terminated, truncated, info = env.step(action)
             done = terminated 
 
+        panda_hand = robot.links_map["panda_hand"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+        left_finger = robot.links_map["panda_leftfinger"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+        right_finger = robot.links_map["panda_rightfinger"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+        points_robot = np.array([panda_hand, left_finger, right_finger])
+        all_points = np.vstack([keypoints_3d, points_robot])
+        colors = [(0, 0, 255)] * 3 + [(255, 0, 0)] * 3
+
         img = env.render().squeeze(0).detach().cpu().numpy()
         img_with_points = draw_points_on_tiled_image(
-                                img, keypoints_3d, camera_extrinsics, camera_intrinsics, 
-                                marker_size=8)
+                                img, all_points, camera_extrinsics, camera_intrinsics, 
+                                marker_size=8, colors=colors)
         img_with_points = cv2.cvtColor(img_with_points, cv2.COLOR_RGB2BGR)
         cv2.imshow("Environment", img_with_points)
 
