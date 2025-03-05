@@ -4,9 +4,9 @@ retargeting:
 
   target_joint_names: [ 'panda_joint1', 'panda_joint2', 'panda_joint3', 'panda_joint4', 'panda_joint5', 'panda_joint6', 'panda_joint7',"panda_finger_joint1" ]
   # target_link_names: [  "panda_left_hand","panda_leftfinger_pad", "panda_rightfinger_pad"]
-  target_link_names: [  "panda_leftfinger_pad", "panda_rightfinger_pad","panda_leftfinger","panda_rightfinger"]
+  target_link_names: [  "panda_left_hand","panda_leftfinger_pad", "panda_rightfinger_pad","panda_leftfinger","panda_rightfinger"]
 
-  target_link_human_indices: [ 4, 8, 3, 6]
+  target_link_human_indices: [ 0, 4, 8, 3, 6]
   add_dummy_free_joint: False
 
   # A smaller alpha means stronger filtering, i.e. more smooth but also larger latency

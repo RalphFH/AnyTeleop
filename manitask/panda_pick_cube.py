@@ -81,7 +81,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     cv2.moveWindow("realtime_retargeting", 960, 100)  # x=50, y=100
     cv2.moveWindow("Environment", 512, 700)
 
-    initial_position = np.array([0.32, 0.0, 0.1]).reshape(1, 3) # initial position of the hand
+    initial_position = np.array([0.45, 0.0, 0.1]).reshape(1, 3) # initial position of the hand in the robot root frame
 
     isStart.set()
     while True:
@@ -130,9 +130,9 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             # robot.set_qpos(qpos)
             keypoints_3d = ref_value*config.scaling_factor + root_pose
 
-            if qpos[-2] > 0.02:
+            if qpos[-2] > 0.018:
                 qpos[-2] = 1
-            if qpos[-2] < 0.02:
+            if qpos[-2] < 0.018:
                 qpos[-2] = -1
             
             action = qpos[:-1]

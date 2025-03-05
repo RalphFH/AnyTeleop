@@ -91,7 +91,7 @@ class PickCubeEnv(BaseEnv):
             name="goal_site",
             body_type="kinematic",
             add_collision=False,
-            initial_pose=sapien.Pose(),
+            initial_pose=sapien.Pose([-0.1,0, 0.15]),
         )
         self._hidden_objects.append(self.goal_site)
 
