@@ -1,6 +1,6 @@
 retargeting:
   type: position
-  urdf_path: xarm7/xarm7_allegro_right.urdf
+  urdf_path: xarm6/xarm6_allegro_right.urdf
 
   target_joint_names: null
   target_link_names: [ "link_15_tip", "link_3_tip", "link_7_tip", "link_11_tip", "link_14",

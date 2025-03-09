@@ -9,6 +9,7 @@ import numpy as np
 class ArmName(enum.Enum):
     xarm7 = enum.auto()
     franka = enum.auto()
+    xarm6 = enum.auto()
 
 class HandName(enum.Enum):
     allegro = enum.auto() # 4 fingers
@@ -31,6 +32,7 @@ class HandType(enum.Enum):
 ARM_NAME_MAP = {
     ArmName.xarm7: "xarm7",
     ArmName.franka: "franka",
+    ArmName.xarm6: "xarm6",
 }
 
 HAND_NAME_MAP = {
@@ -41,8 +43,9 @@ HAND_NAME_MAP = {
 }
 
 LINK_BASE = {
-    "panda": "panda_link0",
-    "allegro": "link_base",
+    "franka": "panda_link0",
+    "xarm7": "link_base",
+    "xarm6": "world",
 }
 
 # ROBOT_NAMES = list(HAND_NAME_MAP.keys())

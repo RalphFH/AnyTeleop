@@ -23,7 +23,7 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, FrankaPanda, XArm7Allegro
+from mani_skill.agents.robots import Fetch, FrankaPanda, XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
@@ -50,10 +50,14 @@ class PushCubeEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["franka_panda_left", "fetch", "xarm7_allegro_right"]
+    SUPPORTED_ROBOTS = ["franka_panda_left", "fetch", 
+                        "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
+                        "xarm6_allegro_right"]
 
     # Specify some supported robot types
-    agent: Union[FrankaPanda, Fetch, XArm7Allegro]
+    agent: Union[FrankaPanda, Fetch, 
+                 XArm7Allegro, XArm7Shadow, XArm7Leap,
+                 XArm6Allegro]
 
     # set some commonly used values
     goal_radius = 0.1
@@ -95,6 +99,7 @@ class PushCubeEnv(BaseEnv):
         pose_right = sapien_utils.look_at([-0.1, 0.1, 0.35], [0.12, -0.1, -0.01])  # Right hand
         pose_left = sapien_utils.look_at([-0.1, -0.1, 0.35], [0.12, 0.1, -0.01]) # Left hand
         ego_centric = sapien_utils.look_at([-0.1, 0, 0.4], [0.2, 0, 0])
+        base_camera = sapien_utils.look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
         cam_config = []
         if self.robot_uids == "franka_panda_left":
             cam_config = [  CameraConfig("left_camera", pose_left, 512, 512, np.pi/2, 0.01, 100),
@@ -114,8 +119,13 @@ class PushCubeEnv(BaseEnv):
             cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
                             CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
                             ]
-        else:
+        elif self.robot_uids == "xarm7_shadow_right":
             cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        else:
+            cam_config = [  CameraConfig("base_camera", base_camera, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
                             CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
                             ]
         return cam_config

@@ -209,7 +209,7 @@
     <dynamics damping="2" friction="1"/>
   </joint>
   <joint name="joint_eef" type="fixed">
-    <origin xyz="0 0 0" rpy="0 0 3.1416"/>
+    <origin xyz="0 0 0" rpy="0 0 1.57079"/>
     <parent link="link7"/>
     <child link="forearm"/>
   </joint>

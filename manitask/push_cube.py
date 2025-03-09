@@ -47,7 +47,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     )
 
     robot = env.unwrapped.agent.robot
-    root_pose=robot.links_map[LINK_BASE[hand]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+    root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
     obs,_ = env.reset(seed=0)
     viewer = env.render()
     human_render_cameras = env.unwrapped.scene.human_render_cameras
@@ -81,7 +81,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     cv2.moveWindow("realtime_retargeting", 960, 100)  # x=50, y=100
     cv2.moveWindow("Environment", 512, 700)
 
-    initial_position = np.array([0.48, 0.0, 0.12]).reshape(1, 3) # initial position of the hand in the robot root frame
+    initial_position = np.array([0.48, 0.0, 0.1]).reshape(1, 3) # initial position of the hand in the robot root frame
 
     # Different robot loader may have different orders for joints
     sapien_joint_names = [joint.name for joint in robot.active_joints]
@@ -151,12 +151,12 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         
         all_points = np.vstack([keypoints_3d, np.array(points_robot)])
         num_points = len(points_robot)
-        colors = [(0, 0, 255)] * num_points + [(255, 0, 0)] * num_points
+        colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
 
         img = env.render().squeeze(0).detach().cpu().numpy()
         img_with_points = draw_points_on_tiled_image(
                                 img, all_points, camera_extrinsics, camera_intrinsics, 
-                                marker_size=2, colors=colors)
+                                marker_size=5, colors=colors)
         img_with_points = cv2.cvtColor(img_with_points, cv2.COLOR_RGB2BGR)
         cv2.imshow("Environment", img_with_points)
 

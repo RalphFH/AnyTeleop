@@ -13,9 +13,9 @@ from mani_skill.utils import sapien_utils
 
 
 @register_agent()
-class XArm7Shadow(BaseAgent):
-    uid = "xarm7_shadow_right"
-    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_shadow_right.urdf"
+class XArm7Leap(BaseAgent):
+    uid = "xarm7_leap_right"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_leap_right.urdf"
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
@@ -23,19 +23,16 @@ class XArm7Shadow(BaseAgent):
             )
         ),
         link=dict(
-            thtip=dict(
+            thumb_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            fftip=dict(
+            index_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            mftip=dict(
+            middle_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            rftip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            lftip=dict(
+            ring_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             )
         ),
@@ -53,16 +50,6 @@ class XArm7Shadow(BaseAgent):
                     0.0,
                     -3.0,
                     0.0,
-                    -1.3, 
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
                     0.0, 
                     0.0,
                     0.0,
@@ -75,7 +62,9 @@ class XArm7Shadow(BaseAgent):
                     0.0,
                     0.0,
                     0.0,
-                    0.0,                 
+                    0.0,
+                    0.0,
+                    0.0                         
                 ]
             ),
             pose=sapien.Pose(p=[0, 0, 0]),
@@ -97,37 +86,29 @@ class XArm7Shadow(BaseAgent):
         self.arm_force_limit = 50
 
         self.hand_joint_names = [
-            'WRJ2', 
-            'WRJ1', 
-            'FFJ4', 
-            'MFJ4', 
-            'RFJ4', 
-            'LFJ5', 
-            'THJ5', 
-            'FFJ3', 
-            'MFJ3', 
-            'RFJ3', 
-            'LFJ4', 
-            'THJ4', 
-            'FFJ2', 
-            'MFJ2', 
-            'RFJ2', 
-            'LFJ3', 
-            'THJ3', 
-            'FFJ1', 
-            'MFJ1', 
-            'RFJ1', 
-            'LFJ2', 
-            'THJ2', 
-            'LFJ1', 
-            'THJ1'
+            '1', 
+            '5', 
+            '9', 
+            '12', 
+            '0', 
+            '4', 
+            '8', 
+            '13', 
+            '2', 
+            '6', 
+            '10', 
+            '14', 
+            '3', 
+            '7', 
+            '11', 
+            '15'
         ]
         self.hand_stiffness = 1e3
         self.hand_damping = 1e2
         self.hand_friction = 1
         self.hand_force_limit = 50
 
-        self.ee_link_name = "palm"
+        self.ee_link_name = "palm_lower"
 
         super().__init__(*args, **kwargs)
 
