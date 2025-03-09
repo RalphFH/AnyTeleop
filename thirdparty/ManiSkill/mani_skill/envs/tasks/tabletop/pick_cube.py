@@ -5,7 +5,7 @@ import sapien
 import torch
 
 import mani_skill.envs.utils.randomization as randomization
-from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq
+from mani_skill.agents.robots import Fetch, Panda, XArm6Robotiq, XArm7Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import sapien_utils
@@ -36,8 +36,9 @@ class PickCubeEnv(BaseEnv):
         "panda",
         "fetch",
         "xarm6_robotiq",
+        "xarm7_allegro",
     ]
-    agent: Union[Panda, Fetch, XArm6Robotiq]
+    agent: Union[Panda, Fetch, XArm6Robotiq, XArm7Allegro]
     cube_half_size = 0.02
     goal_thresh = 0.025
 
@@ -52,22 +53,33 @@ class PickCubeEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        # pose_right = sapien_utils.look_at([-0.12, 0.2, 0.35], [0.12, 0, 0])  # Right hand
-        pose_left = sapien_utils.look_at([-0.1, -0.1, 0.36], [0.1, 0.1, -0.05]) # Left hand
+        pose_right = sapien_utils.look_at([-0.1, 0.1, 0.35], [0.12, -0.1, -0.01])  # Right hand
+        pose_left = sapien_utils.look_at([-0.1, -0.1, 0.35], [0.12, 0.1, -0.01]) # Left hand
         ego_centric = sapien_utils.look_at([-0.1, 0, 0.5], [0.2, 0, 0])
-        return [CameraConfig("render_camera_left", pose_left, 512, 512, np.pi/2, 0.01, 100),
-                CameraConfig(
-                    uid="panda_hand",
-                    pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
-                    width=512,
-                    height=512,
-                    fov=1.57,
-                    near=0.01,
-                    far=100,
-                    entity_uid="panda_hand",
-                ),
-                CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100)
-                ]
+        cam_config = []
+        if self.robot_uids == "panda":
+            cam_config = [  CameraConfig("left_camera", pose_left, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="panda_hand",
+                                pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="panda_hand",
+                            ),
+                            CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        elif self.robot_uids == "xarm7_allegro":
+            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        else:
+            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        return cam_config
 
     def _load_agent(self, options: dict):
         super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
@@ -100,11 +112,13 @@ class PickCubeEnv(BaseEnv):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
             xyz = torch.zeros((b, 3))
-            # xyz[:, :2] = torch.rand((b, 2)) * 0.2 - 0.1
-            xyz[:, :2] =torch.tensor([[0.15,0]] * b)
+            # determistic initial pose
+            # xyz[:, :2] =torch.tensor([[0.15,0]] * b)
+            # qs = torch.tensor([[1,0,0,0]] * b)
+            xyz[:, :2] = torch.rand((b, 2)) * 0.1 + 0.12
             xyz[:, 2] = self.cube_half_size
-            # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
-            qs = torch.tensor([[1,0,0,0]] * b)
+            qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
+            
             
             self.cube.set_pose(Pose.create_from_pq(xyz, qs))
 

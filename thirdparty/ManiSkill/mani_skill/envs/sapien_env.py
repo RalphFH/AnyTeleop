@@ -997,19 +997,19 @@ class BaseEnv(gym.Env):
 
         if set_action:
             if self.num_envs == 1 and action_is_unbatched:
-                action = common.batch(action)
+                action = common.batch(action) # batch the action
             self.agent.set_action(action)
             if self._sim_device.is_cuda():
                 self.scene.px.gpu_apply_articulation_target_position()
                 self.scene.px.gpu_apply_articulation_target_velocity()
-        self._before_control_step()
+        self._before_control_step() # do nothing
         for _ in range(self._sim_steps_per_control):
             if self.agent is not None:
                 self.agent.before_simulation_step()
-            self._before_simulation_step()
+            self._before_simulation_step() # do nothing
             self.scene.step()
-            self._after_simulation_step()
-        self._after_control_step()
+            self._after_simulation_step() # do nothing
+        self._after_control_step() # do nothing
         if self.gpu_sim_enabled:
             self.scene._gpu_fetch_all()
         return action

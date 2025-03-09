@@ -23,7 +23,7 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, FrankaPanda, XArm7Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
@@ -50,16 +50,16 @@ class PushCubeEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
+    SUPPORTED_ROBOTS = ["franka_panda_left", "fetch", "xarm7_allegro_right"]
 
     # Specify some supported robot types
-    agent: Union[Panda, Fetch]
+    agent: Union[FrankaPanda, Fetch, XArm7Allegro]
 
     # set some commonly used values
     goal_radius = 0.1
     cube_half_size = 0.02
 
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="franka_panda_left", robot_init_qpos_noise=0.01, **kwargs):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -92,15 +92,37 @@ class PushCubeEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        # registers a more high-definition (512x512) camera used just for rendering when render_mode="rgb_array" or calling env.render_rgb_array()
-        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
-        return CameraConfig(
-            "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
-        )
+        pose_right = sapien_utils.look_at([-0.1, 0.1, 0.35], [0.12, -0.1, -0.01])  # Right hand
+        pose_left = sapien_utils.look_at([-0.1, -0.1, 0.35], [0.12, 0.1, -0.01]) # Left hand
+        ego_centric = sapien_utils.look_at([-0.1, 0, 0.4], [0.2, 0, 0])
+        cam_config = []
+        if self.robot_uids == "franka_panda_left":
+            cam_config = [  CameraConfig("left_camera", pose_left, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="panda_hand",
+                                pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="panda_hand",
+                            ),
+                            CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        elif self.robot_uids == "xarm7_allegro_right":
+            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        else:
+            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        return cam_config
 
     def _load_agent(self, options: dict):
         # set a reasonable initial pose for the agent that doesn't intersect other objects
-        super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
+        super()._load_agent(options, sapien.Pose(p=[-0.6, 0, 0]))
 
     def _load_scene(self, options: dict):
         # we use a prebuilt scene builder class that automatically loads in a floor and table.

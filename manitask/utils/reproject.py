@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 import torch
+import math
+from loguru import logger
 
 def world_to_image(world_points, extrinsic_cv, intrinsic_cv):
     """
@@ -39,6 +41,9 @@ def world_to_image(world_points, extrinsic_cv, intrinsic_cv):
         u = intrinsic_cv[0, 0] * x_cam + intrinsic_cv[0, 2]
         v = intrinsic_cv[1, 1] * y_cam + intrinsic_cv[1, 2]
         
+        if math.isnan(u) or math.isnan(v):
+            u,v = 0,0
+            logger.warning("Nan value detected in u,v")
         image_points[i] = [int(u), int(v)]
     
     return image_points  # Return array of points

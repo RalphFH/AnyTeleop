@@ -8,11 +8,14 @@
     ```
     maniskill还需要安装[Vulkan](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/installation.html#vulkan)
 
+   
+
 
 
 ## Commands for running the example 
 ```shell
-python3 panda_pick_cube.py --robot-name panda --retargeting-type position --hand-type left
+python3 push_cube.py --arm franka --hand panda --hand-type left
+python3 push_cube.py --arm xarm7 --hand allegro --hand-type right
 ```
 
 

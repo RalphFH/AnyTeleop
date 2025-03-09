@@ -4,30 +4,16 @@ from typing import Optional
 
 import numpy as np
 
-OPERATOR2MANO_RIGHT = np.array(
-    [
-        [0, 0, -1],
-        [-1, 0, 0],
-        [0, 1, 0],
-    ]
-)
-
-OPERATOR2MANO_LEFT = np.array(
-    [
-        [0, 0, -1],
-        [1, 0, 0],
-        [0, -1, 0],
-    ]
-)
 
 
-class RobotName(enum.Enum):
-    allegro = enum.auto()
+class ArmName(enum.Enum):
+    xarm7 = enum.auto()
+    franka = enum.auto()
+
+class HandName(enum.Enum):
+    allegro = enum.auto() # 4 fingers
     shadow = enum.auto() # 5 fingers
-    svh = enum.auto()
     leap = enum.auto() # 4 fingers
-    ability = enum.auto()
-    inspire = enum.auto()
     panda = enum.auto() # 2 fingers
 
 
@@ -42,45 +28,39 @@ class HandType(enum.Enum):
     left = enum.auto()
 
 
-ROBOT_NAME_MAP = {
-    RobotName.allegro: "allegro_hand",
-    RobotName.shadow: "shadow_hand",
-    RobotName.svh: "schunk_svh_hand",
-    RobotName.leap: "leap_hand",
-    RobotName.ability: "ability_hand",
-    RobotName.inspire: "inspire_hand",
-    RobotName.panda: "panda_gripper",
+ARM_NAME_MAP = {
+    ArmName.xarm7: "xarm7",
+    ArmName.franka: "franka",
 }
 
-ROBOT_NAMES = list(ROBOT_NAME_MAP.keys())
+HAND_NAME_MAP = {
+    HandName.allegro: "allegro",
+    HandName.shadow: "shadow",
+    HandName.leap: "leap",
+    HandName.panda: "panda",
+}
+
+LINK_BASE = {
+    "panda": "panda_link0",
+    "allegro": "link_base",
+}
+
+# ROBOT_NAMES = list(HAND_NAME_MAP.keys())
 
 
 def get_default_config_path(
-    robot_name: RobotName, retargeting_type: RetargetingType, hand_type: HandType
+    arm:ArmName, hand: HandName, hand_type: HandType
 ) -> Optional[Path]:
     config_path = Path(__file__).parent / "configs"
     config_path = config_path / "manitask"
-    # if retargeting_type is RetargetingType.position:
-    #     config_path = config_path / "offline"
-    # else:
-    #     config_path = config_path / "teleop"
 
-    robot_name_str = ROBOT_NAME_MAP[robot_name]
+    arm_name_str = ARM_NAME_MAP[arm]
+    hand_name_str = HAND_NAME_MAP[hand]
     hand_type_str = hand_type.name
-    # if "gripper" in robot_name_str:  # For gripper robots, only use gripper config file.
-    #     if retargeting_type == RetargetingType.dexpilot:
-    #         config_name = f"{robot_name_str}_dexpilot.yml"
-    #     else:
-    #         config_name = f"{robot_name_str}.yml"
     
-    if retargeting_type == RetargetingType.dexpilot:
-        config_name = f"{robot_name_str}_{hand_type_str}_dexpilot.yml"
-    else:
-        config_name = f"{robot_name_str}_{hand_type_str}.yml"
-    return config_path / config_name
+    config_name = f"{hand_name_str}_{hand_type_str}.yml"
+    robot_uid = f"{arm_name_str}_{hand_name_str}_{hand_type_str}"
+
+    return config_path / arm_name_str /config_name, robot_uid
 
 
-OPERATOR2MANO = {
-    HandType.right: OPERATOR2MANO_RIGHT,
-    HandType.left: OPERATOR2MANO_LEFT,
-}

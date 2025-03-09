@@ -168,7 +168,7 @@ class RetargetingConfig:
         joint_names = self.target_joint_names if self.target_joint_names is not None else robot.dof_joint_names
 
         if self.type == "position":
-            print("joint_names:",joint_names)
+            print("pinocchio | optimizer | joint_names:",joint_names)
             optimizer = PositionOptimizer(
                 robot,
                 joint_names,
@@ -212,6 +212,12 @@ class RetargetingConfig:
 
         # Parse mimic joints and set kinematics adaptor for optimizer
         has_mimic_joints, source_names, mimic_names, multipliers, offsets = parse_mimic_joint(robot_urdf)
+        """
+        source_names: ['index_q1', 'middle_q1', 'ring_q1', 'pinky_q1']
+        mimic_names: ['index_q2', 'middle_q2', 'ring_q2', 'pinky_q2']
+        multipliers: [1.05851325, 1.05851325, 1.05851325, 1.05851325]
+        offsets: [0.72349796, 0.72349796, 0.72349796, 0.72349796]
+        """
         """
         panda_gripper:
         has_mimic_joints: True

@@ -111,6 +111,7 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
     sapien_joint_names = [joint.get_name() for joint in robot.get_active_joints()]
     retargeting_joint_names = retargeting.joint_names
     retargeting_to_sapien = np.array([retargeting_joint_names.index(name) for name in sapien_joint_names]).astype(int)
+    
 
     while True:
         try:

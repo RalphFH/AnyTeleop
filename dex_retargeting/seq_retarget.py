@@ -40,15 +40,40 @@ class SeqRetargeting:
         # Warm started
         self.is_warm_started = False
     
-    def warm_start_panda(self):
-        self.last_qpos = [  -1.6834,
-                            1.7638,
-                            0.91396,
-                            -2.4655,
-                            -1.0516,
-                            3.7535,
-                            -0.50402,
-                            0.04]
+    def warm_start_manitask(self,robot_uid):
+        if robot_uid == "panda":
+            self.last_qpos = [  -1.6834,
+                                1.7638,
+                                0.91396,
+                                -2.4655,
+                                -1.0516,
+                                3.7535,
+                                -0.50402,
+                                0.04]
+        elif robot_uid == "xarm6_allegro_right":
+            self.last_qpos = [  0.72163,
+                                0.73147,
+                                -1.1601,
+                                -1.9555,
+                                2.7194,
+                                -2.1242,
+                                -0.10196,
+                                0.94961,
+                                -0.17448,
+                                0.6955,
+                                0.61015,
+                                -0.085535,
+                                0.75623,
+                                0.7785,
+                                -0.018408,
+                                0.60735,
+                                -0.15179,
+                                0.6955,
+                                0.4709,
+                                0.55731,
+                                -0.13984,
+                                0.6955]
+        
         self.is_warm_started = True
 
     def warm_start(

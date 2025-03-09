@@ -218,8 +218,9 @@ class DictController(BaseController):
         named_spaces = [
             (uid, controller.single_action_space)
             for uid, controller in self.controllers.items()
-        ]
-        self.single_action_space = spaces.Dict(named_spaces)
+        ] # list
+        self.single_action_space = spaces.Dict(named_spaces) # <class 'gymnasium.spaces.dict.Dict'>
+
 
     def _initialize_joints(self):
         self.joints = []

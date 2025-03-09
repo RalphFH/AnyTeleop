@@ -369,6 +369,7 @@ class ManiSkillScene:
     #     return self.get_cameras()
 
     def step(self):
+        # <class 'sapien.pysapien.physx.PhysxCpuSystem'>
         self.px.step()
 
     def update_render(

@@ -76,18 +76,6 @@ class TableSceneBuilder(SceneBuilder):
                     0.04,
                 ]
             )
-            # qpos = np.array(
-            #     [   -1.6834,
-            #         1.7638,
-            #         0.91396,
-            #         -2.4655,
-            #         -1.0516,
-            #         3.7535,
-            #         -0.50402,
-            #         0.04,
-            #         0.04]
-
-            # )
             if self.env._enhanced_determinism:
                 qpos = (
                     self.env._batched_episode_rng[env_idx].normal(
@@ -127,7 +115,7 @@ class TableSceneBuilder(SceneBuilder):
                 )
             qpos[:, -2:] = 0.04
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))         
         elif self.env.robot_uids == "xmate3_robotiq":
             qpos = np.array(
                 [0, np.pi / 6, 0, np.pi / 3, 0, np.pi / 2, -np.pi / 2, 0, 0]
@@ -154,16 +142,25 @@ class TableSceneBuilder(SceneBuilder):
             "xarm6_allegro_right",
             "xarm6_robotiq",
             "xarm6_nogripper",
+            "xarm7_allegro_right",
         ]:
             qpos = self.env.agent.keyframes["rest"].qpos
-            qpos = (
-                self.env._episode_rng.normal(
-                    0, self.robot_init_qpos_noise, (b, len(qpos))
+            if self.env._enhanced_determinism:
+                qpos = (
+                    self.env._batched_episode_rng[env_idx].normal(
+                        0, self.robot_init_qpos_noise, len(qpos)
+                    )
+                    + qpos
                 )
-                + qpos
-            )
+            else:
+                qpos = (
+                    self.env._episode_rng.normal(
+                        0, self.robot_init_qpos_noise, (b, len(qpos))
+                    )
+                    + qpos
+                )
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose([-0.45, 0, 0]))
+            self.env.agent.robot.set_pose(sapien.Pose([-0.6, 0, 0]))
         elif self.env.robot_uids == "fetch":
             qpos = np.array(
                 [

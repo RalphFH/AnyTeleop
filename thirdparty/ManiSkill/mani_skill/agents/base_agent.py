@@ -112,6 +112,7 @@ class BaseAgent:
 
         self._after_init()
 
+
     @property
     def _sensor_configs(self) -> List[BaseSensorConfig]:
         """Returns a list of sensor configs for this agent. By default this is empty."""
@@ -297,6 +298,7 @@ class BaseAgent:
         if not self.scene.gpu_sim_enabled:
             if np.isnan(action).any():
                 raise ValueError("Action cannot be NaN. Environment received:", action)
+        # self.controller | <class 'mani_skill.agents.controllers.base_controller.CombinedController'>
         self.controller.set_action(action)
 
     def before_simulation_step(self):
