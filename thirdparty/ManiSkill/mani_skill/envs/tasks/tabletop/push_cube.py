@@ -23,7 +23,9 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, FrankaPanda, XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import Fetch, FrankaPanda
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import UR5eShadow
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
@@ -50,20 +52,22 @@ class PushCubeEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["franka_panda_left", "fetch", 
+    SUPPORTED_ROBOTS = ["franka_panda_right", "fetch", 
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right"]
+                        "xarm6_allegro_right",
+                        "ur5e_shadow_right"]
 
     # Specify some supported robot types
     agent: Union[FrankaPanda, Fetch, 
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
-                 XArm6Allegro]
+                 XArm6Allegro,
+                 UR5eShadow]
 
     # set some commonly used values
     goal_radius = 0.1
     cube_half_size = 0.02
 
-    def __init__(self, *args, robot_uids="franka_panda_left", robot_init_qpos_noise=0.01, **kwargs):
+    def __init__(self, *args, robot_uids="franka_panda_right", robot_init_qpos_noise=0.01, **kwargs):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
@@ -95,17 +99,16 @@ class PushCubeEnv(BaseEnv):
         ]
 
     @property
-    def _default_human_render_camera_configs(self):
-        pose_right = sapien_utils.look_at([-0.1, 0.1, 0.35], [0.12, -0.1, -0.01])  # Right hand
-        pose_left = sapien_utils.look_at([-0.1, -0.1, 0.35], [0.12, 0.1, -0.01]) # Left hand
-        ego_centric = sapien_utils.look_at([-0.1, 0, 0.4], [0.2, 0, 0])
-        base_camera = sapien_utils.look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
+    def _default_human_render_camera_configs(self): 
+        right_side = sapien_utils.look_at([-0.2, -0.4, 0.2], [-0.2, 0.3, 0.2]) 
+        top_down = sapien_utils.look_at([-0.1, 0, 0.4], [0.2, 0, 0])
+
         cam_config = []
-        if self.robot_uids == "franka_panda_left":
-            cam_config = [  CameraConfig("left_camera", pose_left, 512, 512, np.pi/2, 0.01, 100),
+        if "panda" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
                             CameraConfig(
-                                uid="panda_hand",
-                                pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0, 0 , 0.06], q=[0.7071, 0, -0.7071, 0]),
                                 width=512,
                                 height=512,
                                 fov=1.57,
@@ -113,21 +116,51 @@ class PushCubeEnv(BaseEnv):
                                 far=100,
                                 entity_uid="panda_hand",
                             ),
-                            CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100)
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100),
                             ]
-        elif self.robot_uids == "xarm7_allegro_right":
-            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+        elif "allegro" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0.005, 0.0 , -0.02], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link",
+                            ),
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]
-        elif self.robot_uids == "xarm7_shadow_right":
-            cam_config = [  CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+        elif "shadow" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ),                         
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]
-        else:
-            cam_config = [  CameraConfig("base_camera", base_camera, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig("ego_centric", ego_centric, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig("right_camera", pose_right, 512, 512, np.pi/2, 0.01, 100)
+        elif "leap" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base",
+                            ),
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]
+
         return cam_config
 
     def _load_agent(self, options: dict):
@@ -185,7 +218,7 @@ class PushCubeEnv(BaseEnv):
 
             # here we write some randomization code that randomizes the x, y position of the cube we are pushing in the range [-0.1, -0.1] to [0.1, 0.1]
             xyz = torch.zeros((b, 3))
-            xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
+            xyz[..., :2] = torch.rand((b, 2)) * 0.1 - 0.1
             xyz[..., 2] = self.cube_half_size
             q = [1, 0, 0, 0]
             # we can then create a pose object using Pose.create_from_pq to then set the cube pose with. Note that even though our quaternion

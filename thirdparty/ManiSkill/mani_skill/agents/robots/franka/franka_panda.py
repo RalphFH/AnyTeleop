@@ -17,7 +17,7 @@ from mani_skill.sensors.camera import CameraConfig
 
 @register_agent()
 class FrankaPanda(BaseAgent):
-    uid = "franka_panda_left"
+    uid = "franka_panda_right"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/franka/panda.urdf"
     urdf_config = dict(
         _materials=dict(
@@ -38,12 +38,12 @@ class FrankaPanda(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    np.pi / 8,
+                    -np.pi / 6,
                     0,
-                    -np.pi * 5 / 8,
+                    -7*np.pi/8,
                     0,
-                    np.pi * 3 / 4,
-                    np.pi / 4,
+                    3*np.pi/4,
+                    -3*np.pi/4,
                     0.04,
                     0.04,
                 ]

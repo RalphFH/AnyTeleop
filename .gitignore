@@ -17,3 +17,4 @@ imgui.ini
 /temp/
 *.egg-info
 WiLoR
+/example/

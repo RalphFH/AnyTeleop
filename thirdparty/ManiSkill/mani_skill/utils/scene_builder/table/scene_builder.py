@@ -62,38 +62,8 @@ class TableSceneBuilder(SceneBuilder):
         self.table.set_pose(
             sapien.Pose(p=[-0.12, 0, -0.9196429], q=euler2quat(0, 0, np.pi / 2))
         )
-        if self.env.robot_uids == "panda":
-            qpos = np.array(
-                [
-                    0.0,
-                    np.pi / 8,
-                    0,
-                    -np.pi * 5 / 8,
-                    0,
-                    np.pi * 3 / 4,
-                    np.pi / 4,
-                    0.04,
-                    0.04,
-                ]
-            )
-            if self.env._enhanced_determinism:
-                qpos = (
-                    self.env._batched_episode_rng[env_idx].normal(
-                        0, self.robot_init_qpos_noise, len(qpos)
-                    )
-                    + qpos
-                )
-            else:
-                qpos = (
-                    self.env._episode_rng.normal(
-                        0, self.robot_init_qpos_noise, (b, len(qpos))
-                    )
-                    + qpos
-                )
-            qpos[:, -2:] = 0.04
-            self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
-        elif self.env.robot_uids == "panda_wristcam":
+
+        if self.env.robot_uids == "panda_wristcam":
             # fmt: off
             qpos = np.array(
                 [0.0, np.pi / 8, 0, -np.pi * 5 / 8, 0, np.pi * 3 / 4, -np.pi / 4, 0.04, 0.04]
@@ -239,13 +209,13 @@ class TableSceneBuilder(SceneBuilder):
             agent.agents[0].robot.set_pose(
                 sapien.Pose([0, -0.75, 0], q=euler2quat(0, 0, np.pi / 2))
             )
-        elif (
-            "dclaw" in self.env.robot_uids
-            or "allegro" in self.env.robot_uids
-            or "trifinger" in self.env.robot_uids
-        ):
-            # Need to specify the robot qpos for each sub-scenes using tensor api
-            pass
+        # elif (
+        #     "dclaw" in self.env.robot_uids
+        #     or "allegro" in self.env.robot_uids
+        #     or "trifinger" in self.env.robot_uids
+        # ):
+        #     # Need to specify the robot qpos for each sub-scenes using tensor api
+        #     pass
         elif self.env.robot_uids == "panda_stick":
             qpos = np.array(
                 [
@@ -290,5 +260,7 @@ class TableSceneBuilder(SceneBuilder):
                     )
                     + qpos
                 )
+            if "panda" in self.env.robot_uids:              
+                qpos[...,-2:] = 0.04
             self.env.agent.reset(qpos)
             self.env.agent.robot.set_pose(sapien.Pose([-0.6, 0, 0]))

@@ -16,42 +16,17 @@ from mani_skill.agents.robots import XArm7Ability
  'pd_joint_pos_vel', 'pd_joint_delta_pos_vel']
 """
 
-import mani_skill.examples.demo_robot as demo_robot_script
-demo_robot_script.main()
-
-# env = gym.make(
-#     "PickCube-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
-#     num_envs=1,
-#     robot_uids="panda", 
-#     obs_mode="state", # there is also "state_dict", "rgbd", ...
-#     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
-#     # parallel_in_single_scene=True,
-#     render_mode="human", # rgb_array | human 
-# )
-
-# qpos = np.array(
-#                 [
-#                     0.0,
-#                     np.pi / 8,
-#                     0,
-#                     -np.pi * 5 / 8,
-#                     0,
-#                     np.pi * 3 / 4,
-#                     np.pi / 4,
-#                     0.04,
-#                 ]
-#             )
 
 
-# env = gym.make(
-#     "PushCube-v3",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
-#     num_envs=1,
-#     robot_uids="xarm6_allegro_right", 
-#     obs_mode="state", # there is also "state_dict", "rgbd", ...
-#     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
-#     # parallel_in_single_scene=True,
-#     render_mode="human", # rgb_array | human 
-# )
+env = gym.make(
+    "PushCube-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    num_envs=1,
+    robot_uids="xarm6_allegro_right", 
+    obs_mode="state", # there is also "state_dict", "rgbd", ...
+    control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
+    # parallel_in_single_scene=True,
+    render_mode="human", # rgb_array | human 
+)
 
 # qpos=np.array(
 #                 [
@@ -144,6 +119,8 @@ env.reset()
    
 agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda'>
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
+qpos = agent.keyframes["rest"].qpos
+print("qpos",type(qpos))
 # panda_hand = robot.links_map["panda_hand"] # <class 'mani_skill.utils.structs.link.Link'>
 # panda_hand_pose=robot.links_map["panda_hand"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
 # root_pose=robot.links_map["panda_link0"].pose.raw_pose.detach().squeeze(0).numpy()[:3]

@@ -12,10 +12,11 @@ from .trifingerpro import TriFingerPro
 from .unitree_g1 import *
 from .unitree_go import *
 from .unitree_h1 import *
-from .ur_e import UR10e
+from .ur10e import UR10e
 from .widowx import *
 from .xmate3 import Xmate3Robotiq
 
 from .xarm6 import *
 from .xarm7 import *
 from .franka import *
+from .ur5e import *

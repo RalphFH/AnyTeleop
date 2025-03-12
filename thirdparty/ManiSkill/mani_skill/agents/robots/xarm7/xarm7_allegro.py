@@ -46,12 +46,12 @@ class XArm7Allegro(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    -0.4,
+                    0.3,
                     0.0,
                     0.5,
-                    0.0,
-                    0.9,
-                    -3.0,
+                    np.pi,
+                    2.2,
+                    np.pi,
                     0.0,
                     0.0, 
                     0.0,

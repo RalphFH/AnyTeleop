@@ -77,9 +77,8 @@ class HandDetector:
                 if self.init_position is None:
                     self.init_position = pred_cam_t_full
 
+                pred_keypoints_3d = pred_keypoints_3d - pred_keypoints_3d[0]
                 cam_t_full = pred_cam_t_full - self.init_position
-
-
                 pred_keypoints_3d = pred_keypoints_3d + self.trans_scale * cam_t_full
                 points = pred_keypoints_3d @ self.operator2mano.T
     
@@ -91,7 +90,7 @@ class HandDetector:
         return is_detected_hand, points
 
 
-    def draw_skeleton_on_image(self, image, style="default"):
+    def draw_skeleton_on_image(self, image, style="default",flip=True):
         if self.keypoints_2d is None:
             return image
 
@@ -117,7 +116,9 @@ class HandDetector:
             x, y = int(keypoint[0]), int(keypoint[1])
             cv2.circle(img_copy, (x, y), radius=4, color=point_color, thickness=-1)
         
-            
+        if flip:
+            img_copy = cv2.flip(img_copy, 1)
+        
         return img_copy
     
 
