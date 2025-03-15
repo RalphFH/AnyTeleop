@@ -11,6 +11,7 @@ class ArmName(enum.Enum):
     franka = enum.auto()
     xarm6 = enum.auto()
     ur5e = enum.auto()
+    iiwa7 = enum.auto()
 
 class HandName(enum.Enum):
     allegro = enum.auto() # 4 fingers
@@ -35,6 +36,7 @@ ARM_NAME_MAP = {
     ArmName.franka: "franka",
     ArmName.xarm6: "xarm6",
     ArmName.ur5e: "ur5e",
+    ArmName.iiwa7: "iiwa7",
 }
 
 HAND_NAME_MAP = {
@@ -49,6 +51,7 @@ LINK_BASE = {
     "xarm7": "link_base",
     "xarm6": "world",
     "ur5e": "base_link",
+    "iiwa7": "link_0_arm",
 }
 
 LINK_WRIST = {

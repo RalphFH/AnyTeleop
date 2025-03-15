@@ -10,16 +10,21 @@
 
    
 
-
-
 ## Commands for running the example 
 ```shell
 python3 push_cube.py --arm franka --hand panda --hand-type right
+
 python3 push_cube.py --arm xarm6 --hand allegro --hand-type right
+
 python3 push_cube.py --arm xarm7 --hand allegro --hand-type right
 python3 push_cube.py --arm xarm7 --hand leap --hand-type right
 python3 push_cube.py --arm xarm7 --hand shadow --hand-type right
+
+python3 push_cube.py --arm ur5e --hand allegro --hand-type right
+python3 push_cube.py --arm ur5e --hand leap --hand-type right
 python3 push_cube.py --arm ur5e --hand shadow --hand-type right
+
+python3 push_cube.py --arm iiwa7 --hand allegro --hand-type right
 ```
 
 ## pipeline
@@ -32,7 +37,7 @@ python3 push_cube.py --arm ur5e --hand shadow --hand-type right
     - 修改类名，如`XArm7Shadow`, 规范命名uid(遵循`arm_hand_handtype`的规范), 如`xarm7_shadow_right`
     - `urdf_config=dict(...` 里的link是在修改材料的摩擦力，如`thtip`就是leap的指尖link, 需修改为对应机器手的link名称
     - 设置`self.arm_joint_names`，`self.hand_joint_names`（这个可以通过'/manitask/utils/URDF_check.py'加载对应的urdf文件查看）
-    - 设置keyframes中`rest`帧的qpos，这里注意qpos维度要和前面的查看的activate joint(arm+hand)数量一致,这个是env.reset后的初始位姿，很重要,可以用'/manitask/utils/test_qpos.py'，调试修改 | `python test_qpos.py -r "robot_uid" -c "pd_joint_pos" --keyframe-actions`
+    - 设置keyframes中`rest`帧的qpos，这里注意qpos维度要和前面的查看的activate joint(arm+hand)数量一致,这个是env.reset后的初始位姿，很重要,可以在完成后续步骤后用'/manitask/utils/test_qpos.py'，调试修改 | `python test_qpos.py -r "robot_uid" -c "pd_joint_pos" --keyframe-actions`测试调整
         - 在retarget时，视频第一帧的人手掌根关键点会和机械手的手掌根`LINK_WRIST`重叠；
         - retarget解算时用warm_start加速初始迭代，这个keyframe将会作为初始解`last_pos`，因此最好让机械手掌朝向和你习惯的第一帧人手朝向对齐一些
         - 由于retarget在解算qpos时不会考虑除机器人自身外的障碍(如桌子)，初始的这个值最好不要让arm部分在hand下面，否则容易造成hand未能碰到桌面时arm就碰到了，然后hand下不去

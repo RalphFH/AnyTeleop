@@ -20,3 +20,4 @@ from .xarm6 import *
 from .xarm7 import *
 from .franka import *
 from .ur5e import *
+from .iiwa7 import *

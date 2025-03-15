@@ -13,9 +13,9 @@ from mani_skill.utils import sapien_utils
 
 
 @register_agent()
-class XArm7Allegro(BaseAgent):
-    uid = "xarm7_allegro_right"
-    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_allegro_right.urdf"
+class UR5eLeap(BaseAgent):
+    uid = "ur5e_leap_right"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/ur5e/ur5e_leap_right.urdf"
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
@@ -23,19 +23,16 @@ class XArm7Allegro(BaseAgent):
             )
         ),
         link=dict(
-            link_0_tip=dict(
+            thumb_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            link_3_tip=dict(
+            index_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            link_7_tip=dict(
+            middle_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            link_11_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_15_tip=dict(
+            ring_tip_head=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             )
         ),
@@ -46,29 +43,28 @@ class XArm7Allegro(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    0.3,
-                    0.0,
-                    0.5,
-                    np.pi,
-                    2.2,
-                    0.0,
-                    0.0,
-                    0.0, 
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
+                    -3*np.pi/5,
+                    4*np.pi/5,
+                    -2*np.pi/5,
+                    np.pi/2,
                     0.0,
                     0.0,
                     0.0, 
                     0.0,
                     0.0,
                     0.0,
-                    0.0,                 
-                ]
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,                                       
+                ]                
             ),
             pose=sapien.Pose(p=[0, 0, 0]),
         )
@@ -76,43 +72,41 @@ class XArm7Allegro(BaseAgent):
 
     def __init__(self, *args, **kwargs):
         self.arm_joint_names = [
-            "joint1",
-            "joint2",
-            "joint3",
-            "joint4",
-            "joint5",
-            "joint6",
-            "joint7",
+            "shoulder_pan_joint",
+            "shoulder_lift_joint",
+            "elbow_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint"
         ]
         self.arm_stiffness = 1e3
         self.arm_damping = 1e2
         self.arm_force_limit = 50
 
         self.hand_joint_names = [
-          'joint_0', 
-          'joint_4', 
-          'joint_8', 
-          'joint_12',
-          'joint_1', 
-          'joint_5', 
-          'joint_9', 
-          'joint_13', 
-          'joint_2', 
-          'joint_6', 
-          'joint_10', 
-          'joint_14', 
-          'joint_3', 
-          'joint_7', 
-          'joint_11', 
-          'joint_15' 
+            '1', 
+            '5', 
+            '9', 
+            '12', 
+            '0', 
+            '4', 
+            '8', 
+            '13', 
+            '2', 
+            '6', 
+            '10', 
+            '14', 
+            '3', 
+            '7', 
+            '11', 
+            '15'
         ]
-
         self.hand_stiffness = 1e3
         self.hand_damping = 1e2
         self.hand_friction = 1
         self.hand_force_limit = 50
 
-        self.ee_link_name = "palm"
+        self.ee_link_name = "palm_lower"
 
         super().__init__(*args, **kwargs)
 

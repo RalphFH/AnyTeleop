@@ -214,7 +214,7 @@
   <joint name="gripper_base_joint" type="fixed">
     <origin rpy="0 0 3.1416" xyz="0.0 0 0.095"/>
     <parent link="link6"/>
-    <child link="base_link"/>
+    <child link="base_link_hand"/>
     <axis xyz="0 0 0"/>
   </joint>
 
@@ -222,7 +222,7 @@
   <!-- FINGERS -->
   <!-- RIGHT HAND due to which finger is number 0 -->
   <!-- for LEFT HAND switch the sign of the **offset_origin_y** and **finger_angle_r** parameters-->
-  <link name="base_link">
+  <link name="base_link_hand">
     <inertial>
       <mass value="0.4154"/>
       <origin rpy="0 0 0" xyz="0 0 0"/>
@@ -257,7 +257,7 @@
   <!--  virtual link-->
   <link name="palm"/>
   <joint name="palm_joint" type="fixed">
-    <parent link="base_link"/>
+    <parent link="base_link_hand"/>
     <child link="palm"/>
     <origin rpy="0.00000 -0.00000 0.00000" xyz="0 0 -0.065"/>
   </joint> 
@@ -291,7 +291,7 @@
   <joint name="joint_0" type="revolute">
     <axis xyz="0 0 1"/>
     <limit effort="10" lower="-0.47" upper="0.47" velocity="3.14"/>
-    <parent link="base_link"/>
+    <parent link="base_link_hand"/>
     <child link="link_0"/>
     <origin rpy="-0.08726646255 0 0" xyz="0 0.0435 -0.001542"/>
   </joint>
@@ -413,7 +413,7 @@
   <joint name="joint_4" type="revolute">
     <axis xyz="0 0 1"/>
     <limit effort="10" lower="-0.47" upper="0.47" velocity="3.14"/>
-    <parent link="base_link"/>
+    <parent link="base_link_hand"/>
     <child link="link_4"/>
     <origin rpy="0.0 0 0" xyz="0 0 0.0007"/>
   </joint>
@@ -535,7 +535,7 @@
   <joint name="joint_8" type="revolute">
     <axis xyz="0 0 1"/>
     <limit effort="10" lower="-0.47" upper="0.47" velocity="3.14"/>
-    <parent link="base_link"/>
+    <parent link="base_link_hand"/>
     <child link="link_8"/>
     <origin rpy="0.08726646255 0 0" xyz="0 -0.0435 -0.001542"/>
   </joint>
@@ -657,7 +657,7 @@
   <joint name="joint_12" type="revolute">
     <axis xyz="-1 0 0"/>
     <limit effort="10" lower="0.263" upper="1.396" velocity="3.14"/>
-    <parent link="base_link"/>
+    <parent link="base_link_hand"/>
     <child link="link_12"/>
     <origin rpy="0 -1.65806278845 -1.5707963259" xyz="-0.0182 0.019333 -0.045987"/>
   </joint>

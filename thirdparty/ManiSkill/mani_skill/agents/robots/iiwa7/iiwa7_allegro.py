@@ -13,10 +13,9 @@ from mani_skill.utils import sapien_utils
 
 
 @register_agent()
-class XArm7Ability(BaseAgent):
-    uid = "xarm7_ability"
-    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_ability_right_hand.urdf"
-    disable_self_collisions = True
+class IIwa7Allegro(BaseAgent):
+    uid = "iiwa7_allegro_right"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/iiwa7/iiwa7_allegro_right.urdf"
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
@@ -24,21 +23,21 @@ class XArm7Ability(BaseAgent):
             )
         ),
         link=dict(
-            thumnb_L2=dict(
+            link_0_tip=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            index_L2=dict(
+            link_3_tip=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            middle_L2=dict(
+            link_7_tip=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            ring_L2=dict(
+            link_11_tip=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
             ),
-            pinky_L2=dict(
+            link_15_tip=dict(
                 material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
+            )
         ),
     )
 
@@ -47,12 +46,13 @@ class XArm7Ability(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    -0.4,
+                    np.pi / 6,
                     0.0,
-                    0.5,
+                    -4*np.pi/5,
                     0.0,
-                    0.9,
-                    -3.0,
+                    -5*np.pi/8,
+                    0.0,
+                    0.0,
                     0.0, 
                     0.0,
                     0.0,
@@ -63,24 +63,12 @@ class XArm7Ability(BaseAgent):
                     0.0,
                     0.0,
                     0.0,
+                    0.0, 
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,                 
                 ]
-                # [   -1.334,
-                #     2.0684,
-                #     0.15401,
-                #     2.9354,
-                #     0.15133,
-                #     1.9562,     
-                #     0.51596,      
-                #     1.6887,       
-                #     2.511,     
-                #     1.7349,     
-                #     2.5599,     
-                #     1.5292,
-                #     2.3422,    
-                #     1.6845,     
-                #     2.5066,  
-                #     -0.066671,      
-                #     1.507]
             ),
             pose=sapien.Pose(p=[0, 0, 0]),
         )
@@ -88,35 +76,43 @@ class XArm7Ability(BaseAgent):
 
     def __init__(self, *args, **kwargs):
         self.arm_joint_names = [
-            "joint1",
-            "joint2",
-            "joint3",
-            "joint4",
-            "joint5",
-            "joint6",
-            "joint7",
+            "A1",
+            "A2",
+            "A3",
+            "A4",
+            "A5",
+            "A6",
+            "A7",
         ]
         self.arm_stiffness = 1e3
         self.arm_damping = 1e2
         self.arm_force_limit = 50
 
         self.hand_joint_names = [
-            "thumb_q1",
-            "index_q1",
-            "middle_q1",
-            "ring_q1",
-            "pinky_q1",
-            "thumb_q2",
-            "index_q2",
-            "middle_q2",
-            "ring_q2",
-            "pinky_q2",
+          'joint_0', 
+          'joint_4', 
+          'joint_8', 
+          'joint_12',
+          'joint_1', 
+          'joint_5', 
+          'joint_9', 
+          'joint_13', 
+          'joint_2', 
+          'joint_6', 
+          'joint_10', 
+          'joint_14', 
+          'joint_3', 
+          'joint_7', 
+          'joint_11', 
+          'joint_15' 
         ]
+
         self.hand_stiffness = 1e3
         self.hand_damping = 1e2
+        self.hand_friction = 1
         self.hand_force_limit = 50
 
-        self.ee_link_name = "base"
+        self.ee_link_name = "palm"
 
         super().__init__(*args, **kwargs)
 
@@ -146,21 +142,6 @@ class XArm7Ability(BaseAgent):
         arm_pd_joint_target_delta_pos = deepcopy(arm_pd_joint_delta_pos)
         arm_pd_joint_target_delta_pos.use_target = True
 
-        # PD ee position
-        arm_pd_ee_delta_pose = PDEEPoseControllerConfig(
-            self.arm_joint_names,
-            -0.1,
-            0.1,
-            0.1,
-            self.arm_stiffness,
-            self.arm_damping,
-            self.arm_force_limit,
-            ee_link=self.ee_link_name,
-            urdf_path=self.urdf_path,
-        )
-
-        arm_pd_ee_target_delta_pose = deepcopy(arm_pd_ee_delta_pose)
-        arm_pd_ee_target_delta_pose.use_target = True
 
         # -------------------------------------------------------------------------- #
         # Hand
@@ -183,48 +164,42 @@ class XArm7Ability(BaseAgent):
             stiffness=self.hand_stiffness,
             damping=self.hand_damping,
             force_limit=self.hand_force_limit,
+            friction=self.hand_friction,
             normalize_action=False,
         )
 
-
         controller_configs = dict(
             pd_joint_delta_pos=dict(
-                arm=arm_pd_joint_delta_pos, gripper=hand_target_delta_pos
+                arm=arm_pd_joint_pos, gripper=hand_target_delta_pos
             ),
-            pd_joint_pos=dict(arm=arm_pd_joint_pos, gripper=hand_target_pos),
-            pd_ee_delta_pose=dict(
-                arm=arm_pd_ee_delta_pose, gripper=hand_target_delta_pos
-            ),
-            pd_ee_target_delta_pose=dict(
-                arm=arm_pd_ee_target_delta_pose, gripper=hand_target_delta_pos
-            ),
+            pd_joint_pos=dict(arm=arm_pd_joint_pos, gripper=hand_target_pos)
         )
 
         # Make a deepcopy in case users modify any config
         return deepcopy_dict(controller_configs)
 
     def _after_init(self):
-        hand_front_link_names = [
-            "thumb_L2",
-            "index_L2",
-            "middle_L2",
-            "ring_L2",
-            "pinky_L2",
-        ]
-        self.hand_front_links = sapien_utils.get_objs_by_names(
-            self.robot.get_links(), hand_front_link_names
-        )
+        # hand_front_link_names = [
+        #     "thumb_L2",
+        #     "index_L2",
+        #     "middle_L2",
+        #     "ring_L2",
+        #     "pinky_L2",
+        # ]
+        # self.hand_front_links = sapien_utils.get_objs_by_names(
+        #     self.robot.get_links(), hand_front_link_names
+        # )
 
-        finger_tip_link_names = [
-            "thumb_tip",
-            "index_tip",
-            "middle_tip",
-            "ring_tip",
-            "pinky_tip",
-        ]
-        self.finger_tip_links = sapien_utils.get_objs_by_names(
-            self.robot.get_links(), finger_tip_link_names
-        )
+        # finger_tip_link_names = [
+        #     "thumb_tip",
+        #     "index_tip",
+        #     "middle_tip",
+        #     "ring_tip",
+        #     "pinky_tip",
+        # ]
+        # self.finger_tip_links = sapien_utils.get_objs_by_names(
+        #     self.robot.get_links(), finger_tip_link_names
+        # )
 
         self.tcp = sapien_utils.get_obj_by_name(
             self.robot.get_links(), self.ee_link_name

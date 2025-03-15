@@ -25,7 +25,8 @@ from transforms3d.euler import euler2quat
 
 from mani_skill.agents.robots import Fetch, FrankaPanda
 from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
-from mani_skill.agents.robots import UR5eShadow
+from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import IIwa7Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
@@ -55,13 +56,15 @@ class PushCubeEnv(BaseEnv):
     SUPPORTED_ROBOTS = ["franka_panda_right", "fetch", 
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
                         "xarm6_allegro_right",
-                        "ur5e_shadow_right"]
+                        "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
+                        "iiwa7_allegro_right"]
 
     # Specify some supported robot types
     agent: Union[FrankaPanda, Fetch, 
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
                  XArm6Allegro,
-                 UR5eShadow]
+                 UR5eShadow, UR5eAllegro, UR5eLeap,
+                 IIwa7Allegro]
 
     # set some commonly used values
     goal_radius = 0.1
@@ -128,7 +131,7 @@ class PushCubeEnv(BaseEnv):
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base_link",
+                                entity_uid="base_link_hand",
                             ),
                             CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]
@@ -156,7 +159,7 @@ class PushCubeEnv(BaseEnv):
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base",
+                                entity_uid="base_hand",
                             ),
                             CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]

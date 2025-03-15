@@ -13,9 +13,9 @@ from mani_skill.utils import sapien_utils
 
 
 @register_agent()
-class XArm7Allegro(BaseAgent):
-    uid = "xarm7_allegro_right"
-    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/xarm7/xarm7_allegro_right.urdf"
+class UR5eAllegro(BaseAgent):
+    uid = "ur5e_allegro_right"
+    urdf_path = f"{PACKAGE_ASSET_DIR}/robots/ur5e/ur5e_allegro_right.urdf"
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
@@ -46,11 +46,10 @@ class XArm7Allegro(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    0.3,
-                    0.0,
-                    0.5,
-                    np.pi,
-                    2.2,
+                    -3*np.pi/5,
+                    4*np.pi/5,
+                    -2*np.pi/5,
+                    np.pi/2,
                     0.0,
                     0.0,
                     0.0, 
@@ -68,7 +67,7 @@ class XArm7Allegro(BaseAgent):
                     0.0,
                     0.0,
                     0.0,                 
-                ]
+                ]                
             ),
             pose=sapien.Pose(p=[0, 0, 0]),
         )
@@ -76,13 +75,12 @@ class XArm7Allegro(BaseAgent):
 
     def __init__(self, *args, **kwargs):
         self.arm_joint_names = [
-            "joint1",
-            "joint2",
-            "joint3",
-            "joint4",
-            "joint5",
-            "joint6",
-            "joint7",
+            "shoulder_pan_joint",
+            "shoulder_lift_joint",
+            "elbow_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint"
         ]
         self.arm_stiffness = 1e3
         self.arm_damping = 1e2
@@ -106,7 +104,6 @@ class XArm7Allegro(BaseAgent):
           'joint_11', 
           'joint_15' 
         ]
-
         self.hand_stiffness = 1e3
         self.hand_damping = 1e2
         self.hand_friction = 1

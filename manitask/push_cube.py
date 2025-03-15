@@ -172,6 +172,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     
 
         if cv2.waitKey(2) & done :
+            print("done!")
             isEnd.set()
             cv2.destroyAllWindows()
             break
