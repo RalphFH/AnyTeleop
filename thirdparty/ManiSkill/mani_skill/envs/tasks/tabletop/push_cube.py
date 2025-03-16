@@ -125,13 +125,13 @@ class PushCubeEnv(BaseEnv):
             cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
                             CameraConfig(
                                 uid="ego-centric",
-                                pose=sapien.Pose(p=[0.005, 0.0 , -0.02], q=[1, 0, 0, 0]),
+                                pose=sapien.Pose(p=[-0.15, 0.0 , 0.02], q=[0.9848, 0,  -0.17365,0]),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base_link_hand",
+                                entity_uid="link7",
                             ),
                             CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
                             ]

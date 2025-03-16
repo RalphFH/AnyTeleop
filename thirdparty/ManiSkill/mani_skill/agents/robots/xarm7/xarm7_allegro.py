@@ -10,6 +10,7 @@ from mani_skill.agents.base_agent import BaseAgent, Keyframe
 from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import sapien_utils
+from mani_skill.utils.structs.actor import Actor
 
 
 @register_agent()
@@ -19,26 +20,27 @@ class XArm7Allegro(BaseAgent):
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
-                static_friction=2.0, dynamic_friction=1.5, restitution=0.0
+                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
             )
         ),
-        link=dict(
-            link_0_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_3_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_7_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_11_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_15_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            )
-        ),
+        link={
+                **{
+                    f"link_{i}": {
+                        "material": "front_finger",
+                        "patch_radius": 0.07,
+                        "min_patch_radius": 0.05,
+                    }
+                    for i in range(16)  # 生成 link_0 到 link_15
+                },
+                **{
+                    f"link_{i}_tip": {
+                        "material": "front_finger",
+                        "patch_radius": 0.07,
+                        "min_patch_radius": 0.05,
+                    }
+                    for i in [3, 7, 11, 15]  # 额外添加 link_3_tip, link_7_tip, link_15_tip
+                }
+            },
     )
 
     keyframes = dict(
@@ -86,7 +88,7 @@ class XArm7Allegro(BaseAgent):
         ]
         self.arm_stiffness = 1e3
         self.arm_damping = 1e2
-        self.arm_force_limit = 50
+        self.arm_force_limit = 30
 
         self.hand_joint_names = [
           'joint_0', 
@@ -109,8 +111,8 @@ class XArm7Allegro(BaseAgent):
 
         self.hand_stiffness = 1e3
         self.hand_damping = 1e2
-        self.hand_friction = 1
-        self.hand_force_limit = 50
+        self.hand_friction = 5
+        self.hand_force_limit = 30
 
         self.ee_link_name = "palm"
 
@@ -206,3 +208,14 @@ class XArm7Allegro(BaseAgent):
         )
 
         self.queries: Dict[str, Tuple[physx.PhysxGpuContactQuery, Tuple[int]]] = dict()
+
+    def is_grasping(self, object: Actor, min_force=0.5, max_angle=85):
+        """Check if the robot is grasping an object
+
+        Args:
+            object (Actor): The object to check if the robot is grasping
+            min_force (float, optional): Minimum force before the robot is considered to be grasping the object in Newtons. Defaults to 0.5.
+            max_angle (int, optional): Maximum angle of contact to consider grasping. Defaults to 85.
+        """
+
+        return False

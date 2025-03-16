@@ -3,8 +3,11 @@ from typing import Any, Dict, Union
 import numpy as np
 import sapien
 import torch
-
-from mani_skill.agents.robots.panda import PandaWristCam
+ 
+from mani_skill.agents.robots import PandaWristCam,FrankaPanda
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import IIwa7Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.scene import ManiSkillScene
 from mani_skill.envs.utils import randomization
@@ -64,8 +67,16 @@ class PegInsertionSideEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PegInsertionSide-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda_wristcam"]
-    agent: Union[PandaWristCam]
+    SUPPORTED_ROBOTS = ["panda_wristcam","franka_panda_right",
+                        "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
+                        "xarm6_allegro_right",
+                        "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
+                        "iiwa7_allegro_right"]
+    agent: Union[PandaWristCam, FrankaPanda,
+                 XArm7Allegro, XArm7Shadow, XArm7Leap,
+                 XArm6Allegro,
+                 UR5eShadow, UR5eAllegro, UR5eLeap,
+                 IIwa7Allegro]
     _clearance = 0.003
 
     def __init__(
@@ -100,8 +111,82 @@ class PegInsertionSideEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = sapien_utils.look_at([0.5, -0.5, 0.8], [0.05, -0.1, 0.4])
-        return CameraConfig("render_camera", pose, 512, 512, 1, 0.01, 100)
+        right_side = sapien_utils.look_at([-0.2, -0.4, 0.2], [-0.2, 0.3, 0.2]) 
+        top_down = sapien_utils.look_at([0.0, 0, 0.4], [0.0, 0, 0])
+
+        cam_config = []
+        if "panda" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="camera_link",
+                            ),
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100),
+                            ]
+        elif "allegro" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.15, 0.0 , 0.02], q=[0.9848, 0,  -0.17365,0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="link7",
+                            ),
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        elif "shadow" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ),                         
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
+                            ]
+        elif "leap" in self.robot_uids:
+            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
+                            CameraConfig(
+                                uid="ego-centric",
+                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_hand",
+                            ),
+                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
+                            ]   
+
+        if "xarm7" in self.robot_uids:
+            cam_config.append(
+                            CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[0.005, 0.0 , -0.02], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link_hand",
+                            ),
+            )     
+        return cam_config
+
 
     def _load_agent(self, options: dict):
         super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
@@ -229,23 +314,23 @@ class PegInsertionSideEnv(BaseEnv):
             self.box.set_pose(Pose.create_from_pq(pos, quat))
 
             # Initialize the robot
-            qpos = np.array(
-                [
-                    0.0,
-                    np.pi / 8,
-                    0,
-                    -np.pi * 5 / 8,
-                    0,
-                    np.pi * 3 / 4,
-                    -np.pi / 4,
-                    0.04,
-                    0.04,
-                ]
-            )
-            qpos = self._episode_rng.normal(0, 0.02, (b, len(qpos))) + qpos
-            qpos[:, -2:] = 0.04
-            self.agent.robot.set_qpos(qpos)
-            self.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+            # qpos = np.array(
+            #     [
+            #         0.0,
+            #         np.pi / 8,
+            #         0,
+            #         -np.pi * 5 / 8,
+            #         0,
+            #         np.pi * 3 / 4,
+            #         -np.pi / 4,
+            #         0.04,
+            #         0.04,
+            #     ]
+            # )
+            # qpos = self._episode_rng.normal(0, 0.02, (b, len(qpos))) + qpos
+            # qpos[:, -2:] = 0.04
+            # self.agent.robot.set_qpos(qpos)
+            # self.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
 
     # save some commonly used attributes
     @property

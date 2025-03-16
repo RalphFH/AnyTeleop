@@ -12,6 +12,8 @@
 
 ## Commands for running the example 
 ```shell
+python3 peg_insertion.py --arm xarm7 --hand allegro --hand-type right
+
 python3 push_cube.py --arm franka --hand panda --hand-type right
 
 python3 push_cube.py --arm xarm6 --hand allegro --hand-type right

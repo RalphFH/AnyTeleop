@@ -157,6 +157,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
             points_robot.append(link_pose)
         
+        print("points_robot",points_robot[0])
         all_points = np.vstack([keypoints_3d, np.array(points_robot)])
         num_points = len(points_robot)
         colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
