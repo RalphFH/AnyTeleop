@@ -1,6 +1,5 @@
 retargeting:
   type: position
-  urdf_path: xarm7/xarm7_leap_right.urdf
 
   target_joint_names: null
   target_link_names: [ "thumb_tip_head", "index_tip_head", "middle_tip_head", "ring_tip_head", 

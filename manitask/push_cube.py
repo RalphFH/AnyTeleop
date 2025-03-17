@@ -11,7 +11,7 @@ from loguru import logger
 import sapien
 import pyrealsense2 as rs
 
-from dex_retargeting.constants_mani import *
+from dex_retargeting.constants_manitask import *
 from dex_retargeting.retargeting_config import RetargetingConfig
 
 import gymnasium as gym
@@ -30,7 +30,9 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     arm, hand, hand_type = robot_uid.split("_")
 
     # Load retargeting optimizer
-    config = RetargetingConfig.load_from_file(config_path)
+    urdf_path = f"{arm}/{robot_uid}.urdf"
+    override = dict(urdf_path=urdf_path)
+    config = RetargetingConfig.load_from_file(config_path,override=override)
     retargeting = config.build()
 
 

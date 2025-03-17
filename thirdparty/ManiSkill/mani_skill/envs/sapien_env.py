@@ -430,7 +430,7 @@ class BaseEnv(gym.Env):
         self,
     ) -> CameraConfig:
         """Default configuration for the viewer camera, controlling shader, fov, etc. By default if there is a human render camera called "render_camera" then the viewer will use that camera's pose."""
-        return CameraConfig(uid="viewer", pose=sapien.Pose([0, 0, 1]), width=1920, height=1080, shader_pack="default", near=0.0, far=1000, fov=np.pi / 2)
+        return CameraConfig(uid="viewer", pose=sapien_utils.look_at([0.2, 0.0, 0.3], [0.0, 0.0, 0.0]) , width=1920, height=1080, shader_pack="default", near=0.0, far=1000, fov=np.pi / 2)
 
     @property
     def sim_freq(self) -> int:
@@ -1210,6 +1210,18 @@ class BaseEnv(gym.Env):
         )
         control_window.show_joint_axes = False
         control_window.show_camera_linesets = False
+
+        tensor_pose = sapien_utils.look_at([0.3, -0.1, 0.6], [-0.5, 0.0, 0.0]).raw_pose
+        pose_list = tensor_pose.squeeze().tolist()  # 去掉多余维度并转换为 list
+
+        p = pose_list[:3]  
+        q = pose_list[3:]  
+        pose = sapien.Pose(p=p, q=q)
+
+        self._viewer.set_camera_pose(
+            pose
+        )
+
         if "render_camera" in self._human_render_cameras:
             self._viewer.set_camera_pose(
                 self._human_render_cameras["render_camera"].camera.global_pose[0].sp

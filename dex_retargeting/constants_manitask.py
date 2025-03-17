@@ -77,6 +77,6 @@ def get_default_config_path(
     config_name = f"{hand_name_str}_{hand_type_str}.yml"
     robot_uid = f"{arm_name_str}_{hand_name_str}_{hand_type_str}"
 
-    return config_path / arm_name_str /config_name, robot_uid
+    return config_path / config_name, robot_uid
 
 

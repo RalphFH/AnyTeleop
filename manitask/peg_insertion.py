@@ -11,7 +11,7 @@ from loguru import logger
 import sapien
 import pyrealsense2 as rs
 
-from dex_retargeting.constants_mani import *
+from dex_retargeting.constants_manitask import *
 from dex_retargeting.retargeting_config import RetargetingConfig
 
 import gymnasium as gym
@@ -30,7 +30,9 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     arm, hand, hand_type = robot_uid.split("_")
 
     # Load retargeting optimizer
-    config = RetargetingConfig.load_from_file(config_path)
+    urdf_path = f"{arm}/{robot_uid}.urdf"
+    override = dict(urdf_path=urdf_path)
+    config = RetargetingConfig.load_from_file(config_path,override=override)
     retargeting = config.build()
 
 
@@ -46,11 +48,12 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         render_mode="rgb_array", # rgb_array | human | all
     )
 
+    obs,_ = env.reset(seed=0)
     agent = env.unwrapped.agent
     robot = agent.robot
     root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
     wrist_pose = robot.links_map[LINK_WRIST[hand]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-    obs,_ = env.reset(seed=0)
+
     viewer = env.render()
     human_render_cameras = env.unwrapped.scene.human_render_cameras
     
@@ -83,10 +86,10 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     cv2.namedWindow("Environment", cv2.WINDOW_NORMAL)
 
     cv2.resizeWindow("realtime_retargeting", 640, 480)
-    cv2.resizeWindow("Environment", 2048, 512)
+    cv2.resizeWindow("Environment", 2560, 512)
 
     cv2.moveWindow("realtime_retargeting", 960, 100)  # x=50, y=100
-    cv2.moveWindow("Environment", 256, 700)
+    cv2.moveWindow("Environment", 0, 700)
 
     # initial_position = np.array([0.48, 0.0, 0.1]).reshape(1, 3) # initial position of the hand in the robot root frame
     initial_position = (wrist_pose - root_pose)
@@ -152,22 +155,23 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             done = terminated 
 
         link_pose = None
-        # points_robot = []
+        points_robot = []
+        print(type(robot))
 
-        # for i,target_link in enumerate(config.target_link_names):
-        #     link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-        #     points_robot.append(link_pose)
+        for i,target_link in enumerate(config.target_link_names):
+            link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+            points_robot.append(link_pose)
         
         # print("points_robot",points_robot[0])
-        # all_points = np.vstack([keypoints_3d, np.array(points_robot)])
-        # num_points = len(points_robot)
-        # colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
+        all_points = np.vstack([keypoints_3d, np.array(points_robot)])
+        num_points = len(points_robot)
+        colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
 
         img = env.render().squeeze(0).detach().cpu().numpy()
-        # img_with_points = draw_points_on_tiled_image(
-        #                         img, all_points, camera_extrinsics, camera_intrinsics, 
-        #                         marker_size=5, colors=colors)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img_with_points = draw_points_on_tiled_image(
+                                img, all_points, camera_extrinsics, camera_intrinsics, 
+                                marker_size=5, colors=colors)
+        img = cv2.cvtColor(img_with_points, cv2.COLOR_RGB2BGR)
         
         cv2.imshow("Environment", img)
 
@@ -212,7 +216,7 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
                 if not success:
                     continue
             
-            time.sleep(1 / 30.0)
+            time.sleep(1 / 20.0)
             queue.put(image)
     finally:
         if camera_path == "rs":

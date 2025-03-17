@@ -1,12 +1,11 @@
 retargeting:
   type: position
-  urdf_path: xarm6/xarm6_allegro_right.urdf
 
   target_joint_names: null
-  target_link_names: [ "link_15_tip", "link_3_tip", "link_7_tip", "link_11_tip", "link_14",
-                       "link_2", "link_6", "link_10" ]
+  target_link_names: [ "link_15","link_15_tip", "link_3_tip", "link_7_tip", "link_11_tip", "link_14",
+                       "link_2", "link_6", "link_10", "link_0", "link_4", "link_8" ]
 
-  target_link_human_indices: [ 4, 8, 12, 16, 2, 6, 10, 14 ]
+  target_link_human_indices: [ 3, 4, 8, 12, 16, 2, 6, 10, 14, 5, 9, 13 ]
   add_dummy_free_joint: False
   scaling_factor: 1.9
 

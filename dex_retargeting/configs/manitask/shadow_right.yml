@@ -1,6 +1,5 @@
 retargeting:
   type: position
-  urdf_path: xarm7/xarm7_shadow_right.urdf
 
   target_joint_names: null
   target_link_names: [ "palm","thtip", "fftip", "mftip", "rftip", "lftip",

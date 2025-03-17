@@ -17,6 +17,7 @@ from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Actor, Pose
 from mani_skill.utils.structs.types import SimConfig
+from mani_skill.utils.quater import product
 
 
 def _build_box_with_hole(
@@ -111,14 +112,16 @@ class PegInsertionSideEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        right_side = sapien_utils.look_at([-0.2, -0.4, 0.2], [-0.2, 0.3, 0.2]) 
-        top_down = sapien_utils.look_at([0.0, 0, 0.4], [0.0, 0, 0])
+        right_side = sapien_utils.look_at([0.0, -0.3, 0.2], [0.1, 0.3, 0.2]) 
+        top_down = sapien_utils.look_at([-0.1, 0, 0.4], [0.1, 0, 0])
+        hole = sapien_utils.look_at([0.02, 0.1, 0.25], [0, 0.3, 0.05])
 
         cam_config = []
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100))
+                            
         if "panda" in self.robot_uids:
-            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig(
-                                uid="ego-centric",
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
                                 pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
                                 width=512,
                                 height=512,
@@ -126,27 +129,23 @@ class PegInsertionSideEnv(BaseEnv):
                                 near=0.01,
                                 far=100,
                                 entity_uid="camera_link",
-                            ),
-                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100),
-                            ]
+                            ))                           
         elif "allegro" in self.robot_uids:
-            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig(
+            q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
+            q2 = [np.cos(40*np.pi/180), 0 , -np.sin(40*np.pi/180),0]
+            cam_config.append( CameraConfig(
                                 uid="hand_cam",
-                                pose=sapien.Pose(p=[-0.15, 0.0 , 0.02], q=[0.9848, 0,  -0.17365,0]),
+                                pose=sapien.Pose(p=[-0.02, 0.18 , -0.02], q=q1),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="link7",
-                            ),
-                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
-                            ]
+                                entity_uid="base_link_hand",
+                            ))
         elif "shadow" in self.robot_uids:
-            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig(
-                                uid="ego-centric",
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
                                 pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
                                 width=512,
                                 height=512,
@@ -154,13 +153,10 @@ class PegInsertionSideEnv(BaseEnv):
                                 near=0.01,
                                 far=100,
                                 entity_uid="palm",
-                            ),                         
-                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
-                            ]
+                            ))
         elif "leap" in self.robot_uids:
-            cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
-                            CameraConfig(
-                                uid="ego-centric",
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
                                 pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
                                 width=512,
                                 height=512,
@@ -168,23 +164,24 @@ class PegInsertionSideEnv(BaseEnv):
                                 near=0.01,
                                 far=100,
                                 entity_uid="base_hand",
-                            ),
-                            CameraConfig("right_camera", right_side, 512, 512, np.pi/2, 0.01, 100)
-                            ]   
+                            ))
 
         if "xarm7" in self.robot_uids:
-            cam_config.append(
-                            CameraConfig(
+            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
+
+            cam_config.append(CameraConfig(
                                 uid="arm_cam",
-                                pose=sapien.Pose(p=[0.005, 0.0 , -0.02], q=[1, 0, 0, 0]),
+                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base_link_hand",
-                            ),
+                                entity_uid="link7",
+                            )
             )     
+        cam_config.append( CameraConfig("hole_cam", hole, 512, 512, np.pi/2, 0.01, 100))
+        cam_config.append( CameraConfig("scene_right_camera", right_side, 512, 512, np.pi/2, 0.01, 100))
         return cam_config
 
 

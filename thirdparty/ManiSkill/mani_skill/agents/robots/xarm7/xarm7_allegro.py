@@ -20,14 +20,14 @@ class XArm7Allegro(BaseAgent):
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
-                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
+                static_friction=4.0, dynamic_friction=4.0, restitution=0.0
             )
         ),
         link={
                 **{
                     f"link_{i}": {
                         "material": "front_finger",
-                        "patch_radius": 0.07,
+                        "patch_radius": 0.08,
                         "min_patch_radius": 0.05,
                     }
                     for i in range(16)  # 生成 link_0 到 link_15
@@ -35,7 +35,7 @@ class XArm7Allegro(BaseAgent):
                 **{
                     f"link_{i}_tip": {
                         "material": "front_finger",
-                        "patch_radius": 0.07,
+                        "patch_radius": 0.08,
                         "min_patch_radius": 0.05,
                     }
                     for i in [3, 7, 11, 15]  # 额外添加 link_3_tip, link_7_tip, link_15_tip
@@ -47,10 +47,10 @@ class XArm7Allegro(BaseAgent):
         rest=Keyframe(
             qpos=np.array(
                 [
+                    -15*np.pi/180,
+                    15*np.pi/180,
                     0.0,
-                    0.3,
-                    0.0,
-                    0.5,
+                    10*np.pi/180,
                     np.pi,
                     2.2,
                     0.0,
@@ -109,7 +109,7 @@ class XArm7Allegro(BaseAgent):
           'joint_15' 
         ]
 
-        self.hand_stiffness = 1e3
+        self.hand_stiffness = 3e3
         self.hand_damping = 1e2
         self.hand_friction = 5
         self.hand_force_limit = 30
