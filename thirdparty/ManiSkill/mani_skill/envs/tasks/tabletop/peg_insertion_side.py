@@ -112,12 +112,12 @@ class PegInsertionSideEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        right_side = sapien_utils.look_at([0.0, -0.3, 0.2], [0.1, 0.3, 0.2]) 
-        top_down = sapien_utils.look_at([-0.1, 0, 0.4], [0.1, 0, 0])
-        hole = sapien_utils.look_at([0.02, 0.1, 0.25], [0, 0.3, 0.05])
+        right_side = sapien_utils.look_at([0.05, -0.2, 0.18], [0.05, 0.3, 0.18]) 
+        top_down = sapien_utils.look_at([-0.1, 0, 0.4], [0.05, 0, 0])
+        hole = sapien_utils.look_at([0.01, 0.05, 0.1], [0.05, 0.3, 0.1])
 
         cam_config = []
-        cam_config.append(CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100))
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
                             
         if "panda" in self.robot_uids:
             cam_config.append(CameraConfig(
@@ -138,7 +138,7 @@ class PegInsertionSideEnv(BaseEnv):
                                 pose=sapien.Pose(p=[-0.02, 0.18 , -0.02], q=q1),
                                 width=512,
                                 height=512,
-                                fov=1.57,
+                                fov=70*np.pi/180,
                                 near=0.01,
                                 far=100,
                                 entity_uid="base_link_hand",
@@ -174,14 +174,14 @@ class PegInsertionSideEnv(BaseEnv):
                                 pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
                                 width=512,
                                 height=512,
-                                fov=1.57,
+                                fov=70*np.pi/180,
                                 near=0.01,
                                 far=100,
                                 entity_uid="link7",
                             )
             )     
-        cam_config.append( CameraConfig("hole_cam", hole, 512, 512, np.pi/2, 0.01, 100))
-        cam_config.append( CameraConfig("scene_right_camera", right_side, 512, 512, np.pi/2, 0.01, 100))
+        cam_config.append( CameraConfig("hole_cam", hole, 512, 512, 50*np.pi/180, 0.01, 100))
+        cam_config.append( CameraConfig("scene_right_camera", right_side, 512, 512, 80*np.pi/180, 0.01, 100))
         return cam_config
 
 
