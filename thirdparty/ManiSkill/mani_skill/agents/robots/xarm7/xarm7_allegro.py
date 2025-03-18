@@ -11,6 +11,7 @@ from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import sapien_utils
 from mani_skill.utils.structs.actor import Actor
+import torch
 
 
 @register_agent()
@@ -218,4 +219,8 @@ class XArm7Allegro(BaseAgent):
             max_angle (int, optional): Maximum angle of contact to consider grasping. Defaults to 85.
         """
 
-        return False
+        return torch.tensor([False])
+    
+    def is_static(self, threshold: float = 0.2):
+        qvel = self.robot.get_qvel()[..., :7]
+        return torch.max(torch.abs(qvel), 1)[0] <= (threshold)
