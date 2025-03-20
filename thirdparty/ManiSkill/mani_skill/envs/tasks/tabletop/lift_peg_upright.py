@@ -25,7 +25,7 @@ from mani_skill.utils.structs.types import Array
 from mani_skill.utils.quater import product
 
 
-@register_env("LiftPegUpright-v1", max_episode_steps=50)
+@register_env("LiftPegUpright-v1", max_episode_steps=300)
 class LiftPegUprightEnv(BaseEnv):
     """
     **Task Description:**
@@ -171,7 +171,7 @@ class LiftPegUprightEnv(BaseEnv):
             self.table_scene.initialize(env_idx)
 
             xyz = torch.zeros((b, 3))
-            xyz[..., :2] = torch.rand((b, 2)) * 0.2 - 0.1
+            xyz[..., :2] = torch.rand((b, 2)) * 0.05
             xyz[..., 2] = self.peg_half_width
             q = euler2quat(np.pi / 2, 0, 0)
 

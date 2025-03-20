@@ -8,7 +8,11 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import Fetch, Panda, FrankaPanda
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import IIwa7Allegro
+
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
@@ -18,6 +22,8 @@ from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
 from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+
+from mani_skill.utils.quater import product
 
 
 @register_env("PlaceSphere-v1", max_episode_steps=50)
@@ -35,15 +41,26 @@ class PlaceSphereEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
+    SUPPORTED_ROBOTS = ["panda", "fetch","franka_panda_right",
+                        "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
+                        "xarm6_allegro_right",
+                        "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
+                        "iiwa7_allegro_right"]
 
     # Specify some supported robot types
-    agent: Union[Panda, Fetch]
+    agent: Union[Panda, Fetch, FrankaPanda,
+                 XArm7Allegro, XArm7Shadow, XArm7Leap,
+                 XArm6Allegro,
+                 UR5eShadow, UR5eAllegro, UR5eLeap,
+                 IIwa7Allegro]
 
     # set some commonly used values
-    radius = 0.02  # radius of the sphere
-    inner_side_half_len = 0.02  # side length of the bin's inner square
-    short_side_half_size = 0.0025  # length of the shortest edge of the block
+    radius = 0.04  # radius of the sphere
+    inner_side_half_len = 0.04  # side length of the bin's inner square
+    short_side_half_size = 0.005  # length of the shortest edge of the block
+    # radius = 0.02  # radius of the sphere
+    # inner_side_half_len = 0.02  # side length of the bin's inner square
+    # short_side_half_size = 0.0025  # length of the shortest edge of the block
     block_half_size = [
         short_side_half_size,
         2 * short_side_half_size + inner_side_half_len,
@@ -84,10 +101,85 @@ class PlaceSphereEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = sapien_utils.look_at([0.6, -0.2, 0.2], [0.0, 0.0, 0.2])
-        return CameraConfig(
-            "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
-        )
+
+        top_down = sapien_utils.look_at([-0.18, 0.0, 0.3], [-0.06, 0.0, 0])
+        left_side = sapien_utils.look_at([-0.05, 0.27, 0.15], [-0.05, 0.1, 0.15]) 
+
+        cam_config = []
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
+
+
+
+        if "xarm7" in self.robot_uids:
+            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
+
+            cam_config.append(CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="link7",
+                            )
+            )     
+
+        if "panda" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=80*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="camera_link",
+                            ))                           
+        elif "allegro" in self.robot_uids:
+            q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
+            q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
+            q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
+            q = product(q3,product(q2,q1)) 
+            cam_config.append( CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.018, 0.2 , -0.02], q=q1),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link_hand",
+                            ))
+        elif "shadow" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ))
+        elif "leap" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_hand",
+                            ))
+            
+
+
+
+        cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))
+
+        return cam_config
 
     def _build_bin(self, radius):
         builder = self.scene.create_actor_builder()
@@ -185,9 +277,9 @@ class PlaceSphereEnv(BaseEnv):
         pos_obj = self.obj.pose.p
         pos_bin = self.bin.pose.p
         offset = pos_obj - pos_bin
-        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.005
+        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.01
         z_flag = (
-            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.005
+            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.01
         )
         is_obj_on_bin = torch.logical_and(xy_flag, z_flag)
         is_obj_static = self.obj.is_static(lin_thresh=1e-2, ang_thresh=0.5)

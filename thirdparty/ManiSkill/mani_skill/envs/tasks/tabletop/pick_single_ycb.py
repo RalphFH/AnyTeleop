@@ -174,12 +174,9 @@ class PickSingleYCBEnv(BaseEnv):
                                 far=100,
                                 entity_uid="base_hand",
                             ))
-            
-
 
 
         cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))
-
         return cam_config
 
     def _load_agent(self, options: dict):

@@ -21,9 +21,15 @@ import torch
 from utils.filter_module import Filter
 from utils.hand_detector import HandDetector
 from utils.reproject import draw_points_on_tiled_image
+
+from mani_skill.utils.wrappers.record import RecordEpisode
+import os
     
 
 def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: str, config_path: str, robot_uid:str):
+    data_dir = os.path.expanduser("~/robotics/dex-retargeting/manitask/data")
+    os.makedirs(data_dir, exist_ok=True)
+    
     RetargetingConfig.set_default_urdf_dir(str(robot_dir))
     logger.info(f"Start retargeting with config {config_path}")
     
@@ -38,15 +44,30 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     retargeting_type = retargeting.optimizer.retargeting_type
     
+    env_id = "LiftPegUpright-v1"
     # Load robot
     env = gym.make(
-        "LiftPegUpright-v1", # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+        env_id, # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
         num_envs=1,
         robot_uids=robot_uid,
-        obs_mode="rgb", # there is also "state_dict", "rgbd", ...
+        obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
         control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
         render_mode="rgb_array", # rgb_array | human | all
     )
+
+    traj_name = time.strftime("%Y%m%d_%H%M%S")
+    env = RecordEpisode(
+        env,
+        output_dir=os.path.join(data_dir, robot_uid),
+        trajectory_name=traj_name,
+        save_video=True,
+        video_fps=30,
+        save_on_reset=False,
+        source_type="teleoperating",
+        source_desc="realtime_retarget"
+    )
+
+
 
     obs,_ = env.reset(seed=0)
     agent = env.unwrapped.agent
@@ -110,12 +131,8 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             return
 
         # 1. Hand Detection and 3D Pose Estimation
-        # detect_start_time = time.time()
         _, keypoints_pos = detector.detect(rgb)
         
-        # detect_end_time = time.time()
-        # detect_duration = detect_end_time - detect_start_time
-        # logger.info(f"Time taken for detection: {detect_duration:.4f} seconds")
         
         # 2. Drawing skeleton
         detect_img = detector.draw_skeleton_on_image(bgr, style="default")
@@ -152,11 +169,11 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 action = qpos[retargeting_to_sapien]
             # print(f"retarget: {qpos[-1]} action: {action[-1]}")
             obs, reward, terminated, truncated, info = env.step(action)
-            done = terminated 
+            done = torch.logical_or(terminated,truncated)
+            is_success = info["success"] 
 
         link_pose = None
         points_robot = []
-        print(type(robot))
 
         for i,target_link in enumerate(config.target_link_names):
             link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
@@ -177,11 +194,22 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     
 
-        if cv2.waitKey(2) & done :
-            print("done!")
+        if cv2.waitKey(2) & done : 
             isEnd.set()
-            cv2.destroyAllWindows()
+            if is_success:
+                print("Episode succeeded, saving trajectory and video.")
+                print("steps",info["elapsed_steps"])
+                env.flush_trajectory()
+                env.flush_video()
+            else:
+                print("Episode failed, not saving trajectory or video.")
+                print("steps",info["elapsed_steps"])
+                env.flush_trajectory(save=False)
+                env.flush_video(save=False)
+            env.close()
+            time.sleep(0.5)
             break
+        
         
         # End of each frame 
 
@@ -201,29 +229,38 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
             cap = cv2.VideoCapture(camera_path)
 
     isStart.wait()
-    try:
-        while not(isEnd.is_set()):
-            if camera_path == "rs":
-                frames = pipe.wait_for_frames()
-                color_frame = frames.get_color_frame()
-                if not color_frame:
-                    continue
-                image = np.asanyarray(color_frame.get_data())
-            else:
-                if not cap.isOpened():
-                    break
-                success, image = cap.read()
-                if not success:
-                    continue
-            
-            time.sleep(1 / 20.0)
-            queue.put(image)
-    finally:
-        if camera_path == "rs":
-            pipe.stop()
-        else:
-            cap.release()
 
+    while not(isEnd.is_set()):
+        if camera_path == "rs":
+            frames = pipe.wait_for_frames()
+            color_frame = frames.get_color_frame()
+            if not color_frame:
+                continue
+            image = np.asanyarray(color_frame.get_data())
+        else:
+            if not cap.isOpened():
+                break
+            success, image = cap.read()
+            if not success:
+                continue
+        
+        time.sleep(1 / 20.0)
+        try:
+            queue.put(image, False)
+        except:
+            try:
+                queue.get_nowait()
+                queue.put(image)
+            except:
+                pass
+
+            
+
+    if camera_path == "rs":
+        pipe.stop()
+    else:
+        cap.release()
+    queue.close()
 
 def main(
     arm: ArmName, hand: HandName, hand_type: HandType, camera_path: Optional[str] = None
@@ -248,22 +285,16 @@ def main(
     producer_process = multiprocessing.Process(target=produce_frame, args=(isStart, isEnd, queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(isStart, isEnd, queue, str(robot_dir), str(config_path),robot_uid))
 
-    try:
-        producer_process.start()
-        consumer_process.start()
 
-        producer_process.join()
-        consumer_process.join()
-        
-    except KeyboardInterrupt:
-        logger.info("收到中断信号，停止进程.")
-    finally:
-        producer_process.terminate()
-        consumer_process.terminate()
-        producer_process.join()
-        consumer_process.join()
+    producer_process.start()
+    consumer_process.start()
+
+    consumer_process.join()
+    producer_process.terminate()
+    consumer_process.terminate()
+
     
-    print("done")
+    print("collect done")
 
 
 if __name__ == "__main__":

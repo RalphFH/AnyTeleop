@@ -5,6 +5,9 @@ import sapien
 import torch
 
 from mani_skill.agents.robots import Fetch, Panda
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import IIwa7Allegro
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
@@ -14,6 +17,8 @@ from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
 from mani_skill.utils.structs.types import GPUMemoryConfig, SimConfig
+
+from mani_skill.utils.quater import product
 
 
 @register_env("PullCubeTool-v1", max_episode_steps=100)
@@ -34,9 +39,18 @@ class PullCubeToolEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PullCubeTool-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["panda", "fetch"]
+    SUPPORTED_ROBOTS = ["panda", "fetch"
+                        "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
+                        "xarm6_allegro_right",
+                        "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
+                        "iiwa7_allegro_right"]
+                            
     SUPPORTED_REWARD_MODES = ("normalized_dense", "dense", "sparse", "none")
-    agent: Union[Panda, Fetch]
+    agent: Union[Panda, Fetch,
+                 XArm7Allegro, XArm7Shadow, XArm7Leap,
+                 XArm6Allegro,
+                 UR5eShadow, UR5eAllegro, UR5eLeap,
+                 IIwa7Allegro]
 
     goal_radius = 0.3
     cube_half_size = 0.02
@@ -76,18 +90,82 @@ class PullCubeToolEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
-        return [
-            CameraConfig(
-                "render_camera",
-                pose=pose,
-                width=512,
-                height=512,
-                fov=1,
-                near=0.01,
-                far=100,
-            )
-        ]
+
+        top_down = sapien_utils.look_at([-0.15, -0.1, 0.3], [-0.05, -0.1, 0])
+        left_side = sapien_utils.look_at([-0.03, 0.2, 0.12], [-0.03, -0.1, 0.12]) 
+
+        cam_config = []
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
+  
+
+        if "panda" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="camera_link",
+                            ))                           
+        elif "allegro" in self.robot_uids:
+            q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
+            q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
+            q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
+            q = product(q3,product(q2,q1)) 
+            cam_config.append( CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.018, 0.2 , -0.02], q=q1),
+                                width=512,
+                                height=512,
+                                fov=60*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link_hand",
+                            ))
+        elif "shadow" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ))
+        elif "leap" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_hand",
+                            ))
+        cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 70*np.pi/180, 0.01, 100))
+        if "xarm7" in self.robot_uids:
+            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
+
+            cam_config.append(CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
+                                width=512,
+                                height=512,
+                                fov=80*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="link7",
+                            )
+            )   
+
+
+
+        return cam_config
+            
 
     def _build_l_shaped_tool(self, handle_length, hook_length, width, height):
         builder = self.scene.create_actor_builder()

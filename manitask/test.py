@@ -18,64 +18,15 @@ import time
 
 
 env = gym.make(
-    "PullCubeTool-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    "LiftPegUpright-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
     num_envs=1,
     robot_uids="xarm7_allegro_right", #panda_wristcam
-    obs_mode="state", # there is also "state_dict", "rgbd", ...
+    obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
     render_mode="human", # rgb_array | human 
 )
 
-# qpos=np.array(
-#                 [
-#                     0.0,
-#                     -0.4,
-#                     0.0,
-#                     0.5,
-#                     0.0,
-#                     0.9,
-#                     -3.0,
-#                     0.0, 
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                 ]
-#             )
-
-
-# qpos=np.array(
-#                 [
-#                     1.56280772e-03,
-#                     -1.10912404e00,
-#                     -9.71343926e-02,
-#                     1.52969832e-04,
-#                     1.20606723e00,
-#                     1.66234924e-03,
-#                     0.0,
-#                     0.0, 
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0, 
-#                     0.0,
-#                     0.0,
-#                     0.0,
-#                     0.0,                 
-#                 ]
-#             )
 
 # """
 # env <class 'mani_skill.utils.registration.TimeLimitWrapper'>
@@ -83,12 +34,26 @@ env = gym.make(
 # env.env.env / env.unwrapped <class 'mani_skill.envs.tasks.tabletop.pick_cube.PickCubeEnv'>
 # """
 
+agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda'>
+robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
+qpos = agent.keyframes["rest"].qpos
+
 env.reset()
+
+obs, reward, terminated, truncated, info=env.step(qpos)
+# print("obs",(obs).keys()) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
+# print("reward",reward) # torch.Tensor | torch.Size([1])
+# print("terminated",terminated) # torch.Tensor | torch.Size([1]) | tensor([False])
+# print("truncated",truncated) # torch.Tensor | torch.Size([1]) | tensor([False])
+# print("info",info['success']) # dict | ['elapsed_steps', 'success']
+
+
 
 while True:
 
-    env.render()
-    # env.step(qpos)
+    # env.render()
+    obs, reward, terminated, truncated, info=env.step(qpos)
+    print("truncated",truncated.item())
     time.sleep(0.1)
 
 # try:
@@ -116,9 +81,7 @@ while True:
 
 
    
-# agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda'>
-# robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
-# qpos = agent.keyframes["rest"].qpos
+
 # print("qpos",type(qpos))
 # panda_hand = robot.links_map["panda_hand"] # <class 'mani_skill.utils.structs.link.Link'>
 # panda_hand_pose=robot.links_map["panda_hand"].pose.raw_pose.detach().squeeze(0).numpy()[:3]

@@ -48,7 +48,7 @@ class XArm7Allegro(BaseAgent):
         rest=Keyframe(
             qpos=np.array(
                 [
-                    -15*np.pi/180,
+                    0,
                     15*np.pi/180,
                     0.0,
                     10*np.pi/180,

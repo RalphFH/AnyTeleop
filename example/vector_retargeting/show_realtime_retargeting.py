@@ -20,7 +20,7 @@ from dex_retargeting import yourdfpy as urdf
 import tempfile
 
 
-def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path: str):
+def start_retargeting(isEnd, queue: multiprocessing.Queue, robot_dir: str, config_path: str):
     RetargetingConfig.set_default_urdf_dir(str(robot_dir))
     logger.info(f"Start retargeting with config {config_path}")
     
@@ -126,6 +126,8 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
         bgr = detector.draw_skeleton_on_image(bgr, keypoint_2d, style="default")
         cv2.imshow("realtime_retargeting_demo", bgr)
         if cv2.waitKey(1) & 0xFF == ord("q"):
+            isEnd.set()
+            # time.sleep(2)
             break
 
         if joint_pos is None:
@@ -146,20 +148,26 @@ def start_retargeting(queue: multiprocessing.Queue, robot_dir: str, config_path:
 
         for _ in range(2):
             viewer.render()
+        
+    print("Consumer: Exiting.")
 
 
-def produce_frame(queue: multiprocessing.Queue, camera_path: Optional[str] = None):
+def produce_frame(isEnd, queue: multiprocessing.Queue, camera_path: Optional[str] = None):
     if camera_path is None:
         cap = cv2.VideoCapture(0)
     else:
         cap = cv2.VideoCapture(camera_path)
 
-    while cap.isOpened():
-        success, image = cap.read()
-        time.sleep(1 / 30.0)
-        if not success:
-            continue
-        queue.put(image)
+    while cap.isOpened() and not isEnd.is_set():
+            success, image = cap.read()
+            time.sleep(1 / 15.0)
+            if not success:
+                continue
+            queue.put(image)
+
+    queue.close()
+    cap.release()
+
 
 
 
@@ -181,17 +189,19 @@ def main(
     config_path = get_default_config_path(robot_name, retargeting_type, hand_type)
     robot_dir = Path(__file__).absolute().parent.parent.parent / "assets" / "robots" / "hands"
 
-    queue = multiprocessing.Queue(maxsize=1000)
-    producer_process = multiprocessing.Process(target=produce_frame, args=(queue, camera_path))
-    consumer_process = multiprocessing.Process(target=start_retargeting, args=(queue, str(robot_dir), str(config_path)))
+    isEnd = multiprocessing.Event()
+    queue = multiprocessing.Queue(maxsize=5)
+
+    producer_process = multiprocessing.Process(target=produce_frame, args=(isEnd, queue, camera_path))
+    consumer_process = multiprocessing.Process(target=start_retargeting, args=(isEnd, queue, str(robot_dir), str(config_path)))
 
     producer_process.start()
     consumer_process.start()
 
-    producer_process.join()
     consumer_process.join()
-    time.sleep(5)
 
+
+    print("Producer and Consumer processes have finished.")
     print("done")
 
 
