@@ -32,23 +32,23 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path: str
+    traj_path: str 
     """Path to the trajectory .h5 file to replay"""
-    sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = None
+    sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = "auto"
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
-    obs_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-o"])] = None
+    obs_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-o"])] = "rgb+depth+segmentation" # "rgb+depth+segmentation" | "point_cloud"
     """Target observation mode to record in the trajectory. See
     https://maniskill.readthedocs.io/en/latest/user_guide/concepts/observation.html for a full list of supported observation modes."""
-    target_control_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-c"])] = None
+    target_control_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-c"])] = "pd_joint_pos"
     """Target control mode to convert the demonstration actions to.
     Note that not all control modes can be converted to others successfully and not all robots have easy to convert control modes.
     Currently the Panda robots are the best supported when it comes to control mode conversion. Furthermore control mode conversion is not supported in GPU parallelized environments.
     """
     verbose: bool = False
     """Whether to print verbose information during trajectory replays"""
-    save_traj: bool = False
+    save_traj: bool = True
     """Whether to save trajectories to disk. This will not override the original trajectory file."""
-    save_video: bool = False
+    save_video: bool = True
     """Whether to save videos"""
     max_retry: int = 0
     """Maximum number of times to try and replay a trajectory until the task reaches a success state at the end."""

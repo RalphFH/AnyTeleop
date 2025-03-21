@@ -4,7 +4,11 @@ import h5py
 from mani_skill.utils.logging_utils import logger
 
 from mani_skill.utils.io_utils import dump_json, load_json
+import re
 
+def extract_episode_number(path):
+    match = re.search(r"episode_(\d+)", str(path))
+    return int(match.group(1)) if match else float("inf")
 
 def merge_trajectories(output_path: str, traj_paths: list, recompute_id: bool = True):
     """
@@ -25,7 +29,7 @@ def merge_trajectories(output_path: str, traj_paths: list, recompute_id: bool = 
     Raises:
         AssertionError: If there is a conflict in the episode IDs when recompute_id is False.
     """
-    logger.info(f"Merging {output_path}")
+    logger.info(f"Saving merged result to {output_path}")
 
     merged_h5_file = h5py.File(output_path, "w")
     merged_json_path = output_path.replace(".h5", ".json")
@@ -79,13 +83,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--input-dirs", nargs="+")
     parser.add_argument("-o", "--output-path", type=str)
-    parser.add_argument("-p", "--pattern", type=str, default="trajectory.h5")
+    parser.add_argument("-p", "--pattern", type=str, default="traj.h5")
     args = parser.parse_args()
 
     traj_paths = []
     for input_dir in args.input_dirs:
         input_dir = Path(input_dir)
-        traj_paths.extend(sorted(input_dir.rglob(args.pattern)))
+        traj_paths.extend(sorted(input_dir.rglob(args.pattern),key=extract_episode_number))
 
     output_dir = Path(args.output_path).parent
     output_dir.mkdir(exist_ok=True, parents=True)

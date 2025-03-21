@@ -8,6 +8,10 @@
     ```
     maniskill还需要安装[Vulkan](https://maniskill.readthedocs.io/en/latest/user_guide/getting_started/installation.html#vulkan)
 
+3. 收集数据
+    ```shell
+    pip install open3d urdf_parser_py zarr
+    ```
    
 
 ## Commands for running the example 
@@ -30,6 +34,7 @@ python3 push_cube.py --arm iiwa7 --hand allegro --hand-type right
 ```
 
 ## pipeline
+### 添加新的“arm+hand” set
 以`xarm7_shadow_right`为例：
 1. 添加urdf
     - 在`thirdparty/ManiSkill/mani_skill/assets/robots/xarm7`中，添加`xarm7_shadow_right.urdf`
@@ -54,6 +59,29 @@ python3 push_cube.py --arm iiwa7 --hand allegro --hand-type right
     - 在ArmName，HandName，HAND_NAME_MAP，ARM_NAME_MAP添加对应的arm和hand
     - LINK_BASE为机器人的root_link，如果有新的arm需要添加, LINK_WRIST为机器手的掌根，如有新的hand需要添加
 6. 可选：为了让机器人最开始求解qpos的时候可以顺利求解，我们可以给个warm_start，这里我使用的是agent的keyframe，也就是env.reset后机器人的qpos
+
+### 数据采集
+以“lift_peg_upright”为例
+1. teleoperate采数据
+```shell
+python3 lift_peg_upright.py --arm xarm7 --hand allegro --hand-type right
+```
+- 一次采集一个episode,数据存放在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/origin`内，以“episode_{idx}”区分各episode(程序自动命名)
+- success会自动保存，如果超过env的max_step会退出并且不会保存东西
+
+2. 多个episode融合
+- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`，里面对应的路径记得修改，尤其是`DATA_DIR`
+- 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中
+
+3. replay 获取不同的观察模式
+- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`replay.bash`, 第一次`obs_mode`用`rgb+depth+segmentation`,第二次修改为`pointcloud`,同样记得修改里面的路径
+- 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中，有对应视频
+
+4. h5转为zarr
+- 执行`manitask`中的`tozarr.bash`,里面对应的路径记得修改
+- 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right`中
+
+注：不同环境收集到的数据的命名都是自动的，但本项目即`dex-retargeting`的位置暂时都写成绝对的路径了，因此在bash里记得修改
 
 
 ## Tips

@@ -8,20 +8,76 @@ import pytorch_kinematics as pk
 
 from mani_skill.utils.structs import Link
 from pov.datasets.pov_zarr_dataset import PovZarrDataset
+from utils.hand_link import hand_link
+import viser
+import time
 
- 
-def main():
-    pc_file = "/home/zeyu/ManiSkill/data/my_faucet_data/OpenFaucet-v1/motionplanning/20250317_145922.pointcloud.pd_joint_pos.physx_cpu"
-    rgbd_file = "/home/zeyu/ManiSkill/data/my_faucet_data/OpenFaucet-v1/motionplanning/20250317_145922.rgb+depth+segmentation.pd_joint_pos.physx_cpu"
-    robot_path = "/home/zeyu/ManiSkill/mani_skill/assets/robots/panda/"
-    robot_name = "panda_v3"
-    process_num = 8
+from dataclasses import dataclass
+import tyro
 
-    data = convert_trajectory_to_zarr(rgbd_file, pc_file, robot_path, robot_name, process_num)
+@dataclass
+class Args:
+    pc_file: str
+    rgbd_file: str
+    robot_path: str
+    robot_name: str
+    episode_num: int = 1
+    zarr_save_path: str = "./converted.zarr"
+    visualize: bool = True
 
-    # Usage example
-    zarr_path = "/home/zeyu/ManiSkill/data/my_faucet_data/OpenFaucet-v1/converted_data_wzx.zarr"
-    zarr_dataset = PovZarrDataset(zarr_path)
+def parse_args():
+    return tyro.cli(Args)
+
+def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.ndarray, interval: float = 0.03):
+    """
+    Visualize all point cloud frames using viser in sequence (like animation).
+
+    Args:
+        pointclouds: (n_steps, n_points, 3)
+        colors: (n_steps, n_points, 3)
+        interval: time delay between frames in seconds
+    """
+
+    # normalize color to [0, 1]
+    colors = colors.astype(np.float32) / 255.0
+
+    print("Viser running at http://localhost:8080 — streaming point cloud...")
+
+    for i in range(pointclouds.shape[0]):
+        pc = pointclouds[i]
+        col = colors[i]
+
+        server.add_point_cloud(
+            name="pointcloud",
+            points=pc,
+            colors=col,
+            point_size=0.01,
+            point_shape="circle",
+        )
+
+        time.sleep(interval)
+
+    print("Finished playing all frames.")
+
+
+def main(args: Args):
+    data = convert_trajectory_to_zarr(
+        args.rgbd_file,
+        args.pc_file,
+        args.robot_path,
+        args.robot_name,
+        args.episode_num
+    )
+
+    if args.visualize:
+        server = viser.ViserServer()
+        visualize_all_frames_with_viser(
+            server,
+            data['data/obs/point_clouds'].transpose(0, 2, 1),
+            data['data/obs/point_colors'].transpose(0, 2, 1)
+        )
+
+    zarr_dataset = PovZarrDataset(args.zarr_save_path)
     zarr_dataset.save_data(data)
     zarr_dataset.print_structure()
 
@@ -43,7 +99,7 @@ def qpos_to_transform(qpos, chain, base_to_world) -> tuple[dict, np.ndarray]:
         transforms_list.append(link_matrix)
         transforms_dict[link_name] = link_matrix
 
-    stacked_transforms = np.stack(transforms_list, axis=1)
+    stacked_transforms = np.stack(transforms_list, axis=1) # (n_steps, n_links, 4, 4)
     return transforms_dict, stacked_transforms
 
 def get_robot_pointcloud(robot_path, robot_name) -> dict:
@@ -52,6 +108,7 @@ def get_robot_pointcloud(robot_path, robot_name) -> dict:
     """
 
     urdf_file = robot_path + robot_name + ".urdf"
+    arm, hand, hand_type = robot_name.split("_")
     robot = URDF.from_xml_file(urdf_file)
     
     pointclouds = {}
@@ -61,8 +118,8 @@ def get_robot_pointcloud(robot_path, robot_name) -> dict:
         else:
             continue # virtual link
         mesh = o3d.io.read_triangle_mesh(mesh_file)
-        if link.name in ["panda_hand", "panda_leftfinger", "panda_rightfinger"]:
-            o3d_pc = mesh.sample_points_poisson_disk(200)
+        if link.name in hand_link[hand]:
+            o3d_pc = mesh.sample_points_poisson_disk(50)
         else:
             o3d_pc = mesh.sample_points_poisson_disk(20)
 
@@ -88,6 +145,8 @@ def transform_link_points(points, transforms) -> np.ndarray:
         + translations[:, np.newaxis]                               # translate
     )  # (n_steps, n_points, 3)
 
+
+
     return transformed_points
 
 def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot_name, process_num) -> dict:
@@ -109,7 +168,7 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
 
     # env init
     env_info = traj_metadata['env_info']
-    env_id = env_info['env_id']
+    env_id = env_info['env_id'] 
     env_kwargs = env_info['env_kwargs']
     env = gym.make(env_id, **env_kwargs)
 
@@ -154,8 +213,8 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
             print(f"Processing {traj_key} rgbd")
 
             if traj_idx == 0:
-                agent_name = list(f[traj_key]['env_states']['articulations'].keys())[0]
-                env_states = f[traj_key]['env_states']['articulations'][agent_name][0,:3]
+                agent_name = list(f[traj_key]['env_states']['articulations'].keys())[0] # "xarm7_allegro_right"
+                env_states = f[traj_key]['env_states']['articulations'][agent_name][0,:3] # robot root position
                 base_to_world = np.eye(4)
                 base_to_world[:3,3] = env_states
                 # env_state = common.flatten_state_dict(env_state)
@@ -178,27 +237,31 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
             traj_tcp_pos = obs['extra']['tcp_pose'][:, :3] # only need position
             
             # process actions and target transforms
-            gripper_open_pos = 0.04
-            gripper_close_pos = 0.0
+            # gripper_open_pos = 0.04
+            # gripper_close_pos = 0.0
             # change actions [n_transition, dof-1] to [n_time_step, dof]
-            traj_qpos_actions = []
-            for action in traj_actions:
-                qpos_action = action.copy()
-                # if action = gripper open, remove the column and add two columns of 0.04
-                if qpos_action[-1] == 1:
-                    qpos_action = np.delete(qpos_action, -1)
-                    qpos_action = np.concatenate([qpos_action, np.array([gripper_open_pos, gripper_open_pos])], axis=0)
-                # if action = gripper close, remove the column and add two columns of 0.0
-                elif qpos_action[-1] == -1:
-                    qpos_action = np.delete(qpos_action, -1)
-                    qpos_action = np.concatenate([qpos_action, np.array([gripper_close_pos, gripper_close_pos])], axis=0)
-                traj_qpos_actions.append(qpos_action)
+            traj_qpos_actions = traj_actions.copy()
+
+            # for action in traj_actions:
+            #     qpos_action = action.copy()
+            #     # if action = gripper open, remove the column and add two columns of 0.04
+            #     if qpos_action[-1] == 1:
+            #         qpos_action = np.delete(qpos_action, -1)
+            #         qpos_action = np.concatenate([qpos_action, np.array([gripper_open_pos, gripper_open_pos])], axis=0)
+            #     # if action = gripper close, remove the column and add two columns of 0.0
+            #     elif qpos_action[-1] == -1:
+            #         qpos_action = np.delete(qpos_action, -1)
+            #         qpos_action = np.concatenate([qpos_action, np.array([gripper_close_pos, gripper_close_pos])], axis=0)
+            #     traj_qpos_actions.append(qpos_action)   
             
-            # add the first step qpos to the beginning of the actions
+            """
+            why add the first step qpos to the beginning of the actions? why lack of one step in the actions?
+            """
+            # add the first step qpos to the beginning of the actions  
             traj_qpos_actions = np.concatenate([traj_agent_qpos[0:1], np.array(traj_qpos_actions)], axis=0)
-            
             # get current and target transforms
             current_transform_dict, traj_current_transforms = qpos_to_transform(traj_agent_qpos, chain, base_to_world)
+
             target_transform_dict, traj_target_transforms = qpos_to_transform(traj_qpos_actions, chain, base_to_world)
             
             # start robot pc processing
@@ -229,7 +292,7 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
             traj_depths = []
             traj_robot_masks = []
 
-            camera_names = list(obs['sensor_data'].keys())
+            camera_names = list(obs['sensor_data'].keys()) # 'base_camera'
             mani_data["meta/camera_name_list"] = np.array(camera_names, dtype=str)
 
             # record camera related data
@@ -260,8 +323,8 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
                 traj_depths.append(depth_camera)
 
                 # robot mask of this camera
-                segmentation_camera = obs['sensor_data'][camera_name]['segmentation'][:]
-                robot_mask = np.isin(segmentation_camera[:,:,:,0], list(link_list.keys())).astype(np.uint8)
+                segmentation_camera = obs['sensor_data'][camera_name]['segmentation'][:] # Shape: (n_steps, h, w, 1)
+                robot_mask = np.isin(segmentation_camera[:,:,:,0], list(link_list.keys())).astype(np.uint8)  # Shape: (n_steps, h, w)
                 robot_mask = robot_mask[:,:,:,np.newaxis]
                 traj_robot_masks.append(robot_mask)
 
@@ -336,7 +399,7 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
             traj_point_colors = obs_pointcloud['rgb'][:]  # (n_steps, n_points, 3)
 
             # Create mask for w=1 and z>0.01 and x>-0,35 points
-            mask_wzx = np.logical_and(traj_pc[...,3] == 1,np.logical_and(traj_pc[...,2] > 0.01, traj_pc[...,0] > -0.35))
+            mask_wzx = np.logical_and(traj_pc[...,3] == 1,np.logical_and(traj_pc[...,2] > 0.01, traj_pc[...,0] > -0.7))
              # (n_steps, n_points)
             
             # Process each timestep to maintain proper shapes
@@ -351,16 +414,17 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
              
                 # filter points within 1m
                 distances = np.linalg.norm(step_pc, axis=1)
-                valid_indices = distances < 1.0
+                valid_indices = distances < 2
                 step_pc = step_pc[valid_indices]
                 step_colors = step_colors[valid_indices]
 
+                pc_downsample = 512
                 # downsample to 512 points
-                if step_pc.shape[0] > 512:
+                if step_pc.shape[0] > pc_downsample:
                     o3d_pc = o3d.geometry.PointCloud()
                     o3d_pc.points = o3d.utility.Vector3dVector(step_pc)
                     o3d_pc.colors = o3d.utility.Vector3dVector(step_colors)
-                    o3d_pc = o3d_pc.farthest_point_down_sample(num_samples = 512)
+                    o3d_pc = o3d_pc.farthest_point_down_sample(num_samples = pc_downsample)
                     step_pc = np.asarray(o3d_pc.points)
                     step_colors = np.asarray(o3d_pc.colors)
 
@@ -368,6 +432,7 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
                 processed_colors.append(step_colors)
 
             # Stack back into 3D arrays
+            # print("pc shape",processed_pc[0].shape,processed_pc[1].shape)
             traj_pc = np.stack(processed_pc)  # (n_steps, n_valid_points, 3)
             traj_point_colors = np.stack(processed_colors)  # (n_steps, n_valid_points, 3)
 
@@ -384,4 +449,5 @@ def convert_trajectory_to_zarr(rgbd_trajectory, pc_trajectory, robot_path, robot
 
 
 if __name__ == "__main__":
-    main()
+    args = parse_args()
+    main(args)

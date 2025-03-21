@@ -38,9 +38,12 @@ agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
 qpos = agent.keyframes["rest"].qpos
 
+# for link in robot.get_links():
+#     print(link.get_name())
+
 env.reset()
 
-obs, reward, terminated, truncated, info=env.step(qpos)
+# obs, reward, terminated, truncated, info=env.step(qpos)
 # print("obs",(obs).keys()) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
 # print("terminated",terminated) # torch.Tensor | torch.Size([1]) | tensor([False])
@@ -51,9 +54,9 @@ obs, reward, terminated, truncated, info=env.step(qpos)
 
 while True:
 
-    # env.render()
+    env.render()
     obs, reward, terminated, truncated, info=env.step(qpos)
-    print("truncated",truncated.item())
+    # print("truncated",truncated.item())
     time.sleep(0.1)
 
 # try:

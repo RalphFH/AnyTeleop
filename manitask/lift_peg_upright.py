@@ -24,11 +24,9 @@ from utils.reproject import draw_points_on_tiled_image
 
 from mani_skill.utils.wrappers.record import RecordEpisode
 import os
-    
+import shutil
 
 def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: str, config_path: str, robot_uid:str):
-    data_dir = os.path.expanduser("~/robotics/dex-retargeting/manitask/data")
-    os.makedirs(data_dir, exist_ok=True)
     
     RetargetingConfig.set_default_urdf_dir(str(robot_dir))
     logger.info(f"Start retargeting with config {config_path}")
@@ -55,10 +53,23 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         render_mode="rgb_array", # rgb_array | human | all
     )
 
-    traj_name = time.strftime("%Y%m%d_%H%M%S")
+    data_dir = os.path.expanduser("~/robotics/dex-retargeting/manitask/data/h5")
+    os.makedirs(data_dir, exist_ok=True)
+    episode_root = os.path.join(data_dir, env_id, robot_uid, "origin")
+    os.makedirs(episode_root, exist_ok=True)
+
+    idx = 0
+    while True:
+        episode_dir = os.path.join(episode_root, f"episode_{idx}")
+        if not os.path.exists(episode_dir):
+            os.makedirs(episode_dir)
+            break
+        idx += 1
+
+    traj_name = "traj"
     env = RecordEpisode(
         env,
-        output_dir=os.path.join(data_dir, robot_uid),
+        output_dir=episode_dir,
         trajectory_name=traj_name,
         save_video=True,
         video_fps=30,
@@ -201,13 +212,17 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 print("steps",info["elapsed_steps"])
                 env.flush_trajectory()
                 env.flush_video()
+                env.close()
+                time.sleep(0.5)
             else:
                 print("Episode failed, not saving trajectory or video.")
                 print("steps",info["elapsed_steps"])
                 env.flush_trajectory(save=False)
                 env.flush_video(save=False)
-            env.close()
-            time.sleep(0.5)
+                env.close()
+                time.sleep(0.5)
+                shutil.rmtree(episode_dir, ignore_errors=True)
+        
             break
         
         
