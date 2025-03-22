@@ -42,7 +42,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     retargeting_type = retargeting.optimizer.retargeting_type
     
-    env_id = "LiftPegUpright-v1"
+    env_id = "PlaceSphere-v1"
     # Load robot
     env = gym.make(
         env_id, # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...

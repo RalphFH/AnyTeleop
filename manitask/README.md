@@ -16,21 +16,9 @@
 
 ## Commands for running the example 
 ```shell
-python3 peg_insertion.py --arm xarm7 --hand allegro --hand-type right
 
-python3 push_cube.py --arm franka --hand panda --hand-type right
+python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 
-python3 push_cube.py --arm xarm6 --hand allegro --hand-type right
-
-python3 push_cube.py --arm xarm7 --hand allegro --hand-type right
-python3 push_cube.py --arm xarm7 --hand leap --hand-type right
-python3 push_cube.py --arm xarm7 --hand shadow --hand-type right
-
-python3 push_cube.py --arm ur5e --hand allegro --hand-type right
-python3 push_cube.py --arm ur5e --hand leap --hand-type right
-python3 push_cube.py --arm ur5e --hand shadow --hand-type right
-
-python3 push_cube.py --arm iiwa7 --hand allegro --hand-type right
 ```
 
 ## pipeline
@@ -64,24 +52,24 @@ python3 push_cube.py --arm iiwa7 --hand allegro --hand-type right
 以“lift_peg_upright”为例
 1. teleoperate采数据
 ```shell
-python3 lift_peg_upright.py --arm xarm7 --hand allegro --hand-type right
+python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 ```
 - 一次采集一个episode,数据存放在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/origin`内，以“episode_{idx}”区分各episode(程序自动命名)
 - success会自动保存，如果超过env的max_step会退出并且不会保存东西
 
 2. 多个episode融合
-- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`，里面对应的路径记得修改，尤其是`DATA_DIR`
+- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`，
 - 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中
 
 3. replay 获取不同的观察模式
-- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`replay.bash`, 第一次`obs_mode`用`rgb+depth+segmentation`,第二次修改为`pointcloud`,同样记得修改里面的路径
+- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`replay.bash`, 第一次`obs_mode`用`rgb+depth+segmentation`,第二次修改为`pointcloud`
 - 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中，有对应视频
 
 4. h5转为zarr
-- 执行`manitask`中的`tozarr.bash`,里面对应的路径记得修改
+- 执行`manitask`中的`tozarr.bash`
 - 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right`中
 
-注：不同环境收集到的数据的命名都是自动的，但本项目即`dex-retargeting`的位置暂时都写成绝对的路径了，因此在bash里记得修改
+注：不同环境收集到的数据的命名都是自动的，不过不同env,robot要记得修改几个bash里对应的东西
 
 
 ## Tips

@@ -1,5 +1,5 @@
 #!/bin/bash
-DATA_DIR="/$Home/robotics/dex-retargeting/manitask/data/h5"
+DATA_DIR="../../../../manitask/data/h5"
 ENV_ID="LiftPegUpright-v1"
 ROBOT_ID="xarm7_allegro_right"
 

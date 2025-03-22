@@ -1,7 +1,7 @@
 #!/bin/bash
-DATA_DIR="$HOME/robotics/dex-retargeting/manitask/data/h5"
-ZARR_DIR="$HOME/robotics/dex-retargeting/manitask/data/zarr"
-ROBOT_DIR="$HOME/robotics/dex-retargeting/thirdparty/ManiSkill/mani_skill/assets/robots"
+DATA_DIR="data/h5"
+ZARR_DIR="data/zarr"
+ROBOT_DIR="../thirdparty/ManiSkill/mani_skill/assets/robots"
 
 ENV_ID="LiftPegUpright-v1"
 ARM_ID="xarm7"
