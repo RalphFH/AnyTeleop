@@ -156,7 +156,6 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
         link_pose = None
         points_robot = []
-        print(type(robot))
 
         for i,target_link in enumerate(config.target_link_names):
             link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
@@ -181,6 +180,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             print("done!")
             isEnd.set()
             cv2.destroyAllWindows()
+            time.sleep(0.5)
             break
         
         # End of each frame 
@@ -201,29 +201,38 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
             cap = cv2.VideoCapture(camera_path)
 
     isStart.wait()
-    try:
-        while not(isEnd.is_set()):
-            if camera_path == "rs":
-                frames = pipe.wait_for_frames()
-                color_frame = frames.get_color_frame()
-                if not color_frame:
-                    continue
-                image = np.asanyarray(color_frame.get_data())
-            else:
-                if not cap.isOpened():
-                    break
-                success, image = cap.read()
-                if not success:
-                    continue
-            
-            time.sleep(1 / 20.0)
-            queue.put(image)
-    finally:
-        if camera_path == "rs":
-            pipe.stop()
-        else:
-            cap.release()
 
+    while not(isEnd.is_set()):
+        if camera_path == "rs":
+            frames = pipe.wait_for_frames()
+            color_frame = frames.get_color_frame()
+            if not color_frame:
+                continue
+            image = np.asanyarray(color_frame.get_data())
+        else:
+            if not cap.isOpened():
+                break
+            success, image = cap.read()
+            if not success:
+                continue
+        
+        time.sleep(1 / 20.0)
+        try:
+            queue.put(image, False)
+        except:
+            try:
+                queue.get_nowait()
+                queue.put(image)
+            except:
+                pass
+
+            
+
+    if camera_path == "rs":
+        pipe.stop()
+    else:
+        cap.release()
+    queue.close()
 
 def main(
     arm: ArmName, hand: HandName, hand_type: HandType, camera_path: Optional[str] = None
@@ -252,7 +261,6 @@ def main(
         producer_process.start()
         consumer_process.start()
 
-        producer_process.join()
         consumer_process.join()
         
     except KeyboardInterrupt:

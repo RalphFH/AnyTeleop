@@ -3,9 +3,9 @@ DATA_DIR="data/h5"
 ZARR_DIR="data/zarr"
 ROBOT_DIR="../thirdparty/ManiSkill/mani_skill/assets/robots"
 
-ENV_ID="LiftPegUpright-v1"
-ARM_ID="xarm7"
-ROBOT_ID="xarm7_allegro_right"
+ENV_ID="PlaceSphere-v1" # 1
+ARM_ID="ur5e" # 2
+ROBOT_ID="ur5e_allegro_right" # 3
 
 
 INPUT_DIR="$DATA_DIR/$ENV_ID/$ROBOT_ID/merged"

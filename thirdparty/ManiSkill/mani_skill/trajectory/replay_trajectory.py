@@ -184,7 +184,7 @@ def replay_parallelized_sim(
         original_actions_batch = np.stack(original_actions_batch, axis=1)
         if args.use_first_env_state or args.use_env_states:
             # set the first environment state to the first states in the trajectories given
-            env.base_env.set_state_dict(env_states_batch[0])
+            env.base_env.unwrapped.set_state_dict(env_states_batch[0])
             if args.save_traj:
                 # replace the first saved env state
                 # since we set state earlier and RecordEpisode will save the reset to state.
@@ -218,7 +218,7 @@ def replay_parallelized_sim(
                     # NOTE (stao): due to the high precision nature of some tasks even taking a single step in GPU simulation (in e.g. PushT-v1) can lead
                     # to some non-deterministic behaviors leading to some steps labeled with slightly wrong observations/rewards/success/fail data (1e-4 error).
                     # I unfortunately do not have a good solution for this apart from using the same number of parallel environments to replay demos as the original trajectory collection.
-                    env.base_env.set_state_dict(env_states_batch[t])
+                    env.base_env.unwrapped.set_state_dict(env_states_batch[t])
                 if args.vis:
                     env.base_env.render_human()
                 # if the elapsed_steps mark saved in the trajectory is reached for any env, flush that trajectory buffer
@@ -275,8 +275,8 @@ def replay_cpu_sim(
                     trajectories[traj_id]["env_states"]
                 )
                 if ori_env is not None:
-                    ori_env.set_state_dict(ori_env_states[0])
-                env.base_env.set_state_dict(ori_env_states[0])
+                    ori_env.unwrapped.set_state_dict(ori_env_states[0])
+                env.base_env.unwrapped.set_state_dict(ori_env_states[0])
                 ori_env_states = ori_env_states[1:]
                 if args.save_traj:
                     # replace the first saved env state
@@ -320,7 +320,7 @@ def replay_cpu_sim(
                         pbar.update()
                     _, _, _, truncated, info = env.step(a)
                     if args.use_env_states:
-                        env.base_env.set_state_dict(ori_env_states[t])
+                        env.base_env.unwrapped.set_state_dict(ori_env_states[t])
                     if args.vis:
                         env.base_env.render_human()
 

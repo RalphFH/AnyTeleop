@@ -84,12 +84,23 @@ def main():
     parser.add_argument("-i", "--input-dirs", nargs="+")
     parser.add_argument("-o", "--output-path", type=str)
     parser.add_argument("-p", "--pattern", type=str, default="traj.h5")
+    parser.add_argument("-r", "--episode-range", type=str, default=None)
     args = parser.parse_args()
+
+    #if episode range is provided, only merge episodes in the range
+    episode_range = None
+    if args.episode_range:
+        start, end = map(int, args.episode_range.split('-'))
+        episode_range = range(start, end + 1)
 
     traj_paths = []
     for input_dir in args.input_dirs:
         input_dir = Path(input_dir)
         traj_paths.extend(sorted(input_dir.rglob(args.pattern),key=extract_episode_number))
+
+    # select only episodes in the range if provided
+    if episode_range:
+        traj_paths = [path for path in traj_paths if extract_episode_number(path) in episode_range]
 
     output_dir = Path(args.output_path).parent
     output_dir.mkdir(exist_ok=True, parents=True)

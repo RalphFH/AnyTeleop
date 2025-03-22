@@ -11,6 +11,10 @@ from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import sapien_utils
 
+from mani_skill.utils.structs.actor import Actor
+import torch
+
+
 
 @register_agent()
 class UR5eAllegro(BaseAgent):
@@ -19,26 +23,27 @@ class UR5eAllegro(BaseAgent):
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
-                static_friction=2.0, dynamic_friction=1.5, restitution=0.0
+                static_friction=4.0, dynamic_friction=4.0, restitution=0.0
             )
         ),
-        link=dict(
-            link_0_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_3_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_7_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_11_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            ),
-            link_15_tip=dict(
-                material="front_finger", patch_radius=0.05, min_patch_radius=0.04
-            )
-        ),
+        link={
+                **{
+                    f"link_{i}": {
+                        "material": "front_finger",
+                        "patch_radius": 0.08,
+                        "min_patch_radius": 0.05,
+                    }
+                    for i in range(16)  # 生成 link_0 到 link_15
+                },
+                **{
+                    f"link_{i}_tip": {
+                        "material": "front_finger",
+                        "patch_radius": 0.08,
+                        "min_patch_radius": 0.05,
+                    }
+                    for i in [3, 7, 11, 15]  # 额外添加 link_3_tip, link_7_tip, link_15_tip
+                }
+            },
     )
 
     keyframes = dict(
@@ -46,10 +51,10 @@ class UR5eAllegro(BaseAgent):
             qpos=np.array(
                 [
                     0.0,
-                    -3*np.pi/5,
-                    4*np.pi/5,
-                    -2*np.pi/5,
-                    np.pi/2,
+                    -85*np.pi/180,
+                    146*np.pi/180,
+                    -97*np.pi/180,
+                    90*np.pi/180,
                     0.0,
                     0.0,
                     0.0, 
@@ -104,10 +109,10 @@ class UR5eAllegro(BaseAgent):
           'joint_11', 
           'joint_15' 
         ]
-        self.hand_stiffness = 1e3
+        self.hand_stiffness = 2e3
         self.hand_damping = 1e2
-        self.hand_friction = 1
-        self.hand_force_limit = 50
+        self.hand_friction = 3.0
+        self.hand_force_limit = 20
 
         self.ee_link_name = "palm"
 
@@ -176,30 +181,60 @@ class UR5eAllegro(BaseAgent):
         return deepcopy_dict(controller_configs)
 
     def _after_init(self):
-        # hand_front_link_names = [
-        #     "thumb_L2",
-        #     "index_L2",
-        #     "middle_L2",
-        #     "ring_L2",
-        #     "pinky_L2",
-        # ]
-        # self.hand_front_links = sapien_utils.get_objs_by_names(
-        #     self.robot.get_links(), hand_front_link_names
-        # )
+        self.finger1_link = sapien_utils.get_obj_by_name(
+            self.robot.get_links(), "link_15"
+        )
 
-        # finger_tip_link_names = [
-        #     "thumb_tip",
-        #     "index_tip",
-        #     "middle_tip",
-        #     "ring_tip",
-        #     "pinky_tip",
-        # ]
-        # self.finger_tip_links = sapien_utils.get_objs_by_names(
-        #     self.robot.get_links(), finger_tip_link_names
-        # )
+        self.finger2_link = sapien_utils.get_obj_by_name(
+            self.robot.get_links(), "link_3"
+        )
+
+        self.finger1_link_tip = sapien_utils.get_obj_by_name(
+            self.robot.get_links(), "link_15_tip"
+        )
+
+        self.finger2_link_tip = sapien_utils.get_obj_by_name(
+            self.robot.get_links(), "link_3_tip"
+        )
+
+        self.palm = sapien_utils.get_obj_by_name(
+            self.robot.get_links(), "palm"
+        )
 
         self.tcp = sapien_utils.get_obj_by_name(
             self.robot.get_links(), self.ee_link_name
         )
 
         self.queries: Dict[str, Tuple[physx.PhysxGpuContactQuery, Tuple[int]]] = dict()
+
+    def is_grasping(self, object: Actor, min_force=0.5, min_tip_distance=0.15, max_contact_force=5.0):
+        """Check if the robot is grasping an object based on tip distance and contact forces.
+
+        Args:
+            object (Actor): The object to check if the robot is grasping.
+            min_force (float, optional): Minimum force before the robot is considered to be grasping the object. Defaults to 0.5 N.
+            max_tip_distance (float, optional): Maximum distance between finger tips for a valid grasp. Defaults to 0.05 meters.
+            max_contact_force (float, optional): Maximum total force between the links and the palm to consider a valid grasp. Defaults to 5.0 N.
+        """
+        
+        l_contact_forces = self.scene.get_pairwise_contact_forces(self.finger1_link, object)
+        r_contact_forces = self.scene.get_pairwise_contact_forces(self.finger2_link, object)
+        
+        # distance between finger tips
+        l_finger_pos = self.finger1_link_tip.pose.p
+        r_finger_pos = self.finger2_link_tip.pose.p
+        tip_distance = torch.linalg.norm(l_finger_pos - r_finger_pos)
+
+        # total contact forces between the links and the object
+        link_forces = 0
+        for link in [self.finger1_link, self.finger2_link, self.finger1_link_tip, self.finger2_link_tip]:
+            link_contact_forces = self.scene.get_pairwise_contact_forces(link, object)
+            link_forces += torch.sum(torch.linalg.norm(link_contact_forces, axis=1))
+
+
+        return torch.logical_and((tip_distance <= min_tip_distance), (link_forces >= max_contact_force))
+
+    
+    def is_static(self, threshold: float = 0.2):
+        qvel = self.robot.get_qvel()[..., :7]
+        return torch.max(torch.abs(qvel), 1)[0] <= (threshold)

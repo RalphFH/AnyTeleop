@@ -21,7 +21,7 @@ from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.quater import product
 
 
-@register_env("PickCube-v1", max_episode_steps=50)
+@register_env("PickCube-v1", max_episode_steps=200)
 class PickCubeEnv(BaseEnv):
     """
     **Task Description:**

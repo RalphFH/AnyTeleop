@@ -60,7 +60,7 @@ class LiftPegUprightEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        pose = look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
+        pose = look_at(eye=[0.3, 0, 0.65], target=[-0.15, 0, 0.3])
         return [CameraConfig("base_camera", pose, 128, 128, np.pi / 2, 0.01, 100)]
 
     @property
@@ -186,8 +186,9 @@ class LiftPegUprightEnv(BaseEnv):
             torch.abs(torch.abs(euler[:, 2]) - np.pi / 2) < 0.08
         )  # 0.08 radians of difference permitted
         close_to_table = torch.abs(self.peg.pose.p[:, 2] - self.peg_half_length) < 0.005
+        is_loosen = not self.agent.is_grasping(self.peg)
         return {
-            "success": is_peg_upright & close_to_table,
+            "success": is_peg_upright & close_to_table & is_loosen,
         }
 
     def _get_obs_extra(self, info: Dict):
@@ -224,6 +225,13 @@ class LiftPegUprightEnv(BaseEnv):
         reaching_rew = 1 - torch.tanh(5 * to_grip_dist)
         # reaching reward granted if gripping block
         reaching_rew[self.agent.is_grasping(self.peg)] = 1
+
+        # if self.agent.is_grasping(self.peg):
+        #     # weight reaching reward more
+        #     print("grasping")
+        # else:
+        #     print("loosen")
+        
         # weight reaching reward less
         reaching_rew = reaching_rew / 5
         reward += reaching_rew

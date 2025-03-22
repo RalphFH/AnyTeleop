@@ -40,6 +40,6 @@ export LD_LIBRARY_PATH=$HOME/anaconda3/envs/retarget/lib/python3.9/site-packages
 [Tutorial on retargeting from human hand to the maniskill robot to complete some tasks](manitask/README.md)
 
 
+## Declaration
 
-
-
+Developed based on [dex-retargeting project](https://github.com/yzqin/dex-hand-teleop) and [wilor-mini project](https://github.com/warmshao/WiLoR-mini).

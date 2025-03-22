@@ -26,7 +26,7 @@ from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from mani_skill.utils.quater import product
 
 
-@register_env("PlaceSphere-v1", max_episode_steps=50)
+@register_env("PlaceSphere-v1", max_episode_steps=250)
 class PlaceSphereEnv(BaseEnv):
     """
     **Task Description:**
@@ -86,14 +86,14 @@ class PlaceSphereEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        pose = sapien_utils.look_at(eye=[0.3, 0, 0.2], target=[-0.1, 0, 0])
+        pose = sapien_utils.look_at(eye=[0.25, 0.0, 0.65], target=[-0.1, 0, 0.15])
         return [
             CameraConfig(
                 "base_camera",
                 pose=pose,
                 width=128,
                 height=128,
-                fov=np.pi / 2,
+                fov= 100*np.pi / 180,
                 near=0.01,
                 far=100,
             )
@@ -252,7 +252,7 @@ class PlaceSphereEnv(BaseEnv):
             xyz[..., 0] = (torch.rand((b, 1)) * 0.05 - 0.1)[
                 ..., 0
             ]  # first 1/4 zone of x ([-0.1, -0.05])
-            xyz[..., 1] = (torch.rand((b, 1)) * 0.2 - 0.1)[
+            xyz[..., 1] = (torch.rand((b, 1)) * 0.05 - 0.025)[
                 ..., 0
             ]  # spanning all possible ys
             xyz[..., 2] = self.radius  # on the table
@@ -263,7 +263,7 @@ class PlaceSphereEnv(BaseEnv):
             # init the bin in the last 1/2 zone along the x-axis (so that it doesn't collide the sphere)
             pos = torch.zeros((b, 3))
             pos[:, 0] = (
-                torch.rand((b, 1))[..., 0] * 0.1
+                torch.rand((b, 1))[..., 0] * 0.1 + 0.05
             )  # the last 1/2 zone of x ([0, 0.1])
             pos[:, 1] = (
                 torch.rand((b, 1))[..., 0] * 0.2 - 0.1

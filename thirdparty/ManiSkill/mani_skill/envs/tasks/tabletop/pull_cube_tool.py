@@ -21,7 +21,7 @@ from mani_skill.utils.structs.types import GPUMemoryConfig, SimConfig
 from mani_skill.utils.quater import product
 
 
-@register_env("PullCubeTool-v1", max_episode_steps=100)
+@register_env("PullCubeTool-v1", max_episode_steps=300)
 class PullCubeToolEnv(BaseEnv):
     """
     **Task Description**

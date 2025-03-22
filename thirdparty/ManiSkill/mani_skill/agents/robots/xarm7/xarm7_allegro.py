@@ -10,6 +10,7 @@ from mani_skill.agents.base_agent import BaseAgent, Keyframe
 from mani_skill.agents.controllers import *
 from mani_skill.agents.registration import register_agent
 from mani_skill.utils import sapien_utils
+
 from mani_skill.utils.structs.actor import Actor
 import torch
 
