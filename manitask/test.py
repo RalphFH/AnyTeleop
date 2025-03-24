@@ -18,9 +18,9 @@ import time
 
 
 env = gym.make(
-    "PlaceSphere-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    "LiftPegUpright-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
     num_envs=1,
-    robot_uids="xarm7_allegro_right", #panda_wristcam
+    robot_uids="xarm6_shadow_right", #panda_wristcam
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
@@ -38,8 +38,8 @@ agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
 qpos = agent.keyframes["rest"].qpos
 
-# for link in robot.get_links():
-#     print(link.get_name())
+for link in robot.get_links():
+    print(link.get_name())
 
 env.reset()
 

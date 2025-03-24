@@ -9,4 +9,6 @@ from .mobile_manipulation import *
 from .quadruped import *
 from .rotate_cube import RotateCubeEnv
 from .tabletop import *
+from .my_faucet import *
+from .my_laptop import *
 

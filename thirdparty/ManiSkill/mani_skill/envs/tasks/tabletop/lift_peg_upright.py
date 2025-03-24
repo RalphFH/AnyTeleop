@@ -7,8 +7,9 @@ import torch.random
 from transforms3d.euler import euler2quat
 
 from mani_skill.agents.robots import Fetch, Panda
-from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import XArm6Shadow, XArm6Allegro
 from mani_skill.agents.robots import IIwa7Allegro
 
 
@@ -25,7 +26,7 @@ from mani_skill.utils.structs.types import Array
 from mani_skill.utils.quater import product
 
 
-@register_env("LiftPegUpright-v1", max_episode_steps=200)
+@register_env("LiftPegUpright-v1", max_episode_steps=250)
 class LiftPegUprightEnv(BaseEnv):
     """
     **Task Description:**
@@ -41,12 +42,12 @@ class LiftPegUprightEnv(BaseEnv):
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/LiftPegUpright-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right",
+                        "xarm6_allegro_right", "xarm6_shadow_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"]
     agent: Union[Panda, Fetch,
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
-                 XArm6Allegro,
+                 XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
                  IIwa7Allegro]
 
