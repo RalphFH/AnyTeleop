@@ -18,7 +18,7 @@ import time
 
 
 env = gym.make(
-    "LiftPegUpright-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    "OpenFaucet-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
     num_envs=1,
     robot_uids="xarm6_shadow_right", #panda_wristcam
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
@@ -38,11 +38,10 @@ agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
 qpos = agent.keyframes["rest"].qpos
 
-for link in robot.get_links():
-    print(link.get_name())
+# for link in robot.get_links():
+#     print(link.get_name())
 
 env.reset()
-
 # obs, reward, terminated, truncated, info=env.step(qpos)
 # print("obs",(obs).keys()) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
@@ -55,7 +54,7 @@ env.reset()
 while True:
 
     env.render()
-    obs, reward, terminated, truncated, info=env.step(qpos)
+    # obs, reward, terminated, truncated, info=env.step(qpos)
     # print("truncated",truncated.item())
     time.sleep(0.1)
 

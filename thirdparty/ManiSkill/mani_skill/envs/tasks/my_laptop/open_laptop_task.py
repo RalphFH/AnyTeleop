@@ -8,7 +8,8 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 from mani_skill.agents.robots import Fetch, Panda
-from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap
+from mani_skill.agents.robots import XArm6Allegro, XArm6Shadow 
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
 from mani_skill.agents.robots import IIwa7Allegro
 
@@ -23,22 +24,24 @@ from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 import time
 import transforms3d as tf3d
 
+from mani_skill.utils.quater import product
+
 
 current_dir = os.path.dirname(__file__)
-@register_env("OpenLaptop-v1", max_episode_steps=500)
+@register_env("OpenLaptop-v1", max_episode_steps=200)
 
 class OpenLaptopEnv(BaseEnv):
    
     SUPPORTED_ROBOTS = ["panda", "fetch",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right",
+                        "xarm6_allegro_right", "xarm6_shadow_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"] 
 
     # Specify some supported robot types
     agent: Union[Panda, Fetch,
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
-                 XArm6Allegro,
+                 XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
                  IIwa7Allegro]        
 
@@ -81,11 +84,85 @@ class OpenLaptopEnv(BaseEnv):
 
     @property
     def _default_human_render_camera_configs(self):
-        # registers a more high-definition (512x512) camera used just for rendering when render_mode="rgb_array" or calling env.render_rgb_array()
-        pose = sapien_utils.look_at([0.7, 0.7, 0.7], [0.0, 0.0, 0.35])
-        return CameraConfig(
-            "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
-        )
+
+        top_down = sapien_utils.look_at([-0.18, 0.0, 0.4], [-0.06, 0.0, 0])
+        left_side = sapien_utils.look_at([-0.05, 0.27, 0.15], [-0.05, 0.1, 0.15]) 
+
+        cam_config = []
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
+
+
+
+        if "xarm7" in self.robot_uids:
+            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
+
+            cam_config.append(CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="link7",
+                            )
+            )     
+
+        if "panda" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=80*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="camera_link",
+                            ))                           
+        elif "allegro" in self.robot_uids:
+            q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
+            q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
+            q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
+            q = product(q3,product(q2,q1)) 
+            cam_config.append( CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.018, 0.2 , -0.02], q=q1),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link_hand",
+                            ))
+        elif "shadow" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ))
+        elif "leap" in self.robot_uids:
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_hand",
+                            ))
+            
+
+
+
+        cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))
+
+        return cam_config
     #auto called in env.make() to load the agent
     def _load_agent(self, options: dict): # type: ignore
         # set a reasonable initial pose for the agent that doesn't intersect other objects
@@ -112,7 +189,7 @@ class OpenLaptopEnv(BaseEnv):
         builder = articulation_builders[0]
         
     
-        base_pos = np.array([0, 0.1, 0.1])
+        base_pos = np.array([0, 0.0, 0.1])
         random_offset_xy = np.random.uniform(-0.1, 0.1, size=2)
         new_pos = np.array([base_pos[0] + random_offset_xy[0],
                             base_pos[1] + random_offset_xy[1],
@@ -143,7 +220,7 @@ class OpenLaptopEnv(BaseEnv):
             self.laptop_articulation.set_qpos(laptopqpos)
 
             # a little randomization for the laptop initial position
-            base_pos = np.array([0, 0.15, 0.1])
+            base_pos = np.array([0.1, 0.05, 0.1])
             random_offset_x = np.random.uniform(-0.075, 0.05, size=2)
             random_offset_y = np.random.uniform(-0.35, 0.35, size=2)                           #set according to a lot of experiments.
             new_pos = np.array([base_pos[0] + random_offset_x[0],
@@ -154,12 +231,13 @@ class OpenLaptopEnv(BaseEnv):
             
             
             # panda initial pose
-            if self.robot_init_qpos_noise > 0:
-                noise = np.random.uniform(
-                    -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
-                )
-                new_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0]) + noise     #set accroding to a lot of experiments.
-                self.agent.robot.set_qpos(new_qpos)
+            if self.robot_uids == "panda":
+                if self.robot_init_qpos_noise > 0:
+                    noise = np.random.uniform(
+                        -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
+                    )
+                    new_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0]) + noise     #set accroding to a lot of experiments.
+                    self.agent.robot.set_qpos(new_qpos)
             
             
     def evaluate(self):
