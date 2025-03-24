@@ -7,8 +7,9 @@ import torch.random
 from transforms3d.euler import euler2quat
 
 from mani_skill.agents.robots import Fetch, Panda
-from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import XArm6Shadow, XArm6Allegro
 from mani_skill.agents.robots import IIwa7Allegro
 
 
@@ -25,7 +26,7 @@ from mani_skill.utils.structs.types import Array
 from mani_skill.utils.quater import product
 
 
-@register_env("LiftPegUpright-v1", max_episode_steps=200)
+@register_env("LiftPegUpright-v1", max_episode_steps=250)
 class LiftPegUprightEnv(BaseEnv):
     """
     **Task Description:**
@@ -41,12 +42,12 @@ class LiftPegUprightEnv(BaseEnv):
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/LiftPegUpright-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right",
+                        "xarm6_allegro_right", "xarm6_shadow_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"]
     agent: Union[Panda, Fetch,
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
-                 XArm6Allegro,
+                 XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
                  IIwa7Allegro]
 
@@ -69,11 +70,11 @@ class LiftPegUprightEnv(BaseEnv):
         right_side = look_at([-0.2, -0.4, 0.18], [-0.2, 0.3, 0.18]) 
 
         cam_config = []
-        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
+        # cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
 
 
 
-        if "xarm7" in self.robot_uids:
+        if "xarm7" in self.robot_uids and (not "shadow" in self.robot_uids):
             q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
 
             cam_config.append(CameraConfig(
@@ -98,7 +99,7 @@ class LiftPegUprightEnv(BaseEnv):
                                 near=0.01,
                                 far=100,
                                 entity_uid="camera_link",
-                            ))                           
+                            ))    
         elif "allegro" in self.robot_uids:
             q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
             q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
@@ -115,16 +116,32 @@ class LiftPegUprightEnv(BaseEnv):
                                 entity_uid="base_link_hand",
                             ))
         elif "shadow" in self.robot_uids:
+            q1 = [0.7044, 0.06166, 0.06166, -0.7044]
+            q2 = [np.cos(-30*np.pi/180), np.sin(-30*np.pi/180), 0, 0]
+            q = product(q2,q1)
             cam_config.append(CameraConfig(
-                                uid="hand_cam",
-                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=q),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="forearm",
+                            ))
+            q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
+            q4 = [np.cos(30*np.pi/180), np.sin(30*np.pi/180), 0, 0]
+            q = product(q4,q3)
+            cam_config.append(CameraConfig(  
+                                uid="hand_cam", 
+                                pose=sapien.Pose(p=[0.18, 0.05 , 0.1], q=q),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
                                 entity_uid="palm",
-                            ))
+                            ))                     
         elif "leap" in self.robot_uids:
             cam_config.append(CameraConfig(
                                 uid="hand_cam",

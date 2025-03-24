@@ -218,8 +218,8 @@
     <axis xyz="0 0 0"/>
   </joint>
 
-  <!-- ============================================================================= -->
-  <!-- FINGERS -->
+<!-- ============================================================================= -->
+  <!-- HAND -->
   <!-- RIGHT HAND due to which finger is number 0 -->
   <!-- for LEFT HAND switch the sign of the **offset_origin_y** and **finger_angle_r** parameters-->
   <link name="base_link_hand">

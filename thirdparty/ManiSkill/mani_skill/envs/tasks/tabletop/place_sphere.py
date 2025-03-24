@@ -152,16 +152,32 @@ class PlaceSphereEnv(BaseEnv):
                                 entity_uid="base_link_hand",
                             ))
         elif "shadow" in self.robot_uids:
+            q1 = [0.7044, 0.06166, 0.06166, -0.7044]
+            q2 = [np.cos(-30*np.pi/180), np.sin(-30*np.pi/180), 0, 0]
+            q = product(q2,q1)
             cam_config.append(CameraConfig(
-                                uid="hand_cam",
-                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=[0.7044, 0.06166, 0.06166, -0.7044]),
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=q),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="forearm",
+                            ))
+            q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
+            q4 = [np.cos(30*np.pi/180), np.sin(30*np.pi/180), 0, 0]
+            q = product(q4,q3)
+            cam_config.append(CameraConfig(  
+                                uid="hand_cam", 
+                                pose=sapien.Pose(p=[0.18, 0.05 , 0.1], q=q),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
                                 entity_uid="palm",
-                            ))
+                            ))  
         elif "leap" in self.robot_uids:
             cam_config.append(CameraConfig(
                                 uid="hand_cam",

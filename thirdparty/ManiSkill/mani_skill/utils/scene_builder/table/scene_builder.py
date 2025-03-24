@@ -263,7 +263,10 @@ class TableSceneBuilder(SceneBuilder):
             if "panda" in self.env.robot_uids:              
                 qpos[...,-2:] = 0.04
             self.env.agent.reset(qpos)
+            x,y,z = -0.615, 0, 0
+            if "shadow" in self.env.robot_uids:
+                x = -0.675
             if "ur5e" in self.env.robot_uids:
-                self.env.agent.robot.set_pose(sapien.Pose([-0.615, -0.133, 0]))
-            else:
-                self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+                y = -0.133 
+
+            self.env.agent.robot.set_pose(sapien.Pose([x, y, z]))

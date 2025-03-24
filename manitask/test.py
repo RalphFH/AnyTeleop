@@ -18,9 +18,9 @@ import time
 
 
 env = gym.make(
-    "PlaceSphere-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    "LiftPegUpright-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
     num_envs=1,
-    robot_uids="xarm7_allegro_right", #panda_wristcam
+    robot_uids="xarm6_shadow_right", #panda_wristcam
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
@@ -42,7 +42,6 @@ qpos = agent.keyframes["rest"].qpos
 #     print(link.get_name())
 
 env.reset()
-
 # obs, reward, terminated, truncated, info=env.step(qpos)
 # print("obs",(obs).keys()) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
@@ -55,7 +54,7 @@ env.reset()
 while True:
 
     env.render()
-    obs, reward, terminated, truncated, info=env.step(qpos)
+    # obs, reward, terminated, truncated, info=env.step(qpos)
     # print("truncated",truncated.item())
     time.sleep(0.1)
 
