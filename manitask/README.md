@@ -49,7 +49,7 @@ python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 6. 可选：为了让机器人最开始求解qpos的时候可以顺利求解，我们可以给个warm_start，这里我使用的是agent的keyframe，也就是env.reset后机器人的qpos
 
 ### 数据采集
-以“lift_peg_upright”为例
+以“lift_peg_upright”为例, 不同环境在`teleoperate.py`里修改`env_id`即可
 1. teleoperate采数据
 ```shell
 python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
@@ -58,7 +58,7 @@ python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 - success会自动保存，如果超过env的max_step会退出并且不会保存东西
 
 2. 多个episode融合
-- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`，
+- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`(bash里可指定融合的序号数 0-9， 10-19之类的， 不过目前这个命名法，如果同一个环境+同一个机器人有旧的数据会被覆盖掉, 后面的也是)
 - 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中
 
 3. replay 获取不同的观察模式
@@ -66,10 +66,12 @@ python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 - 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中，有对应视频
 
 4. h5转为zarr
-- 执行`manitask`中的`tozarr.bash`
+- 执行`manitask`中的`tozarr.bash`，bash中的--episode-num参数对应转换的episode数量
 - 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right`中
 
 注：不同环境收集到的数据的命名都是自动的，不过不同env,robot要记得修改几个bash里对应的东西
+
+![文件命名架构](docs/file_structure.png)
 
 
 ## Tips

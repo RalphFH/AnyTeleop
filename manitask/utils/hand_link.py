@@ -23,5 +23,14 @@ hand_link = {"allegro":[
     "link_7_tip",
     "link_11_tip",
     "link_15_tip",
-]
+],
+"shadow":[
+    "palm",
+    'thtip', 'fftip', 'mftip', 'rftip', 'lftip',
+    'thbase', 'thhub',
+    'thproximal', 'ffproximal', 'mfproximal', 'rfproximal', 'lfproximal',
+    'thmiddle', 'ffmiddle', 'mfmiddle', 'rfmiddle', 'lfmiddle',
+    'thdistal', 'ffdistal', 'mfdistal', 'rfdistal', 
+    'fftip', 'mftip', 'rftip', 'lfdistal','lftip'   
+],
 }
