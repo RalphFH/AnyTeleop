@@ -116,10 +116,11 @@ class OpenLaptopMulEnv(BaseEnv):
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
         
-        base_pos = np.array([0, 0.15, 0.1])
-        random_offset_xy = np.random.uniform(-0.05, 0.05, size=2)
-        new_pos = np.array([base_pos[0] + random_offset_xy[0],
-                            base_pos[1] + random_offset_xy[1],
+        base_pos = np.array([0, 0.35, 0.1])
+        random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
+        random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
+        new_pos = np.array([base_pos[0] + random_offset_x[0],
+                            base_pos[1] + random_offset_y[0],
                             base_pos[2]])
         builder.initial_pose = sapien.Pose(p=new_pos.tolist())
         
@@ -150,12 +151,12 @@ class OpenLaptopMulEnv(BaseEnv):
             self.laptop_articulation.set_qpos(qpos_tensor)
             
             #base pose and random offset for the laptop are determined according to experiment, do not change
-            base_pos = np.array([0, 0.15, 0.1])
-            random_offset_x = np.random.uniform(-0.075, 0.05, size=2)
-            random_offset_y = np.random.uniform(-0.35, 0.35, size=2)               
+            base_pos = np.array([0, 0.35, 0.1])
+            random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
+            random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
             new_pos = np.array([base_pos[0] + random_offset_x[0],
                                 base_pos[1] + random_offset_y[0],
-                                base_pos[2]])  
+                                base_pos[2]])
             self.laptop_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
               
                 

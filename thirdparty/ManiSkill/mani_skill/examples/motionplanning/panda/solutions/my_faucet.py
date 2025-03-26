@@ -15,26 +15,8 @@ from mani_skill.examples.motionplanning.panda.utils import (
     compute_grasp_info_of_faucet,
 )
 
-def main():
-   
-    env = gym.make(
-        "OpenFaucet-v1",
-        obs_mode="none",
-        control_mode="pd_joint_pos",
-        render_mode="rgb_array",  # or "human",
-        reward_mode="sparse",
-    )
 
-    
-    for seed in tqdm(range(10)):  
-        res = solve(env, seed=seed, debug=False, vis=True)
-        env.reset()
-       # print("[INFO] Last step result:", res[-1])
-
-    env.close()
-
-
-def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False):
+def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False, visualize_target_grasp_pose=True, print_env_info=False):
     
     # 1) reset
     env.reset(seed=seed)
@@ -50,23 +32,18 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False):
         debug=debug,
         vis=vis,
         base_pose=env_unwrapped.agent.robot.pose,
-        visualize_target_grasp_pose=True,
-        print_env_info=True,
+        visualize_target_grasp_pose=visualize_target_grasp_pose,
+        print_env_info=print_env_info,
         joint_vel_limits=1,
         joint_acc_limits=1,
     )
-
-
     faucet_pose = env_unwrapped.faucet_articulation.get_pose()
     approaching = np.array([0, 0, -1])
 
     # 3) compute grasp pose
     FINGER_LENGTH = 0.02
-    
     grasp_info = compute_grasp_info_of_faucet(faucet_pose, approaching, FINGER_LENGTH)
-    
     closing, center = grasp_info["closing"], grasp_info["center"]
-   
     grasp_pose = env.unwrapped.agent.build_grasp_pose(grasp_info["approaching"], closing, center)
     rot_pose1 = sapien.Pose(
         p=[0, 0, 0],
@@ -86,7 +63,7 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False):
     full_open_pose = sapien.Pose(
     p = np.array(grasp_pose.p) + offset2,
     q = grasp_pose.q  
-)
+    )
     full_open_pose=full_open_pose * rot_pose1
     res = planner.move_to_pose_with_screw(full_open_pose,refine_steps=20)
     
@@ -97,8 +74,6 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False):
     # --- Release & Retreat ---
     retreat_pose = full_open_pose * sapien.Pose([-0.02, -0.02, 0])
     res =planner.move_to_pose_with_screw(retreat_pose,refine_steps=10)
-  
-    print(f"水龙头开启的角度是：{env_unwrapped.faucet_articulation.get_qpos()}")
     env_unwrapped.has_been_successful=False
     if res == -1:
         return res
@@ -106,5 +81,3 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False):
     planner.close()
     return res
 
-if __name__ == "__main__":
-    main()

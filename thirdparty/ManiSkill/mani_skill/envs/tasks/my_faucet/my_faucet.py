@@ -58,12 +58,13 @@ class OpenFaucetEnv(BaseEnv):
     
     # set some commonly used values
     goal_range = 2   # degrees
-    faucet_target_angle = 1.16     # arc
+        
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, reward_mode="sparse" ,sim_backend = "physx_cuda",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.has_been_successful = False
+        self.faucet_target_angle=1.16   # arc
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,sim_backend=sim_backend, **kwargs)    #
 
     # Specify default simulation/gpu memory configurations to override any default values
@@ -201,13 +202,12 @@ class OpenFaucetEnv(BaseEnv):
         loader.fix_root_link = True
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
+        base_pos = np.array([-0.05, 0.1, 0.2])
+        random_offset_x = np.random.uniform(-0.15, 0.15, size=2)
+        random_offset_y = np.random.uniform(-0.3, 0.3, size=2)
         
-    
-        base_pos = np.array([0, 0.2, 0.2])
-        random_offset_xy = np.random.uniform(-0.1, 0.1, size=2)
-        
-        new_pos = np.array([base_pos[0] + random_offset_xy[0],
-                            base_pos[1] + random_offset_xy[1],
+        new_pos = np.array([base_pos[0] + random_offset_x[0],
+                            base_pos[1] + random_offset_y[0],
                             base_pos[2]])
         builder.initial_pose = sapien.Pose(p=new_pos.tolist())
         
@@ -240,20 +240,14 @@ class OpenFaucetEnv(BaseEnv):
             self.faucet_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
                 
             if self.robot_uids == "panda":    
-                # panda initial pose
-                if self.robot_init_qpos_noise > 0:
-                    noise = np.random.uniform(
-                        -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
-                    )
-                    new_qpos = np.array([0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.1,0,0]) + noise  
-                    self.agent.robot.set_qpos(new_qpos)
-                # panda initial pose
+                 # panda initial pose
                 if self.robot_init_qpos_noise > 0:
                     noise = np.random.uniform(
                         -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
                     )
                     new_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0]) + noise  
                     self.agent.robot.set_qpos(new_qpos)
+
 
     
     def evaluate(self):

@@ -67,7 +67,7 @@ class OpenLaptopEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        # registers one 128x128 camera looking at the robot, cube, and target
+        # registers one 224x224 camera looking at the robot, cube, and target
         # a smaller sized camera will be lower quality, but render faster
         pose = sapien_utils.look_at(eye=[0.3, 0, 0.6], target=[-0.1, 0, 0.1])
         return [
@@ -205,10 +205,11 @@ class OpenLaptopEnv(BaseEnv):
         builder = articulation_builders[0]
         
     
-        base_pos = np.array([0, 0.15, 0.1])
-        random_offset_xy = np.random.uniform(-0.05, 0.05, size=2)
-        new_pos = np.array([base_pos[0] + random_offset_xy[0],
-                            base_pos[1] + random_offset_xy[1],
+        base_pos = np.array([0, 0.35, 0.1])
+        random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
+        random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
+        new_pos = np.array([base_pos[0] + random_offset_x[0],
+                            base_pos[1] + random_offset_y[0],
                             base_pos[2]])
         builder.initial_pose = sapien.Pose(p=new_pos.tolist())
         
@@ -236,11 +237,11 @@ class OpenLaptopEnv(BaseEnv):
             self.laptop_articulation.set_qpos(laptopqpos)
 
              #set according to a lot of experiments.
-            base_pos = np.array([-0.075, 0.25, 0.1])
-            random_offset_x = np.random.uniform(-0.025, 0.025, size=2)
-            random_offset_y = np.random.uniform(-0.35, 0.35, size=2) 
+            base_pos = np.array([0, 0.35, 0.1])
+            random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
+            random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
             new_pos = np.array([base_pos[0] + random_offset_x[0],
-                                base_pos[1] + random_offset_y[1],
+                                base_pos[1] + random_offset_y[0],
                                 base_pos[2]])
             self.laptop_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
 
