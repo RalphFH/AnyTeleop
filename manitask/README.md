@@ -1,5 +1,5 @@
 ## Setup
-1. 在安装的`wilor_mini`包中，将`site-packages/wilor_mini/pipelines/wilor_hand_pose3d_estimation_pipeline.py` 中的scaled_focal_length修改自身摄像头的fx
+1. 在安装的`wilor_mini`包中，将`site-packages/wilor_mini/pipelines/wilor_hand_pose3d_estimation_pipeline.py` 中的scaled_focal_length修改自身摄像头的fx,如果不知道摄像头的焦距，可以使用manitask/camera_clib中的文件标定出摄像头的焦距。
 
 2. 安装ManiSkill
     ```shell
