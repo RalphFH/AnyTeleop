@@ -162,18 +162,20 @@ class OpenFaucetEnv(BaseEnv):
                                 entity_uid="palm",
                             ))  
         elif "leap" in self.robot_uids:
+            q1 = [np.cos(45*np.pi/180), 0 , np.sin(45*np.pi/180), 0]
+            q2 = [np.cos(-45*np.pi/180), np.sin(-45*np.pi/180), 0 , 0]
+            q3 = [np.cos(-40*np.pi/180), 0 , np.sin(-40*np.pi/180), 0]
+            q = product(q3,product(q2,q1))
             cam_config.append(CameraConfig(
                                 uid="hand_cam",
-                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                pose=sapien.Pose(p=[-0.01, 0.22 , -0.04], q=q),
                                 width=512,
                                 height=512,
-                                fov=1.57,
+                                fov= 70*np.pi/180,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base_hand",
+                                entity_uid="palm_lower",
                             ))
-            
-
 
 
         cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))

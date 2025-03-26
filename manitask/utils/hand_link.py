@@ -23,6 +23,7 @@ hand_link = {"allegro":[
     "link_7_tip",
     "link_11_tip",
     "link_15_tip",
+    "thumb_tip_head", "index_tip_head", "middle_tip_head", "ring_tip_head",
 ],
 "shadow":[
     "palm",
@@ -33,4 +34,23 @@ hand_link = {"allegro":[
     'thdistal', 'ffdistal', 'mfdistal', 'rfdistal', 
     'fftip', 'mftip', 'rftip', 'lfdistal','lftip'   
 ],
+"leap":[
+    'pip',
+    'pip_2',
+    'pip_3',
+    'thumb_pip',
+    'dip',
+    'dip_2',
+    'dip_3',
+    'thumb_dip',
+    'fingertip',
+    'fingertip_2',
+    'fingertip_3',
+    'thumb_fingertip',
+    'palm_lower',
+    'mcp_joint',
+    'mcp_joint_2',
+    'mcp_joint_3',
+    'thumb_temp_base',    
+]
 }

@@ -70,7 +70,7 @@ class LiftPegUprightEnv(BaseEnv):
         right_side = look_at([-0.2, -0.4, 0.18], [-0.2, 0.3, 0.18]) 
 
         cam_config = []
-        # cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
 
 
 
@@ -143,15 +143,19 @@ class LiftPegUprightEnv(BaseEnv):
                                 entity_uid="palm",
                             ))                     
         elif "leap" in self.robot_uids:
+            q1 = [np.cos(45*np.pi/180), 0 , np.sin(45*np.pi/180), 0]
+            q2 = [np.cos(-45*np.pi/180), np.sin(-45*np.pi/180), 0 , 0]
+            q3 = [np.cos(-40*np.pi/180), 0 , np.sin(-40*np.pi/180), 0]
+            q = product(q3,product(q2,q1))
             cam_config.append(CameraConfig(
                                 uid="hand_cam",
-                                pose=sapien.Pose(p=[0.03, 0.0 , 0.01], q=[1, 0, 0, 0]),
+                                pose=sapien.Pose(p=[-0.01, 0.25 , -0.04], q=q),
                                 width=512,
                                 height=512,
                                 fov=1.57,
                                 near=0.01,
                                 far=100,
-                                entity_uid="base_hand",
+                                entity_uid="palm_lower",
                             ))
             
 
