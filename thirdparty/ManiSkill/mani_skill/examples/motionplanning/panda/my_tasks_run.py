@@ -11,7 +11,7 @@ from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve
 
 
 def main():
-    data_dir = os.path.expanduser("~/ManiSkill/data/my_laptop_data")
+    data_dir = os.path.expanduser("/data/xzx/projects/pov/data/maniskill/laptop")
     os.makedirs(data_dir, exist_ok=True)
 
     env_id = "OpenLaptop-v1"   #"OpenFaucet-v1" ,"OpenLaptop-v1"
@@ -21,7 +21,10 @@ def main():
     reward_mode = "sparse"
     sim_backend = "auto"
     shader = "default"
-  
+    only_count_success = True  
+    num_episodes = 10
+    use_viewer = False
+    seed = 2
 
     env = gym.make(
         env_id,
@@ -49,12 +52,6 @@ def main():
         max_steps_per_video=max_episode_steps
     )
 
-
-    
-    only_count_success = True  
-    num_episodes = 12
-    seed = 2
-
     # first reset the environment
     env.reset(seed=seed)
     print(f"Motion Planning Running on {env_id}")
@@ -63,7 +60,7 @@ def main():
         for i in range(num_episodes):
             env.reset()
             print(f"Episode {i} running on {env_id} ...")
-            result = solve(env, seed=seed, debug=False, vis=True)
+            result = solve(env, seed=seed, debug=False, vis=use_viewer)
             # print("Motion planning solution result:")
             # print(result)
 

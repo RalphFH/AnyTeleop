@@ -8,7 +8,6 @@ cmake-build-debug
 /.dir-locals.el
 __pycache__
 .ini
-*.convex.*
 imgui.ini
 .mypy_cache
 .DS_Store
