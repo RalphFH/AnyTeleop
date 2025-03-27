@@ -21,6 +21,7 @@ from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from mani_skill.utils.building import articulations
 from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
 import multiprocessing as mp
+from mani_skill.utils.structs.pose import Pose as BatchPose
 
 current_dir = os.path.dirname(__file__)
 
@@ -117,12 +118,15 @@ class OpenLaptopMulEnv(BaseEnv):
         builder = articulation_builders[0]
         
         base_pos = np.array([0, 0.35, 0.1])
-        random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
-        random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
-        new_pos = np.array([base_pos[0] + random_offset_x[0],
-                            base_pos[1] + random_offset_y[0],
-                            base_pos[2]])
-        builder.initial_pose = sapien.Pose(p=new_pos.tolist())
+        random_offset_x = np.random.uniform(-0.05, 0.075, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.25, 0.25, size=(self.num_envs,))  
+        new_pos = np.stack([base_pos[0] + random_offset_x,
+                            base_pos[1] + random_offset_y,
+                            base_pos[2]*np.ones(self.num_envs)],axis=1)
+        p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
+        batched_pose = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
+        builder.initial_pose = batched_pose
+      
         
         self.laptop_articulation = builder.build(name="laptop_articulation")
         # set friction for the faucet
@@ -152,12 +156,15 @@ class OpenLaptopMulEnv(BaseEnv):
             
             #base pose and random offset for the laptop are determined according to experiment, do not change
             base_pos = np.array([0, 0.35, 0.1])
-            random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
-            random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
-            new_pos = np.array([base_pos[0] + random_offset_x[0],
-                                base_pos[1] + random_offset_y[0],
-                                base_pos[2]])
-            self.laptop_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
+            random_offset_x = np.random.uniform(-0.05, 0.075, size=(self.num_envs,))
+            random_offset_y = np.random.uniform(-0.25, 0.25, size=(self.num_envs,))  
+            new_pos = np.stack([base_pos[0] + random_offset_x,
+                                base_pos[1] + random_offset_y,
+                                base_pos[2]*np.ones(self.num_envs)],axis=1)
+            p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
+            batched_pose1 = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
+            self.laptop_articulation.set_pose(batched_pose1)
+           
               
                 
             noise_np = np.random.uniform(

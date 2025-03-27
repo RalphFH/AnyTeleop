@@ -112,14 +112,16 @@ class OpenFaucetMulEnv(BaseEnv):
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
         
-    
         base_pos = np.array([-0.05, 0.1, 0.2])
-        random_offset_x = np.random.uniform(-0.15, 0.15, size=2)
-        random_offset_y = np.random.uniform(-0.3, 0.3, size=2)
-        new_pos = np.array([base_pos[0] + random_offset_x[0],
-                            base_pos[1] + random_offset_y[1],
-                            base_pos[2]])
-        builder.initial_pose = sapien.Pose(p=new_pos.tolist())
+        random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
+        new_pos = np.array([base_pos[0] + random_offset_x,
+                            base_pos[1] + random_offset_y,
+                            base_pos[2]*np.ones(self.num_envs)],axis=1)
+        p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
+        batched_pose = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
+        builder.initial_pose = batched_pose
+        
         
         self.faucet_articulation = builder.build(name="faucet_articulation")
         # set friction for the faucet
@@ -146,13 +148,14 @@ class OpenFaucetMulEnv(BaseEnv):
 
             #base pos and random offset for the faucet are determined according to experiments, do not change
             base_pos = np.array([-0.05, 0.1, 0.2])
-            random_offset_x = np.random.uniform(-0.15, 0.15, size=2)
-            random_offset_y = np.random.uniform(-0.3, 0.3, size=2)
-            new_pos = np.array([base_pos[0] + random_offset_x[0],
-                                base_pos[1] + random_offset_y[0],
-                                base_pos[2]])  
-            self.faucet_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
-              
+            random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
+            random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
+            new_pos = np.array([base_pos[0] + random_offset_x,
+                                base_pos[1] + random_offset_y,
+                                base_pos[2]*np.ones(self.num_envs)],axis=1)
+            p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
+            batched_pose1 = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
+            self.faucet_articulation.set_pose(batched_pose1)
                 
             noise_np = np.random.uniform(
             low=-self.robot_init_qpos_noise,
