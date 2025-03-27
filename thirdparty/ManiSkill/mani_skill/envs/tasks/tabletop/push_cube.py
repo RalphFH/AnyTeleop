@@ -107,7 +107,7 @@ class PushCubeEnv(BaseEnv):
         top_down = sapien_utils.look_at([-0.1, 0, 0.4], [0.2, 0, 0])
 
         cam_config = []
-        if "panda" in self.robot_uids:
+        if "panda_wrist" in self.robot_uids:
             cam_config = [  CameraConfig("top_down", top_down, 512, 512, np.pi/2, 0.01, 100),
                             CameraConfig(
                                 uid="ego-centric",

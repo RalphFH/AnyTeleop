@@ -90,7 +90,7 @@ def start_retargeting(event,queue: multiprocessing.Queue, robot_dir: str, config
     elif "svh" in robot_name:
         loader.scale = 1.5
 
-    if "glb" not in robot_name:
+    if "glb" not in robot_name and ("inspire" not in robot_name):
         filepath = str(filepath).replace(".urdf", "_glb.urdf")
     else:
         filepath = str(filepath)
@@ -98,13 +98,13 @@ def start_retargeting(event,queue: multiprocessing.Queue, robot_dir: str, config
     # print("Config:add_dummy_free_joint", config.add_dummy_free_joint)
     if config.add_dummy_free_joint == True:
         print("add dummy free joint !")
-        robot_urdf = urdf.URDF.load(str(filepath), add_dummy_free_joints=True, build_scene_graph=False)
+        robot_urdf = urdf.URDF.load(filepath, add_dummy_free_joints=True, build_scene_graph=False)
         temp_dir = tempfile.mkdtemp(prefix="dex_retargeting-")
         temp_path = f"{temp_dir}/{robot_name}"
         robot_urdf.write_xml_file(temp_path)
         robot = loader.load(temp_path)
     else:
-        robot = loader.load(filepath)
+        robot = loader.load(str(filepath))
 
     if "ability" in robot_name:
         robot.set_pose(sapien.Pose([0, 0, -0.15]))

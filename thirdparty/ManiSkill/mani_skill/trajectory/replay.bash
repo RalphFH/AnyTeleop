@@ -1,20 +1,20 @@
-#!/bin/bash
+# !!! deprecated
 DATA_DIR="../../../../manitask/data/h5"
-ENV_ID="PlaceSphere-v1" # 1
-ROBOT_ID="ur5e_allegro_right" # 2
+ENV_ID="PlaceSphere-v1"
+ROBOT_ID="ur5e_allegro_right"
 
+EPISODE_RANGE="0-9"
 
-# 设置输入和输出路径
 INPUT_DIR="$DATA_DIR/$ENV_ID/$ROBOT_ID/merged"
-INPUT_NAME="traj"
+INPUT_NAME="trajectory"
 
 
-# 3 rgb+depth+segmentation | pointcloud
+# rgb+depth+segmentation | pointcloud
 python replay_trajectory.py \
-    --traj-path "$INPUT_DIR/$INPUT_NAME.h5" \
+    --traj-path "$INPUT_DIR/$EPISODE_RANGE/$INPUT_NAME.h5" \
     --save_traj \
     --save-video \
-    --obs-mode "pointcloud" \
+    --obs-mode "rgb+depth+segmentation" \
     --use_env_states
 
 # python replay_trajectory.py \

@@ -57,7 +57,7 @@ LINK_BASE = {
 LINK_WRIST = {
     "allegro":"palm",
     "shadow":"palm",
-    "leap":"palm_lower",
+    "leap":"base_hand",
     "panda":"panda_hand",
 }
 

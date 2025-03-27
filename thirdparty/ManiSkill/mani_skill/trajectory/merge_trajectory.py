@@ -38,7 +38,7 @@ def merge_trajectories(output_path: str, traj_paths: list, recompute_id: bool = 
 
     for traj_path in traj_paths:
         traj_path = str(traj_path)
-        logger.info(f"Merging{traj_path}")
+        logger.info(f"Merging {traj_path}")
 
         with h5py.File(traj_path, "r") as h5_file:
             json_data = load_json(traj_path.replace(".h5", ".json"))

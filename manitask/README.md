@@ -10,7 +10,7 @@
 
 3. 收集数据
     ```shell
-    pip install open3d urdf_parser_py zarr
+    pip install open3d urdf_parser_py zarr fpsample
     ```
    
 
@@ -58,20 +58,19 @@ python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 - success会自动保存，如果超过env的max_step会退出并且不会保存东西
 
 2. 多个episode融合
-- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`merge.bash`(bash里可指定融合的序号数 0-9， 10-19之类的， 不过目前这个命名法，如果同一个环境+同一个机器人有旧的数据会被覆盖掉, 后面的也是)
-- 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中
+- 执行`manitask`中的`merge.bash`(bash里可指定融合的episode序号数 0-9， 10-19之类)
+- 输出在 `manitaskdata/h5/LiftPegUpright-v1/xarm7_allegro_right/merged/0-9`中
 
-3. replay 获取不同的观察模式
-- 执行`thirdparty/ManiSkill/mani_skill/trajectory`中的`replay.bash`, 第一次`obs_mode`用`rgb+depth+segmentation`,第二次修改为`pointcloud`
-- 输出在 `data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged`中，有对应视频
+3. replay h5 file & convert to zarr (可指定episode序号数)
+- 执行`manitask`中的`tozarr.bash`
+- replay 输出在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged/0-9`中，
+- zarr 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right/0-9`中
+- bash 中可以控制是否replay，replay时是否存储replay视频，是否将replay后的h5转为zarr,转为zarr后是否可视化显示点云等，从而实现 `replay h5 file`和`convert to zarr`的良好解耦。
 
-4. h5转为zarr
-- 执行`manitask`中的`tozarr.bash`，bash中的--episode-num参数对应转换的episode数量
-- 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right`中
 
-注：不同环境收集到的数据的命名都是自动的，不过不同env,robot要记得修改几个bash里对应的东西
+注：不同环境收集到的数据的命名都是自动的，不同env,robot要记得修改两个bash里env_id 和 robot_id
 
-![文件命名架构](docs/file_structure.png)
+
 
 
 ## Tips

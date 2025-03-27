@@ -119,7 +119,7 @@ class PegInsertionSideEnv(BaseEnv):
         cam_config = []
         cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
                             
-        if "panda" in self.robot_uids:
+        if "panda_wrist" in self.robot_uids:
             cam_config.append(CameraConfig(
                                 uid="hand_cam",
                                 pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),

@@ -89,7 +89,7 @@ class LiftPegUprightEnv(BaseEnv):
                             )
             )     
 
-        if "panda" in self.robot_uids:
+        if "panda_wrist" in self.robot_uids:
             cam_config.append(CameraConfig(
                                 uid="hand_cam",
                                 pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),

@@ -119,9 +119,9 @@ class XArm7Leap(BaseAgent):
             '11', 
             '15'
         ]
-        self.hand_stiffness = 2e3
+        self.hand_stiffness = 1e3
         self.hand_damping = 1e2
-        self.hand_friction = 1
+        self.hand_friction = 3
         self.hand_force_limit = 20
 
         self.ee_link_name = "palm_lower"
