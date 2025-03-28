@@ -182,8 +182,8 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             done = torch.logical_or(terminated,truncated)
             is_success = info["success"] 
 
-        link_pose = None
-        points_robot = []
+        # link_pose = None
+        # points_robot = []
 
         # for i,target_link in enumerate(config.target_link_names):
         #     link_pose = robot.links_map[target_link].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]

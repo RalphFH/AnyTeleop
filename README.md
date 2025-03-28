@@ -18,6 +18,7 @@ Then clone this repository and install some dependecies about dex-retargeting.
 ```shell
 git clone https://github.com/Ralph-cong/AnyTeleop.git
 pip install -e ".[example]"
+pip install tyro pyyaml sapien==3.0.0b0
 ```
 For the hand detector and 3D estimation part, I implement with [WiLor-mini](https://github.com/warmshao/WiLoR-mini), so you should install some package about it.
 
