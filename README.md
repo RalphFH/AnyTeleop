@@ -18,15 +18,19 @@ Then clone this repository and install some dependecies about dex-retargeting.
 ```shell
 git clone https://github.com/Ralph-cong/AnyTeleop.git
 pip install -e ".[example]"
-pip install tyro pyyaml sapien==3.0.0b0
+pip install tyro pyyaml sapien==3.0.0b0 pyrealsense2 numpy-quaternion
 ```
 For the hand detector and 3D estimation part, I implement with [WiLor-mini](https://github.com/warmshao/WiLoR-mini), so you should install some package about it.
 
 ```shell
 pip install git+https://github.com/warmshao/WiLoR-mini
 ```
+Then in line 716 and line 736 of "~/anaconda3/envs/anytele/lib/python3.9/site-packages/ultralytics/nn/tasks.py", add `weights_only` param
+```shell
+ckpt = torch.load(file, map_location="cpu"，weights_only=False)
+```
 
-And during my experiment, I met an error message, but I just remember its solution:
+And during my experiment, I met an error message, but I just remember its solution ( In my second installation trial from scatch this one is not need ):
 ```shell
 export LD_LIBRARY_PATH=$HOME/anaconda3/envs/retarget/lib/python3.9/site-packages/cmeel.prefix/lib:$LD_LIBRARY_PATH
 ```
