@@ -210,27 +210,22 @@ class UR5eAllegro(BaseAgent):
 
     def is_grasping(self, object: Actor, min_force=0.5, max_angle=20, min_tip_distance=0.15, max_contact_force=5.0):
         """Check if the robot is grasping an object based on tip distance and contact forces.
-
-        Args:
-            object (Actor): The object to check if the robot is grasping.
-            min_force (float, optional): Minimum force before the robot is considered to be grasping the object. Defaults to 0.5 N.
-            min_tip_distance (float, optional): Minimum distance between finger tips for a valid grasp. Defaults to 0.15 meters.
-            max_contact_force (float, optional): Maximum total force between the links and the palm to consider a valid grasp. Defaults to 5.0 N.
         """
         
         # distance between finger tips
         l_finger_pos = self.finger1_link_tip.pose.p
         r_finger_pos = self.finger2_link_tip.pose.p
-        tip_distance = torch.linalg.norm(l_finger_pos - r_finger_pos)
+
+        tip_distance = torch.linalg.norm(l_finger_pos - r_finger_pos,axis=1)
 
         # total contact forces between the links and the object
         link_forces = 0
         for link in [self.finger1_link, self.finger2_link, self.finger1_link_tip, self.finger2_link_tip]:
             link_contact_forces = self.scene.get_pairwise_contact_forces(link, object)
-            link_forces += torch.sum(torch.linalg.norm(link_contact_forces, axis=1))
+            link_forces += torch.linalg.norm(link_contact_forces, axis=1)
+        
+        return torch.logical_and((tip_distance <= min_tip_distance), (link_forces >= max_contact_force))
 
-        return torch.logical_and((tip_distance <= min_tip_distance), (link_forces >= max_contact_force)).unsqueeze(0)
-        # return torch.tensor([False])
     
     def is_static(self, threshold: float = 0.2):
         qvel = self.robot.get_qvel()[..., :7]

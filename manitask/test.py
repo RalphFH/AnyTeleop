@@ -18,13 +18,13 @@ import time
 
 
 env = gym.make(
-    "LiftPegUpright-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+    "PlaceSphere-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
     num_envs=1,
-    robot_uids="xarm7_leap_right", #panda_wristcam
+    robot_uids="ur5e_allegro_right", #panda_wristcam
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
-    render_mode="human", # rgb_array | human 
+    render_mode="rgb_array", # rgb_array | human 
 )
 
 
@@ -36,25 +36,29 @@ env = gym.make(
 
 agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda'>
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
-qpos = agent.keyframes["rest"].qpos
 
-for link in robot.get_links():
-    print(link.get_name())
+
+qpos = agent.keyframes["rest"].qpos[:]
+# qpos = torch.tensor(agent.keyframes["rest"].qpos[:])
+# qpos = qpos.unsqueeze(0).repeat(3, 1) 
+# for link in robot.get_links():
+#     print(link.get_name())
 
 env.reset()
-# obs, reward, terminated, truncated, info=env.step(qpos)
-# print("obs",(obs).keys()) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
+obs, reward, terminated, truncated, info=env.step(qpos)
+print("obs",obs['agent']['qpos'].shape) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
 # print("terminated",terminated) # torch.Tensor | torch.Size([1]) | tensor([False])
 # print("truncated",truncated) # torch.Tensor | torch.Size([1]) | tensor([False])
 # print("info",info['success']) # dict | ['elapsed_steps', 'success']
 
-
+print("Observation space", env.observation_space) # dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
+print("Action space", env.action_space) # 7 DoF robot arm | array of 7 floats
 
 while True:
 
     env.render()
-    # obs, reward, terminated, truncated, info=env.step(qpos)
+    obs, reward, terminated, truncated, info=env.step(qpos)
     # print("truncated",truncated.item())
     time.sleep(0.1)
 
@@ -96,26 +100,6 @@ while True:
 # robot = env.unwrapped.agent.robot
 # root_pose=robot.links_map["panda_link0"].pose.raw_pose.detach().squeeze(0).numpy()[:3]
 # print("root_pose",root_pose)
-
-
-
-# print("Observation space", env.observation_space) # dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
-# print("Action space", env.action_space) # 7 DoF robot arm | array of 7 floats
-# obs, _ = env.reset(seed=0)
-
-
-
-# obs, _ = env.reset(seed=0) # reset with a seed for determinism
-# done = False
-# for _ in range(500):
-#     action = env.action_space.sample()
-#     obs, reward, terminated, truncated, info = env.step(action)
-#     done = terminated | truncated
-#     # print(f"Obs shape: {obs.shape}, Reward shape {reward.shape}, Done shape {done.shape}")
-#     env.render()  # a display is required to render
-# env.close()
-
-
 
 
 """
