@@ -10,7 +10,7 @@ OUTPUT_NAME="trajectory"
 PATTERN="trajectory.h5"
 
 # modify based on the range of episodes to convert
-EPISODE_RANGE="0-9"
+EPISODE_RANGE="0-19"
 
 mkdir -p "$OUTPUT_DIR"
 

@@ -26,7 +26,7 @@ from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from mani_skill.utils.quater import product
 
 
-@register_env("PlaceSphere-v1", max_episode_steps=250)
+@register_env("PlaceSphere-v1", max_episode_steps=300)
 class PlaceSphereEnv(BaseEnv):
     """
     **Task Description:**
@@ -86,7 +86,7 @@ class PlaceSphereEnv(BaseEnv):
 
     @property
     def _default_sensor_configs(self):
-        pose = sapien_utils.look_at(eye=[0.25, 0.0, 0.65], target=[-0.1, 0, 0.15])
+        pose = sapien_utils.look_at(eye=[0.3, 0, 0.2], target=[-0.1, 0, 0])
         return [
             CameraConfig(
                 "base_camera",

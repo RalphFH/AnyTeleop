@@ -180,23 +180,23 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             done = torch.logical_or(terminated,truncated)
             is_success = info["success"] 
 
-        # visualize the keypoints
-        link_pose = None
-        points_robot = []
+        # # visualize the keypoints
+        # link_pose = None
+        # points_robot = []
 
-        for i,target_link in enumerate(config.target_link_names):
-            link_pose = robot.links_map[target_link].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
-            points_robot.append(link_pose)
+        # for i,target_link in enumerate(config.target_link_names):
+        #     link_pose = robot.links_map[target_link].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
+        #     points_robot.append(link_pose)
         
-        print("points_robot",points_robot[0])
-        all_points = np.vstack([keypoints_3d, np.array(points_robot)])
-        num_points = len(points_robot)
-        colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
+        # print("points_robot",points_robot[0])
+        # all_points = np.vstack([keypoints_3d, np.array(points_robot)])
+        # num_points = len(points_robot)
+        # colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
 
         img = env.render().squeeze(0).detach().cpu().numpy()
-        img = draw_points_on_tiled_image(
-                                img, all_points, camera_extrinsics, camera_intrinsics, 
-                                marker_size=5, colors=colors)
+        # img = draw_points_on_tiled_image(
+        #                         img, all_points, camera_extrinsics, camera_intrinsics, 
+        #                         marker_size=5, colors=colors)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         
         cv2.imshow("Environment", img)

@@ -70,7 +70,7 @@ def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.n
 
 def main(args: Args):
     process_num = args.episode_num
-    bounding_box = [[-0.3, -0.3, 0.01], [0.2, 0.3, 0.9]]
+    bounding_box = [[-0.55, -0.3, 0.01], [0.3, 0.3, 0.8]]
     # urdf and hdf5 data
     robot_path = args.robot_path
     robot_name = args.robot_name
@@ -132,7 +132,7 @@ def main(args: Args):
         )
         
         data = converter.convert(rgbds_file, pc_file, process_num=process_num)
-        
+        converter.save_to_zarr(data, args.zarr_save_path)
         if args.visualize:
             server = viser.ViserServer()
             visualize_all_frames_with_viser(
@@ -141,7 +141,7 @@ def main(args: Args):
                 data['data/obs/point_colors'].transpose(0, 2, 1)
             )
 
-        converter.save_to_zarr(data, args.zarr_save_path)
+        
 
 
 

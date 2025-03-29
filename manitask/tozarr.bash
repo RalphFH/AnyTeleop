@@ -9,7 +9,7 @@ ARM_ID="ur5e"
 ROBOT_ID="ur5e_allegro_right"
 
 # modify based on the range of episodes to convert
-EPISODE_RANGE="0-9"
+EPISODE_RANGE="0-19"
 
 INPUT_DIR="$DATA_DIR/$ENV_ID/$ROBOT_ID/merged/"
 hdf5_NAME="trajectory"
@@ -26,9 +26,9 @@ python maniskill_dataset_to_zarr.py \
   --hdf5_name "$hdf5_NAME" \
   --robot-path "$ROBOT_DIR/$ARM_ID/" \
   --robot-name "$ROBOT_ID" \
-  --episode-num 10 \
+  --episode-num 20 \
   --zarr-save-path "$OUTPUT_DIR/$EPISODE_RANGE/$OUTPUT_NAME.zarr" \
-  --replay \
+  --no-replay \
   --no-save-replay-video \
   --tozarr \
   --visualize

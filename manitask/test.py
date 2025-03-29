@@ -24,7 +24,7 @@ env = gym.make(
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
-    render_mode="rgb_array", # rgb_array | human 
+    render_mode="human", # rgb_array | human 
 )
 
 
