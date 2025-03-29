@@ -11,9 +11,9 @@ from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve
 #change the solve function to solve the different tasks
 
 def main():
-    data_dir = os.path.expanduser("~/ManiSkill/data/my_faucet_data")
-    os.makedirs(data_dir, exist_ok=True)
-    env_id = "OpenFaucet-v1"                                 #"OpenFaucet-v1" ,"OpenLaptop-v1"
+    env_id = "OpenFaucet-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
+    data_dir = "../../../../../../manitask/data/h5" 
+    os.makedirs(data_dir, exist_ok=True)                            
     obs_mode = "rgb+depth+segmentation"
     control_mode = "pd_joint_pos"
     render_mode = "rgb_array"
@@ -38,10 +38,10 @@ def main():
     )
     
     max_episode_steps=500
-    traj_name = time.strftime("%Y%m%d_%H%M%S")
+    traj_name = "trajectory_1"
     env = RecordEpisode(
         env,
-        output_dir=os.path.join(data_dir, env_id, "motionplanning"),
+        output_dir=os.path.join(data_dir,env_id, "panda"),
         trajectory_name=traj_name,
         save_video=True,
         video_fps=30,
@@ -53,7 +53,7 @@ def main():
 
     only_count_success = True  
     num_episodes = 10
-    seed = 2
+    seed = 0
     succeed_count = 0
     # first reset the environment
     env.reset(seed=seed)

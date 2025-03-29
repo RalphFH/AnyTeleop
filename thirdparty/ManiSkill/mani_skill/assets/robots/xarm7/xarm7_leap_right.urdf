@@ -217,6 +217,12 @@
 <!-- ============================================================================= -->
   <!-- HAND -->
   <link name="base_hand"/>
+  <link name="palm"/>
+  <joint name="palm_joint" type="fixed">
+    <parent link="base_hand"/>
+    <child link="palm"/>
+    <origin xyz="0 0 -0.088" rpy="0 0 0"/>
+  </joint>
   <joint name="base_joint" type="fixed">
     <parent link="base_hand"/>
     <child link="palm_lower"/>

@@ -172,9 +172,6 @@ class ManiskillToZarrConverter:
                 o3d_pc = mesh.sample_points_poisson_disk(200)
             else:
                 o3d_pc = mesh.sample_points_poisson_disk(20)
-
-            # if mesh_file.endswith(".stl"): # no color info
-            #     o3d_pc.colors = o3d.utility.Vector3dVector(np.ones((len(o3d_pc.points), 3)) * [0, 0, 1])
             
             pointclouds[link.name] = o3d_pc # (n_points, 3)
         
@@ -215,7 +212,15 @@ class ManiskillToZarrConverter:
         return transformed_points
 
     def convert(self, rgbd_file, pc_file, process_num=2) -> dict:
-        """Convert maniskill official format .h5 and .json trajectory data to zarr dataset"""
+        """
+        Input:
+        rgbd_file: maniskill official format .h5 and .json trajectory data in pd_joint_pos mode
+        pc_file: maniskill official format .h5 and .json trajectory data in pd_joint_pos mode
+        process_num: number of processes to use
+
+        Output:
+        mani_data: zarr dataset
+        """
         urdf_path = self.urdf_path
 
         mani_data = {}

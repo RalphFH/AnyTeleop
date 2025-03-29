@@ -5,7 +5,7 @@ retargeting:
   target_link_names: ["thumb_tip_head", "index_tip_head", "middle_tip_head", "ring_tip_head", 
                                         "fingertip", "fingertip_2", "fingertip_3", 
                                         "dip", "dip_2", "dip_3",
-                                        "base_hand"]
+                                        "palm"]
 
   target_link_human_indices: [ 4, 8, 12, 16,  
                                   7, 11, 15,
