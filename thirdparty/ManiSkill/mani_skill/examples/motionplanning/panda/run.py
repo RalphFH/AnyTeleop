@@ -9,7 +9,7 @@ from tqdm import tqdm
 import os.path as osp
 from mani_skill.utils.wrappers.record import RecordEpisode
 from mani_skill.trajectory.merge_trajectory import merge_trajectories
-from mani_skill.examples.motionplanning.panda.solutions import solvePushCube, solvePickCube, solveStackCube, solvePegInsertionSide, solvePlugCharger, solvePullCubeTool, solveLiftPegUpright, solvePullCube
+from mani_skill.examples.motionplanning.panda.solutions import solvePushCube, solvePickCube, solveStackCube, solvePegInsertionSide, solvePlugCharger, solvePullCubeTool, solveLiftPegUpright, solvePullCube, solvePlaceSphere
 MP_SOLUTIONS = {
     "PickCube-v1": solvePickCube,
     "StackCube-v1": solveStackCube,
@@ -18,7 +18,8 @@ MP_SOLUTIONS = {
     "PushCube-v1": solvePushCube,
     "PullCubeTool-v1": solvePullCubeTool,
     "LiftPegUpright-v1": solveLiftPegUpright,
-    "PullCube-v1": solvePullCube
+    "PullCube-v1": solvePullCube,
+    "PlaceSphere-v1": solvePlaceSphere
 
 }
 def parse_args(args=None):
@@ -51,6 +52,7 @@ def _main(args, proc_id: int = 0, start_seed: int = 0) -> str:
         viewer_camera_configs=dict(shader_pack=args.shader),
         sim_backend=args.sim_backend
     )
+    print(env_id)
     if env_id not in MP_SOLUTIONS:
         raise RuntimeError(f"No already written motion planning solutions for {env_id}. Available options are {list(MP_SOLUTIONS.keys())}")
     
