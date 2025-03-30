@@ -19,7 +19,7 @@ import time
 
 env = gym.make(
     "PlaceSphere-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
-    num_envs=1,
+    num_envs=3,
     robot_uids="ur5e_allegro_right", #panda_wristcam
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
@@ -39,13 +39,13 @@ agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
 
 
-qpos = agent.keyframes["rest"].qpos[:]
-# qpos = torch.tensor(agent.keyframes["rest"].qpos[:])
-# qpos = qpos.unsqueeze(0).repeat(3, 1) 
+# qpos = agent.keyframes["rest"].qpos[:]
+qpos = torch.tensor(agent.keyframes["rest"].qpos[:])
+qpos = qpos.unsqueeze(0).repeat(3, 1) 
 # for link in robot.get_links():
 #     print(link.get_name())
 
-env.reset()
+env.reset(seed=42)
 obs, reward, terminated, truncated, info=env.step(qpos)
 # print("obs",obs['agent']['qpos'].shape) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
@@ -60,7 +60,7 @@ while True:
 
     env.render()
     obs, reward, terminated, truncated, info=env.step(qpos)
-    print(reward)
+    # print(reward)
     # print("truncated",truncated.item())
     time.sleep(0.1)
 

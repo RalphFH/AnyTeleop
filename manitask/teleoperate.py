@@ -203,8 +203,9 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     
 
-        if cv2.waitKey(2) & done : 
+        if done or (cv2.waitKey(2) & 0xFF == ord("q")):
             isEnd.set()
+            print("collect done")
             if is_success:
                 print("Episode succeeded, saving trajectory and video.")
                 print("steps",info["elapsed_steps"])
@@ -220,11 +221,11 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 env.close()
                 time.sleep(0.5)
                 shutil.rmtree(episode_dir, ignore_errors=True)
-        
             break
-        
-        
-        # End of each frame 
+
+
+
+    # End of each frame 
 
 
 
@@ -307,7 +308,7 @@ def main(
     consumer_process.terminate()
 
     
-    print("collect done")
+
 
 
 if __name__ == "__main__":

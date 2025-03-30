@@ -298,12 +298,12 @@ class PlaceSphereEnv(BaseEnv):
         pos_obj = self.obj.pose.p
         pos_bin = self.bin.pose.p
         offset = pos_obj - pos_bin
-        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.01
+        xy_flag = torch.linalg.norm(offset[..., :2], axis=1) <= 0.012
         z_flag = (
-            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.01
+            torch.abs(offset[..., 2] - self.radius - self.block_half_size[0]) <= 0.012
         )
         is_obj_on_bin = torch.logical_and(xy_flag, z_flag)
-        is_obj_static = self.obj.is_static(lin_thresh=1e-2, ang_thresh=0.5)
+        is_obj_static = self.obj.is_static(lin_thresh=2e-2, ang_thresh=0.8)
         is_obj_grasped = self.agent.is_grasping(self.obj)
         success = is_obj_on_bin & is_obj_static & (~is_obj_grasped)
         return {
