@@ -263,3 +263,16 @@ class LiftPegUprightEnv(BaseEnv):
     def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):
         max_reward = 3.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
+
+    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
+        
+        success = info["success"]
+
+        if self.has_been_successful is None:
+            self.has_been_successful = torch.zeros((self.num_envs,), dtype=torch.bool, device=self.device)
+
+        newly_success = success & (~self.has_been_successful)
+        reward = newly_success.float()
+        self.has_been_successful = self.has_been_successful | success
+
+        return reward

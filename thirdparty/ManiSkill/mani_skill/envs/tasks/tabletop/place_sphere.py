@@ -74,6 +74,7 @@ class PlaceSphereEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        self.has_been_successful = None
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -368,3 +369,17 @@ class PlaceSphereEnv(BaseEnv):
         # this should be equal to compute_dense_reward / max possible reward
         max_reward = 13.0
         return self.compute_dense_reward(obs=obs, action=action, info=info) / max_reward
+
+
+    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
+
+        success = info["success"]
+
+        if self.has_been_successful is None:
+            self.has_been_successful = torch.zeros((self.num_envs,), dtype=torch.bool, device=self.device)
+
+        newly_success = success & (~self.has_been_successful)
+        reward = newly_success.float()
+        self.has_been_successful = self.has_been_successful | success
+
+        return reward

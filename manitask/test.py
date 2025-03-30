@@ -24,7 +24,8 @@ env = gym.make(
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
-    render_mode="human", # rgb_array | human 
+    render_mode="rgb_array", # rgb_array | human 
+    reward_mode="sparse", # dense | sparse
 )
 
 
@@ -46,19 +47,20 @@ qpos = agent.keyframes["rest"].qpos[:]
 
 env.reset()
 obs, reward, terminated, truncated, info=env.step(qpos)
-print("obs",obs['agent']['qpos'].shape) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
+# print("obs",obs['agent']['qpos'].shape) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
 # print("terminated",terminated) # torch.Tensor | torch.Size([1]) | tensor([False])
 # print("truncated",truncated) # torch.Tensor | torch.Size([1]) | tensor([False])
 # print("info",info['success']) # dict | ['elapsed_steps', 'success']
 
-print("Observation space", env.observation_space) # dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
-print("Action space", env.action_space) # 7 DoF robot arm | array of 7 floats
+# print("Observation space", env.observation_space) # dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
+# print("Action space", env.action_space) # 7 DoF robot arm | array of 7 floats
 
 while True:
 
     env.render()
     obs, reward, terminated, truncated, info=env.step(qpos)
+    print(reward)
     # print("truncated",truncated.item())
     time.sleep(0.1)
 
