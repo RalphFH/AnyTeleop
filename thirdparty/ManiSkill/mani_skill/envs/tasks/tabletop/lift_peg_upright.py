@@ -58,6 +58,7 @@ class LiftPegUprightEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
+        self.has_been_successful = None
 
     @property
     def _default_sensor_configs(self):
