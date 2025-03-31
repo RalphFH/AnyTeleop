@@ -16,9 +16,10 @@ from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
-from mani_skill.utils.structs import Pose
+from mani_skill.utils.structs import Pose as BatchPose
 from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
 from mani_skill.utils.building import articulations
+
 from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
 current_dir = os.path.dirname(__file__)
 
@@ -115,7 +116,7 @@ class OpenFaucetMulEnv(BaseEnv):
         base_pos = np.array([-0.05, 0.1, 0.2])
         random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
         random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
-        new_pos = np.array([base_pos[0] + random_offset_x,
+        new_pos = np.stack([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
         p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
@@ -150,7 +151,7 @@ class OpenFaucetMulEnv(BaseEnv):
             base_pos = np.array([-0.05, 0.1, 0.2])
             random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
             random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
-            new_pos = np.array([base_pos[0] + random_offset_x,
+            new_pos = np.stack([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
                                 base_pos[2]*np.ones(self.num_envs)],axis=1)
             p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
