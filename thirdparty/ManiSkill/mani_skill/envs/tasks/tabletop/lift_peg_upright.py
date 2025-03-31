@@ -208,7 +208,7 @@ class LiftPegUprightEnv(BaseEnv):
             torch.abs(torch.abs(euler[:, 2]) - np.pi / 2) < 0.08
         )  # 0.08 radians of difference permitted
         close_to_table = torch.abs(self.peg.pose.p[:, 2] - self.peg_half_length) < 0.005
-        is_loosen = not self.agent.is_grasping(self.peg)
+        is_loosen = torch.logical_not(self.agent.is_grasping(self.peg))
         return {
             "success": is_peg_upright & close_to_table & is_loosen,
         }
