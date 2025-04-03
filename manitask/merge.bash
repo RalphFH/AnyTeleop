@@ -1,8 +1,8 @@
 DATA_DIR="data/h5"
 
 # modify based on the task
-ENV_ID="PlaceSphere-v1"
-ROBOT_ID="ur5e_allegro_right"
+ENV_ID="LiftPegUpright-v1"
+ROBOT_ID="xarm7_leap_right"
 
 INPUT_DIR="$DATA_DIR/$ENV_ID/$ROBOT_ID/origin"
 OUTPUT_DIR="$DATA_DIR/$ENV_ID/$ROBOT_ID/merged"
@@ -10,7 +10,7 @@ OUTPUT_NAME="trajectory"
 PATTERN="trajectory.h5"
 
 # modify based on the range of episodes to convert
-EPISODE_RANGE="0-19"
+EPISODE_RANGE="0-29"
 
 mkdir -p "$OUTPUT_DIR"
 

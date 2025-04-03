@@ -19,12 +19,12 @@ import time
 
 env = gym.make(
     "PlaceSphere-v1",#here are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
-    num_envs=3,
-    robot_uids="ur5e_allegro_right", #panda_wristcam
+    num_envs=1,
+    robot_uids="xarm7_leap_right", # xarm6_shadow_right, ur5e_allegro_right, 
     obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
     control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
     # parallel_in_single_scene=True,
-    render_mode="rgb_array", # rgb_array | human 
+    render_mode="human", # rgb_array | human 
     reward_mode="sparse", # dense | sparse
 )
 
@@ -37,16 +37,17 @@ env = gym.make(
 
 agent = env.unwrapped.agent # <class 'mani_skill.agents.robots.panda.panda.Panda'>
 robot = agent.robot # <class 'mani_skill.utils.structs.articulation.Articulation'>
+sapien_joint_names = [joint.name for joint in robot.active_joints]
+print(sapien_joint_names)
 
-
-# qpos = agent.keyframes["rest"].qpos[:]
-qpos = torch.tensor(agent.keyframes["rest"].qpos[:])
-qpos = qpos.unsqueeze(0).repeat(3, 1) 
+# qpos = agent.keyframes["place_sphere"].qpos[:]
+# qpos = torch.tensor(agent.keyframes["rest"].qpos[:])
+# qpos = qpos.unsqueeze(0).repeat(3, 1) 
 # for link in robot.get_links():
 #     print(link.get_name())
 
-env.reset(seed=42)
-obs, reward, terminated, truncated, info=env.step(qpos)
+# env.reset(seed=42)
+# obs, reward, terminated, truncated, info=env.step(qpos)
 # print("obs",obs['agent']['qpos'].shape) # torch.Tensor or dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("reward",reward) # torch.Tensor | torch.Size([1])
 # print("terminated",terminated) # torch.Tensor | torch.Size([1]) | tensor([False])
@@ -56,13 +57,13 @@ obs, reward, terminated, truncated, info=env.step(qpos)
 # print("Observation space", env.observation_space) # dict | ['agent', 'extra', 'sensor_param', 'sensor_data']
 # print("Action space", env.action_space) # 7 DoF robot arm | array of 7 floats
 
-while True:
+# while True:
 
-    env.render()
-    obs, reward, terminated, truncated, info=env.step(qpos)
-    # print(reward)
-    # print("truncated",truncated.item())
-    time.sleep(0.1)
+#     env.render()
+#     # obs, reward, terminated, truncated, info=env.step(qpos)
+#     # print(reward)
+#     # print("truncated",truncated.item())
+#     time.sleep(0.1)
 
 # try:
 #     while True:

@@ -14,6 +14,7 @@ from mani_skill.utils.building.ground import build_ground
 from mani_skill.utils.scene_builder import SceneBuilder
 
 
+
 # TODO (stao): make the build and initialize api consistent with other scenes
 class TableSceneBuilder(SceneBuilder):
     def build(self):
@@ -245,7 +246,11 @@ class TableSceneBuilder(SceneBuilder):
             self.env.agent.reset(qpos)
             self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
         else:
-            qpos = self.env.agent.keyframes["rest"].qpos
+            env_class = type(self.env).__name__
+            if (env_class == "PlaceSphereEnv" or env_class == "LiftPegUprightEnv") and "shadow" in self.env.robot_uids:
+                qpos = self.env.agent.keyframes["place_sphere"].qpos
+            else:
+                qpos = self.env.agent.keyframes["rest"].qpos
             if self.env._enhanced_determinism:
                 qpos = (
                     self.env._batched_episode_rng[env_idx].normal(

@@ -43,7 +43,7 @@ class PlaceSphereEnv(BaseEnv):
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PlaceSphere-v1_rt.mp4"
     SUPPORTED_ROBOTS = ["panda", "fetch","franka_panda_right",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right",
+                        "xarm6_allegro_right", "xarm6_shadow_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"]
 
@@ -107,24 +107,12 @@ class PlaceSphereEnv(BaseEnv):
         left_side = sapien_utils.look_at([-0.05, 0.27, 0.15], [-0.05, 0.1, 0.15]) 
 
         cam_config = []
+        if "shadow" in self.robot_uids:
+            top_down = sapien_utils.look_at([-0.18, 0.0, 0.5], [-0.05, 0.0, 0])
+        elif "leap" in self.robot_uids:
+            top_down = sapien_utils.look_at([-0.16, 0.0, 0.4], [-0.02, 0.0, 0])
         cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
 
-
-
-        if "xarm7" in self.robot_uids:
-            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
-
-            cam_config.append(CameraConfig(
-                                uid="arm_cam",
-                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
-                                width=512,
-                                height=512,
-                                fov=70*np.pi/180,
-                                near=0.01,
-                                far=100,
-                                entity_uid="link7",
-                            )
-            )     
 
         if "panda_wrist" in self.robot_uids:
             cam_config.append(CameraConfig(
@@ -153,21 +141,8 @@ class PlaceSphereEnv(BaseEnv):
                                 entity_uid="base_link_hand",
                             ))
         elif "shadow" in self.robot_uids:
-            q1 = [0.7044, 0.06166, 0.06166, -0.7044]
-            q2 = [np.cos(-30*np.pi/180), np.sin(-30*np.pi/180), 0, 0]
-            q = product(q2,q1)
-            cam_config.append(CameraConfig(
-                                uid="arm_cam",
-                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=q),
-                                width=512,
-                                height=512,
-                                fov=1.57,
-                                near=0.01,
-                                far=100,
-                                entity_uid="forearm",
-                            ))
             q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
-            q4 = [np.cos(30*np.pi/180), np.sin(30*np.pi/180), 0, 0]
+            q4 = [np.cos(-20*np.pi/180), np.sin(-20*np.pi/180), 0, 0]
             q = product(q4,q3)
             cam_config.append(CameraConfig(  
                                 uid="hand_cam", 

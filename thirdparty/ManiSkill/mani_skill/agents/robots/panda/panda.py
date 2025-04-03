@@ -235,7 +235,7 @@ class Panda(BaseAgent):
             self.robot.get_links(), self.ee_link_name
         )
 
-    def is_grasping(self, object: Actor, min_force=0.5, max_angle=85):
+    def is_grasping(self, object: Actor, min_force=0.5, max_angle=85,min_tip_distance=0.18,max_contact_force=0.2):
         """Check if the robot is grasping an object
 
         Args:

@@ -12,12 +12,14 @@ from mani_skill.utils.structs import Link
 from pov.datasets.pov_zarr_dataset import PovZarrDataset
 from pov.utils.camera.pc import fpsample_pc
 
-from utils.hand_link import hand_link
+from utils.sapien_link import sapien_joint,hand_link
 import viser
 import time
 
 from dataclasses import dataclass
 import tyro
+
+import trimesh
 
 
 @dataclass
@@ -29,6 +31,7 @@ class Args:
     episode_num: int = 1
     zarr_save_path: str = "./converted.zarr"
     replay: bool = True
+    use_env_state: str = "use_env_states"
     save_replay_video: bool = True
     tozarr: bool = True
     visualize: bool = True
@@ -83,7 +86,7 @@ def main(args: Args):
             subprocess.run([
                 "python", "-m", "mani_skill.trajectory.replay_trajectory",
                 "--traj-path", state_file+".h5",
-                "--use-env-states",  
+                "--"+args.use_env_state,
                 "--save-traj", "--target-control-mode", "pd_joint_pos",
                 "--obs-mode", "rgb+depth+segmentation", "--num-envs", "1", "--count", str(process_num)
             ], check=True)
@@ -94,7 +97,7 @@ def main(args: Args):
             subprocess.run([
                 "python", "-m", "mani_skill.trajectory.replay_trajectory",
                 "--traj-path", state_file+".h5",
-                "--use-env-states", 
+                "--"+args.use_env_state, 
                 "--save-traj", "--target-control-mode", "pd_joint_pos",
                 "--obs-mode", "pointcloud", "--num-envs", "1", "--count", str(process_num)
             ], check=True)
@@ -103,7 +106,7 @@ def main(args: Args):
             subprocess.run([
                 "python", "-m", "mani_skill.trajectory.replay_trajectory",
                 "--traj-path", state_file+".h5",
-                "--use-env-states", 
+                "--"+args.use_env_state, 
                 "--save-traj", "--no-save-video",
                 "--target-control-mode", "pd_joint_pos",
                 "--obs-mode", "rgb+depth+segmentation", "--num-envs", "1", "--count", str(process_num)
@@ -115,7 +118,7 @@ def main(args: Args):
             subprocess.run([
                 "python", "-m", "mani_skill.trajectory.replay_trajectory",
                 "--traj-path", state_file+".h5",
-                "--use-env-states",
+                "--"+args.use_env_state,
                 "--save-traj", "--no-save-video",
                 "--target-control-mode", "pd_joint_pos",
                 "--obs-mode", "pointcloud", "--num-envs", "1", "--count", str(process_num)
@@ -132,7 +135,7 @@ def main(args: Args):
         )
         
         data = converter.convert(rgbds_file, pc_file, process_num=process_num)
-        converter.save_to_zarr(data, args.zarr_save_path)
+        converter.save_to_zarr(data, args.zarr_save_path) 
         if args.visualize:
             server = viser.ViserServer()
             visualize_all_frames_with_viser(
@@ -155,10 +158,15 @@ class ManiskillToZarrConverter:
         self.urdf_path = robot_path + robot_name + ".urdf"
         self.links_pcs_dict = self._get_robot_pointcloud()
         self.chain = pk.build_chain_from_urdf(open(self.urdf_path, mode="rb").read())
+        pk_joint_names = self.chain.get_joint_parameter_names()
+        sapien_joint_names = sapien_joint[robot_name]
+        self.sapien_to_pk = np.array([sapien_joint_names.index(name) for name in pk_joint_names]).astype(int)
+
 
     def _get_robot_pointcloud(self) -> dict:
         """Get links pointcloud dict from urdf file and geometry meshes"""
         urdf_file = self.urdf_path
+        arm, hand, hand_type = self.robot_name.split("_")
         robot = URDF.from_xml_file(urdf_file)
         
         pointclouds = {}
@@ -167,11 +175,14 @@ class ManiskillToZarrConverter:
                 mesh_file = self.robot_path + link.visual.geometry.filename
             else:
                 continue # virtual link
-            mesh = o3d.io.read_triangle_mesh(mesh_file)
-            if link.name in ["panda_hand", "panda_leftfinger", "panda_rightfinger"]:
-                o3d_pc = mesh.sample_points_poisson_disk(200)
+
+            o3d_mesh = o3d.io.read_triangle_mesh(mesh_file)
+
+            # Sample points using poisson disk sampling
+            if link.name in hand_link[hand]:
+                o3d_pc = o3d_mesh.sample_points_poisson_disk(50)
             else:
-                o3d_pc = mesh.sample_points_poisson_disk(20)
+                o3d_pc = o3d_mesh.sample_points_poisson_disk(50)
             
             pointclouds[link.name] = o3d_pc # (n_points, 3)
         
@@ -179,7 +190,7 @@ class ManiskillToZarrConverter:
 
     def _qpos_to_transform(self, qpos, base_to_world) -> tuple[dict, np.ndarray]:
         """Apply Forward Kinematics to get transforms for each link from joint positions"""
-        res = self.chain.forward_kinematics(qpos)
+        res = self.chain.forward_kinematics(qpos[:,self.sapien_to_pk])
         link_names = list(res.keys())
         transforms_list = []
         transforms_dict = {}
@@ -296,20 +307,11 @@ class ManiskillToZarrConverter:
                 traj_tcp_pos = obs['extra']['tcp_pose'][:, :3] # only need position
                 
                 # process actions and target transforms
-                gripper_open_pos = 0.04
-                gripper_close_pos = 0.0
+
                 # change actions [n_transition, dof-1] to [n_time_step, dof]
                 traj_qpos_actions = []
                 for action in traj_actions:
                     qpos_action = action.copy()
-                    # if action = gripper open, remove the column and add two columns of 0.04
-                    if qpos_action[-1] == 1:
-                        qpos_action = np.delete(qpos_action, -1)
-                        qpos_action = np.concatenate([qpos_action, np.array([gripper_open_pos, gripper_open_pos])], axis=0)
-                    # if action = gripper close, remove the column and add two columns of 0.0
-                    elif qpos_action[-1] == -1:
-                        qpos_action = np.delete(qpos_action, -1)
-                        qpos_action = np.concatenate([qpos_action, np.array([gripper_close_pos, gripper_close_pos])], axis=0)
                     traj_qpos_actions.append(qpos_action)
                 
                 # add the first step qpos to the beginning of the actions

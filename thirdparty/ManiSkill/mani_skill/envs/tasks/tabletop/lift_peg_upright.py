@@ -26,7 +26,7 @@ from mani_skill.utils.structs.types import Array
 from mani_skill.utils.quater import product
 
 
-@register_env("LiftPegUpright-v1", max_episode_steps=250)
+@register_env("LiftPegUpright-v1", max_episode_steps=300)
 class LiftPegUprightEnv(BaseEnv):
     """
     **Task Description:**
@@ -70,25 +70,13 @@ class LiftPegUprightEnv(BaseEnv):
         top_down = look_at([-0.12, 0.0, 0.36], [0.15, 0.0, 0])
         right_side = look_at([-0.2, -0.4, 0.18], [-0.2, 0.3, 0.18]) 
 
+        if "shadow" in self.robot_uids:
+            top_down = look_at([-0.15, 0.0, 0.45], [0.12, 0.0, 0])
+        elif "leap" in self.robot_uids:
+            top_down = look_at([-0.15, 0.0, 0.4], [0.12, 0.0, 0])
+
         cam_config = []
-        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
-
-
-
-        if "xarm7" in self.robot_uids and (not "shadow" in self.robot_uids):
-            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
-
-            cam_config.append(CameraConfig(
-                                uid="arm_cam",
-                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
-                                width=512,
-                                height=512,
-                                fov=70*np.pi/180,
-                                near=0.01,
-                                far=100,
-                                entity_uid="link7",
-                            )
-            )     
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))   
 
         if "panda_wrist" in self.robot_uids:
             cam_config.append(CameraConfig(
@@ -117,21 +105,8 @@ class LiftPegUprightEnv(BaseEnv):
                                 entity_uid="base_link_hand",
                             ))
         elif "shadow" in self.robot_uids:
-            q1 = [0.7044, 0.06166, 0.06166, -0.7044]
-            q2 = [np.cos(-30*np.pi/180), np.sin(-30*np.pi/180), 0, 0]
-            q = product(q2,q1)
-            cam_config.append(CameraConfig(
-                                uid="arm_cam",
-                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=q),
-                                width=512,
-                                height=512,
-                                fov=1.57,
-                                near=0.01,
-                                far=100,
-                                entity_uid="forearm",
-                            ))
             q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
-            q4 = [np.cos(30*np.pi/180), np.sin(30*np.pi/180), 0, 0]
+            q4 = [np.cos(-20*np.pi/180), np.sin(-20*np.pi/180), 0, 0]
             q = product(q4,q3)
             cam_config.append(CameraConfig(  
                                 uid="hand_cam", 
@@ -142,7 +117,7 @@ class LiftPegUprightEnv(BaseEnv):
                                 near=0.01,
                                 far=100,
                                 entity_uid="palm",
-                            ))                     
+                            ))                      
         elif "leap" in self.robot_uids:
             q1 = [np.cos(45*np.pi/180), 0 , np.sin(45*np.pi/180), 0]
             q2 = [np.cos(-45*np.pi/180), np.sin(-45*np.pi/180), 0 , 0]
@@ -205,12 +180,15 @@ class LiftPegUprightEnv(BaseEnv):
         qmat = rotation_conversions.quaternion_to_matrix(q)
         euler = rotation_conversions.matrix_to_euler_angles(qmat, "XYZ")
         is_peg_upright = (
-            torch.abs(torch.abs(euler[:, 2]) - np.pi / 2) < 0.08
+            torch.abs(torch.abs(euler[:, 2]) - np.pi / 2) < 0.05
         )  # 0.08 radians of difference permitted
-        close_to_table = torch.abs(self.peg.pose.p[:, 2] - self.peg_half_length) < 0.005
-        is_loosen = torch.logical_not(self.agent.is_grasping(self.peg))
+
+        close_to_table = torch.abs(self.peg.pose.p[:, 2] - self.peg_half_length) < 0.005        
+        is_loosen = torch.logical_not(self.agent.is_grasping(self.peg,min_tip_distance=0.18,max_contact_force=0.2))
+        is_peg_static = self.peg.is_static(lin_thresh=2e-2, ang_thresh=0.8)
+
         return {
-            "success": is_peg_upright & close_to_table & is_loosen,
+            "success": is_peg_upright & close_to_table & is_loosen & is_peg_static,
         }
 
     def _get_obs_extra(self, info: Dict):
@@ -246,7 +224,7 @@ class LiftPegUprightEnv(BaseEnv):
         to_grip_dist = torch.linalg.norm(to_grip_vec, axis=1)
         reaching_rew = 1 - torch.tanh(5 * to_grip_dist)
         # reaching reward granted if gripping block
-        reaching_rew[self.agent.is_grasping(self.peg)] = 1
+        reaching_rew[self.agent.is_grasping(self.peg,max_contact_force=0.5)] = 1
 
         # if self.agent.is_grasping(self.peg):
         #     # weight reaching reward more
