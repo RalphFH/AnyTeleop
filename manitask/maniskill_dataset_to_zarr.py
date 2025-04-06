@@ -1,34 +1,28 @@
 import h5py
 import json
+import time
+import tyro
+import viser
+import sapien
+import subprocess
 import numpy as np
 import gymnasium as gym
-import open3d as o3d
-from urdf_parser_py.urdf import URDF
-import pytorch_kinematics as pk
-import subprocess
-
-
-from mani_skill.utils.structs import Link
-from pov.datasets.pov_zarr_dataset import PovZarrDataset
-from pov.utils.camera.pc import fpsample_pc
-
-from utils.sapien_link import sapien_joint,hand_link
-import viser
-import time
-
+from pathlib import Path
 from dataclasses import dataclass
-import tyro
 
-import trimesh
+from mani_skill.utils import sapien_utils
+from mani_skill.utils.structs import Link
+from pov.utils.camera.pc import fpsample_pc
+from pov.datasets.pov_zarr_dataset import PovZarrDataset
 
 
 @dataclass
 class Args:
     hdf5_dir: str
     hdf5_name: str
-    robot_path: str
-    robot_name: str
+    robot_pc_dir_path: str
     episode_num: int = 1
+    n_sample_pc: int = 512
     zarr_save_path: str = "./converted.zarr"
     replay: bool = True
     use_env_state: str = "use_env_states"
@@ -39,13 +33,15 @@ class Args:
 def parse_args():
     return tyro.cli(Args)
 
-def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.ndarray, interval: float = 0.03):
+def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.ndarray, current_robot_points: np.ndarray, target_robot_points: np.ndarray, interval: float = 0.03):
     """
     Visualize all point cloud frames using viser in sequence (like animation).
 
     Args:
         pointclouds: (n_steps, n_points, 3)
         colors: (n_steps, n_points, 3)
+        current_robot_points: (n_steps, n_points, 3)
+        target_robot_points: (n_steps, n_points, 3)
         interval: time delay between frames in seconds
     """
 
@@ -57,15 +53,30 @@ def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.n
     for i in range(pointclouds.shape[0]):
         pc = pointclouds[i]
         col = colors[i]
+        cr_pc = current_robot_points[i]
+        tr_pc = target_robot_points[i]
 
-        server.add_point_cloud(
+        server.scene.add_point_cloud(
             name="pointcloud",
             points=pc,
             colors=col,
             point_size=0.01,
             point_shape="circle",
         )
-
+        server.scene.add_point_cloud(
+            name="current_robot_points",
+            points=cr_pc,
+            colors=(255, 0, 0),
+            point_size=0.005,
+            point_shape="circle",
+        )
+        server.scene.add_point_cloud(
+            name="target_robot_points",
+            points=tr_pc,
+            colors=(0, 0, 255),
+            point_size=0.005,
+            point_shape="circle",
+        )
         time.sleep(interval)
 
     print("Finished playing all frames.")
@@ -73,10 +84,9 @@ def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.n
 
 def main(args: Args):
     process_num = args.episode_num
-    bounding_box = [[-0.55, -0.3, 0.01], [0.3, 0.3, 0.8]]
+    bounding_box = [[-0.4, -5, 0.01], [5, 5, 5]]
     # urdf and hdf5 data
-    robot_path = args.robot_path
-    robot_name = args.robot_name
+    robot_pc_dir_path = args.robot_pc_dir_path
     hdf5_dir = args.hdf5_dir
     state_file = hdf5_dir + args.hdf5_name
 
@@ -129,9 +139,9 @@ def main(args: Args):
         pc_file = state_file + ".pointcloud.pd_joint_pos.physx_cpu"
         # convert to zarr
         converter = ManiskillToZarrConverter(
-            robot_path=robot_path,
-            robot_name=robot_name,
-            bounding_box=bounding_box
+            robot_pc_dir_path=robot_pc_dir_path,
+            bounding_box=bounding_box,
+            n_sample_pc=args.n_sample_pc
         )
         
         data = converter.convert(rgbds_file, pc_file, process_num=process_num)
@@ -141,86 +151,84 @@ def main(args: Args):
             visualize_all_frames_with_viser(
                 server,
                 data['data/obs/point_clouds'].transpose(0, 2, 1),
-                data['data/obs/point_colors'].transpose(0, 2, 1)
+                data['data/obs/point_colors'].transpose(0, 2, 1),
+                data['data/obs/current_robot_points'].transpose(0, 2, 1),
+                data['data/actions/target_robot_points'].transpose(0, 2, 1)
             )
 
         
-
-
-
 class ManiskillToZarrConverter:
-    def __init__(self, robot_path, robot_name, bounding_box=None):
-        self.robot_path = robot_path
-        self.robot_name = robot_name
-        self.bounding_box = bounding_box or [[-0.3, -0.3, 0.01], [0.2, 0.3, 0.9]]
+    def __init__(self, robot_pc_dir_path, bounding_box=None, n_sample_pc=512):
+        self.robot_pc_dir_path = robot_pc_dir_path
+        self.body_name_list = np.load(Path(robot_pc_dir_path).absolute() / "body_name_list.npy", allow_pickle=True)
+        self.body_name_to_pc_canonical_downsampled = np.load(Path(robot_pc_dir_path).absolute() / "body_name_to_pc_canonical_downsampled.npy", allow_pickle=True)
+        self.concatenated_canonical_points = np.load(Path(robot_pc_dir_path).absolute() / "concatenated_canonical_points.npy")
+        self.concatenated_point_body_indices = np.load(Path(robot_pc_dir_path).absolute() / "concatenated_point_body_indices.npy")
+        self.bounding_box = bounding_box or [[-0.4, -5, 0.01], [5, 5, 5]]
+        self.n_sample_pc = n_sample_pc
+
+    def _qpos_to_transform(self, qpos, env):
+        """
+        qpos: (n_time_step, dof)
+        env: mani_skill env
+        ---
+        transforms: (n_time_step, n_links, 4, 4) | links are in the order of self.body_name_list
+        """
+        robot = env.unwrapped.agent.robot
+        n_time_step = qpos.shape[0]
+        n_links = len(self.body_name_list)
+        robot_link_name_to_link = {link_name:sapien_utils.get_obj_by_name(env.agent.robot.get_links(), link_name) for link_name in env.unwrapped.robot_link_names}
+        transforms = np.zeros((n_time_step, n_links, 4, 4))
+        for i in range(n_time_step):
+            robot.set_qpos(qpos[i])
+            for j, link_name in enumerate(self.body_name_list):
+                link_pose = robot_link_name_to_link[link_name].pose.raw_pose.detach().cpu().numpy()[0]
+                transforms[i, j] = sapien.Pose(p=link_pose[:3], q=link_pose[3:]).to_transformation_matrix()
+        return transforms
+
+    def _transforms_to_robot_pc(self, current_transforms, tgt_transforms):
+        """
+        Args:
+        - current_transforms: (n_time_step, n_links, 4, 4)
+        - tgt_transforms: (n_time_step, n_links, 4, 4)
         
-        # Initialize robot-related attributes
-        self.urdf_path = robot_path + robot_name + ".urdf"
-        self.links_pcs_dict = self._get_robot_pointcloud()
-        self.chain = pk.build_chain_from_urdf(open(self.urdf_path, mode="rb").read())
-        pk_joint_names = self.chain.get_joint_parameter_names()
-        sapien_joint_names = sapien_joint[robot_name]
-        self.sapien_to_pk = np.array([sapien_joint_names.index(name) for name in pk_joint_names]).astype(int)
-
-
-    def _get_robot_pointcloud(self) -> dict:
-        """Get links pointcloud dict from urdf file and geometry meshes"""
-        urdf_file = self.urdf_path
-        arm, hand, hand_type = self.robot_name.split("_")
-        robot = URDF.from_xml_file(urdf_file)
+        Returns:
+        - current_robot_points: (n_time_step, n_all_pc, 3)
+        - tgt_robot_points: (n_time_step, n_all_pc, 3)
+        """
+        canonical_points, point_body_indices = (
+            self.concatenated_canonical_points,
+            self.concatenated_point_body_indices,
+        )
+        current_rotations = current_transforms[:, :, :3, :3]  # Shape: (T, n_body, 3, 3)
+        current_translations = current_transforms[:, :, :3, 3]  # Shape: (T, n_body, 3)
+        tgt_rotations = tgt_transforms[:, :, :3, :3]  # Shape: (T, n_body, 3, 3)
+        tgt_translations = tgt_transforms[:, :, :3, 3]  # Shape: (T, n_body, 3)
+        current_point_rotations = current_rotations[
+            :, point_body_indices
+        ]  # Shape: (T, n_all_pc, 3, 3)
+        current_point_translations = current_translations[
+            :, point_body_indices
+        ]  # Shape: (T, n_all_pc, 3)
+        tgt_point_rotations = tgt_rotations[
+            :, point_body_indices
+        ]  # Shape: (T, n_all_pc, 3, 3)
+        tgt_point_translations = tgt_translations[
+            :, point_body_indices
+        ]  # Shape: (T, n_all_pc, 3)
+        canonical_points_expanded = canonical_points[
+            np.newaxis, :, :, np.newaxis
+        ]  # Shape: (1, n_all_pc, 3, 1)
+        current_robot_points = (
+            np.matmul(current_point_rotations, canonical_points_expanded).squeeze(-1)
+            + current_point_translations
+        )  # Shape: (T, n_all_pc, 3)
+        tgt_robot_points = (
+            np.matmul(tgt_point_rotations, canonical_points_expanded).squeeze(-1)
+            + tgt_point_translations
+        )  # Shape: (T, n_all_pc, 3)
+        return current_robot_points, tgt_robot_points
         
-        pointclouds = {}
-        for link in robot.links:
-            if link.visual and hasattr(link.visual.geometry, 'filename'):
-                mesh_file = self.robot_path + link.visual.geometry.filename
-            else:
-                continue # virtual link
-
-            o3d_mesh = o3d.io.read_triangle_mesh(mesh_file)
-
-            # Sample points using poisson disk sampling
-            if link.name in hand_link[hand]:
-                o3d_pc = o3d_mesh.sample_points_poisson_disk(50)
-            else:
-                o3d_pc = o3d_mesh.sample_points_poisson_disk(50)
-            
-            pointclouds[link.name] = o3d_pc # (n_points, 3)
-        
-        return pointclouds
-
-    def _qpos_to_transform(self, qpos, base_to_world) -> tuple[dict, np.ndarray]:
-        """Apply Forward Kinematics to get transforms for each link from joint positions"""
-        res = self.chain.forward_kinematics(qpos[:,self.sapien_to_pk])
-        link_names = list(res.keys())
-        transforms_list = []
-        transforms_dict = {}
-        for link_name in link_names:
-            link_matrix = res[link_name].get_matrix().numpy()  # Convert tensor to numpy
-
-            # transform link_matrix to world frame
-            base_to_world_expanded = np.tile(base_to_world[None, :, :], (link_matrix.shape[0], 1, 1))
-            link_matrix = np.matmul(base_to_world_expanded, link_matrix) 
-
-            transforms_list.append(link_matrix)
-            transforms_dict[link_name] = link_matrix
-
-        stacked_transforms = np.stack(transforms_list, axis=1)
-        return transforms_dict, stacked_transforms
-
-    def _transform_link_points(self, points, transforms) -> np.ndarray:
-        """Transform points by applying rotation and translation to each step"""
-        rotations = transforms[:, :3, :3]      # (n_steps, 3, 3)
-        translations = transforms[:, :3, 3]     # (n_steps, 3)
-
-        points_expanded = points[np.newaxis, :, :, np.newaxis]  # (1, n_points, 3, 1)
-        rotations_expanded = rotations[:, np.newaxis]           # (n_steps, 1, 3, 3)
-
-        transformed_points = (
-            np.matmul(rotations_expanded, points_expanded).squeeze(-1)  # rotate
-            + translations[:, np.newaxis]                               # translate
-        )  # (n_steps, n_points, 3)
-
-        return transformed_points
 
     def convert(self, rgbd_file, pc_file, process_num=2) -> dict:
         """
@@ -232,7 +240,6 @@ class ManiskillToZarrConverter:
         Output:
         mani_data: zarr dataset
         """
-        urdf_path = self.urdf_path
 
         mani_data = {}
 
@@ -245,19 +252,17 @@ class ManiskillToZarrConverter:
         env_id = env_info['env_id']
         env_kwargs = env_info['env_kwargs']
         env = gym.make(env_id, **env_kwargs)
-
+        robot = env.unwrapped.agent.robot
         # get segment id to link name mapping for robot mask
-        link_list = {}
+        link_seg_id_to_link_name = {}
         for obj_id, obj in sorted(env.unwrapped.segmentation_id_map.items()):
             if isinstance(obj, Link):
-                link_list[obj_id] = obj.name
+                link_seg_id_to_link_name[obj_id] = obj.name
 
-        env.close()
-
-        link_names = [link_list[i] for i in sorted(link_list.keys())]
-        # link_names = chain.get_link_names()
-        mani_data["meta/link_name_list"] = np.array(link_names, dtype=str)
-        mani_data["meta/joint_name_list"] = np.array(self.chain.get_joint_parameter_names(), dtype=str)
+        # get link names and joint names 
+        joint_name_list = [joint.get_name() for joint in robot.get_active_joints()]
+        mani_data["meta/link_name_list"] = np.array(self.body_name_list, dtype=str)
+        mani_data["meta/joint_name_list"] = np.array(joint_name_list, dtype=str)
 
         n_trajectories = process_num
         # read rgbd trajectory data
@@ -267,12 +272,13 @@ class ManiskillToZarrConverter:
             images = []
             depths = []
             robot_masks = []
-            agent_qpos = []
-            agent_qvel = []
-            agent_tcp_pos = []
+            agent_qposes = []
+            agent_qvels = []
+            agent_tcp_poses = []
+            agent_tcp_quats = []
             current_transforms = []
             target_transforms = []
-            target_qpos = []
+            target_qposes = []
             actions = []
             trajectory_ends = []
             target_robot_pc = []
@@ -284,17 +290,11 @@ class ManiskillToZarrConverter:
                 traj_key = f"traj_{traj_idx}"
                 print(f"Processing {traj_key} rgbd")
 
-                if traj_idx == 0:
-                    agent_name = list(f[traj_key]['env_states']['articulations'].keys())[0]
-                    env_states = f[traj_key]['env_states']['articulations'][agent_name][0,:3]
-                    base_to_world = np.eye(4)
-                    base_to_world[:3,3] = env_states
-
                 obs = f[traj_key]['obs']
 
-                # process episode ends
+                # process actions and episode ends
                 traj_actions = f[traj_key]['actions'][:]
-                padded_traj_actions = np.concatenate([traj_actions[0:1], np.array(traj_actions)], axis=0)
+                padded_actions = np.concatenate([np.array(traj_actions), traj_actions[-1:]], axis=0)
                 
                 if traj_idx == 0:
                     trajectory_ends.append(len(traj_actions)+1)
@@ -305,46 +305,43 @@ class ManiskillToZarrConverter:
                 traj_agent_qpos = obs['agent']['qpos'][:]
                 traj_agent_qvel = obs['agent']['qvel'][:]
                 traj_tcp_pos = obs['extra']['tcp_pose'][:, :3] # only need position
+                traj_tcp_quat = obs['extra']['tcp_pose'][:, 3:] # only need rotation
                 
-                # process actions and target transforms
+                # process target qpos and target transforms                
+                target_qpos = np.concatenate([np.array(traj_actions), traj_actions[-1:]], axis=0)
+                if traj_agent_qpos.shape[-1] != target_qpos.shape[-1]:
+                    # there is a mimic joint in panda
+                    assert traj_agent_qpos.shape[-1] == target_qpos.shape[-1] + 1, f"traj_agent_qpos.shape[-1]: {traj_agent_qpos.shape[-1]}, target_qpos.shape[-1]: {target_qpos.shape[-1]}"
+                    # 1. Compute the finger positions for all rows at once.
+                    finger_positions = (target_qpos[:, -1] + 1) * 0.04 / 2  # shape: (n_time_step,)
+                    # 2. Remove the last column (gripper command) from the actions.
+                    actions_no_gripper = target_qpos[:, :-1]  # shape: (n_time_step, dof-2)
+                    # 3. Create two columns for the finger positions.
+                    # Each row gets [finger_pos, finger_pos].
+                    finger_columns = np.repeat(finger_positions[:, np.newaxis], 2, axis=1)  # shape: (n_time_step, 2)
+                    # 4. Concatenate the non-gripper part of the actions with the two finger position columns.
+                    target_qpos = np.concatenate([actions_no_gripper, finger_columns], axis=1)  # shape: (n_time_step, dof)
 
-                # change actions [n_transition, dof-1] to [n_time_step, dof]
-                traj_qpos_actions = []
-                for action in traj_actions:
-                    qpos_action = action.copy()
-                    traj_qpos_actions.append(qpos_action)
-                
-                # add the first step qpos to the beginning of the actions
-                traj_qpos_actions = np.concatenate([traj_agent_qpos[0:1], np.array(traj_qpos_actions)], axis=0)
-                
                 # get current and target transforms
-                current_transform_dict, traj_current_transforms = self._qpos_to_transform(traj_agent_qpos, base_to_world)
-                target_transform_dict, traj_target_transforms = self._qpos_to_transform(traj_qpos_actions, base_to_world)
+                traj_current_transforms = self._qpos_to_transform(traj_agent_qpos, env)
+                traj_target_transforms = self._qpos_to_transform(target_qpos, env)
                 
                 # start robot pc processing
-                traj_current_robot_pc = []
-                traj_target_robot_pc = []
-                for link in self.links_pcs_dict.keys():
-                    current_link_pc = self._transform_link_points(np.asarray(self.links_pcs_dict[link].points), current_transform_dict[link])
-                    target_link_pc = self._transform_link_points(np.asarray(self.links_pcs_dict[link].points), target_transform_dict[link])
-                    traj_current_robot_pc.append(current_link_pc)
-                    traj_target_robot_pc.append(target_link_pc)
-                # reform
-                traj_current_robot_pc = np.concatenate(traj_current_robot_pc, axis=1)
-                traj_target_robot_pc = np.concatenate(traj_target_robot_pc, axis=1)
+                traj_current_robot_pc, traj_target_robot_pc = self._transforms_to_robot_pc(traj_current_transforms, traj_target_transforms)
 
                 # append traj data
-                agent_qpos.append(traj_agent_qpos)
-                agent_qvel.append(traj_agent_qvel)
-                agent_tcp_pos.append(traj_tcp_pos)
+                agent_qposes.append(traj_agent_qpos)
+                agent_qvels.append(traj_agent_qvel)
+                agent_tcp_poses.append(traj_tcp_pos)
+                agent_tcp_quats.append(traj_tcp_quat)
                 current_transforms.append(traj_current_transforms)
                 target_transforms.append(traj_target_transforms)
-                target_qpos.append(traj_qpos_actions) 
-                actions.append(padded_traj_actions) 
+                target_qposes.append(target_qpos) 
+                actions.append(padded_actions)  
                 target_robot_pc.append(traj_target_robot_pc)
                 current_robot_pc.append(traj_current_robot_pc)
 
-               # Stack images for all cameras in this trajectory
+                # Stack images for all cameras in this trajectory
                 traj_images = []
                 traj_depths = []
                 traj_robot_masks = []
@@ -381,7 +378,7 @@ class ManiskillToZarrConverter:
 
                     # robot mask of this camera
                     segmentation_camera = obs['sensor_data'][camera_name]['segmentation'][:]
-                    robot_mask = np.isin(segmentation_camera[:,:,:,0], list(link_list.keys())).astype(np.uint8)
+                    robot_mask = np.isin(segmentation_camera[:,:,:,0], list(link_seg_id_to_link_name.keys())).astype(np.uint8)
                     robot_mask = robot_mask[:,:,:,np.newaxis]
                     traj_robot_masks.append(robot_mask)
 
@@ -394,12 +391,13 @@ class ManiskillToZarrConverter:
             images = np.concatenate(images, axis=0)
             depths = np.concatenate(depths, axis=0)
             robot_masks = np.concatenate(robot_masks, axis=0)
-            agent_qpos = np.concatenate(agent_qpos, axis=0)
-            agent_qvel = np.concatenate(agent_qvel, axis=0)
-            agent_tcp_pos = np.concatenate(agent_tcp_pos, axis=0)
+            agent_qposes = np.concatenate(agent_qposes, axis=0)
+            agent_qvels = np.concatenate(agent_qvels, axis=0)
+            agent_tcp_poses = np.concatenate(agent_tcp_poses, axis=0)
+            agent_tcp_quats = np.concatenate(agent_tcp_quats, axis=0)
             current_transforms = np.concatenate(current_transforms, axis=0)
             target_transforms = np.concatenate(target_transforms, axis=0)
-            target_qpos = np.concatenate(target_qpos, axis=0)
+            target_qposes = np.concatenate(target_qposes, axis=0)
             actions = np.concatenate(actions, axis=0)
             trajectory_ends = np.array(trajectory_ends, dtype=np.int64)
             target_robot_pc = np.concatenate(target_robot_pc, axis=0)
@@ -409,12 +407,13 @@ class ManiskillToZarrConverter:
             mani_data["data/obs/images"] = images.astype(np.uint8).transpose(0, 1, 4, 2, 3)
             mani_data["data/obs/depths"] = depths.astype(np.float32).transpose(0, 1, 4, 2, 3)
             mani_data["data/obs/robot_masks"] = robot_masks.astype(np.uint8).transpose(0, 1, 4, 2, 3)
-            mani_data["data/obs/panda_all_qpos"] = agent_qpos.astype(np.float32)
-            mani_data["data/obs/panda_all_qvel"] = agent_qvel.astype(np.float32)
-            mani_data["data/obs/panda_tcp_pos"] = agent_tcp_pos.astype(np.float32)
+            mani_data["data/obs/panda_all_qpos"] = agent_qposes.astype(np.float32)
+            mani_data["data/obs/panda_all_qvel"] = agent_qvels.astype(np.float32)
+            mani_data["data/obs/panda_tcp_pos"] = agent_tcp_poses.astype(np.float32)
+            mani_data["data/obs/panda_tcp_quat"] = agent_tcp_quats.astype(np.float32)
             mani_data["data/obs/current_transforms"] = current_transforms.astype(np.float32)
             mani_data["data/actions/target_transforms"] = target_transforms.astype(np.float32)
-            mani_data["data/actions/target_all_qpos"] = target_qpos.astype(np.float32)
+            mani_data["data/actions/target_all_qpos"] = target_qposes.astype(np.float32)
             mani_data["data/actions/original_actions"] = actions.astype(np.float32)
             mani_data["meta/episode_ends"] = trajectory_ends.astype(np.int64)
             mani_data["data/obs/current_robot_points"] = current_robot_pc.astype(np.float32).transpose(0, 2, 1)
@@ -455,7 +454,7 @@ class ManiskillToZarrConverter:
                     step_pc = step_pc[valid_indices]
                     step_colors = step_colors[valid_indices]
 
-                    step_pc, step_colors = fpsample_pc(step_pc, step_colors, 224)
+                    step_pc, step_colors = fpsample_pc(step_pc, step_colors, self.n_sample_pc)
 
                     processed_pc.append(step_pc)  # Only take xyz coordinates
                     processed_colors.append(step_colors)
@@ -480,7 +479,6 @@ class ManiskillToZarrConverter:
         zarr_dataset = PovZarrDataset(zarr_path)
         zarr_dataset.save_data(data)
         zarr_dataset.print_structure()
-
 
 
 
