@@ -23,7 +23,7 @@ from dataclasses import dataclass
 class Args:
     env_id: Annotated[str, tyro.conf.arg(aliases=["-e"])] = "PickCube-v1"
     obs_mode: str = "none"
-    robot_uid: Annotated[str, tyro.conf.arg(aliases=["-r"])] = "panda"
+    robot_uid: Annotated[str, tyro.conf.arg(aliases=["-r"])] = "ur5e"
     """The robot to use. Robot setups supported for teleop in this script are panda and panda_stick"""
     record_dir: str = "demos"
     """directory to record the demonstration data and optionally videos"""

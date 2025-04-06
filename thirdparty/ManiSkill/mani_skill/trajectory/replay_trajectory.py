@@ -32,7 +32,7 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path: str 
+    traj_path="/home/zeyu/robotics/dex-retargeting/manitask/data/h5/PullCubeTool-v1/ur5e_allegro_right/ur5e_allegro_cubetool_total.h5" 
     """Path to the trajectory .h5 file to replay"""
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = "auto"
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
@@ -56,12 +56,12 @@ class Args:
     """Whether to discard episodes that timeout and are truncated (depends on the max_episode_steps parameter of task)"""
     allow_failure: bool = False
     """Whether to include episodes that fail in saved videos and trajectory data based on the environment's evaluation returned "success" label"""
-    vis: bool = False
+    vis: bool = True
     """Whether to visualize the trajectory replay via the GUI."""
-    use_env_states: bool = False
+    use_env_states: bool = True
     """Whether to replay by environment states instead of actions. This guarantees that the environment will look exactly
     the same as the original trajectory at every step."""
-    use_first_env_state: bool = False
+    use_first_env_state: bool = True
     """Use the first env state in the trajectory to set initial state. This can be useful for trying to replay
     demonstrations collected in the CPU simulation in the GPU simulation by first starting with the same initial
     state as GPU simulated tasks will randomize initial states differently despite given the same seed compared to CPU sim."""

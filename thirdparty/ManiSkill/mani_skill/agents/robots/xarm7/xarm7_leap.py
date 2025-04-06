@@ -36,11 +36,11 @@ class XArm7Leap(BaseAgent):
     urdf_config = dict(
         _materials=dict(
             front_finger=dict(
-                static_friction=4.0, dynamic_friction=4.0, restitution=0.0
-            ),
-            palm=dict(
-                static_friction=2.0, dynamic_friction=2.0, restitution=0.0
-            ),
+                static_friction=10, dynamic_friction=10, restitution=0.0          #the 2 frictions are set to 10, for pull cube tool.
+            ),                                                                    
+            palm=dict(                                                           
+                static_friction=6, dynamic_friction=6, restitution=0.0            #the 2 frictions are set to 6, for pull cube tool.
+            ),                                                                    # change for pull cube tool are all above
         ),
         link={**{
             link_name: dict(

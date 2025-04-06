@@ -1,174 +1,85 @@
-<robot name="partnet_cc0535a34cdc7d676bf98d15712168f">
-	<link name="base" />
-	<link name="link_0">
-		<inertial>
-			<mass value="0.3" />  <!-- 假设 link_0 的质量为 0.3 kg -->
-			<origin xyz="0 0 0" />  <!-- 质心位于几何中心 -->
-			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />  <!-- 转动惯量 -->
-		</inertial>
-		<collision>
-			<origin xyz="0 0 0" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_0_0.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<visual name="keyboard-part[&quot;id]">
-			<origin xyz="0 0 0" />
-			<geometry>
-				<mesh filename="textured_objs/new-1.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="touchpad_surface-part[&quot;id]">
-			<origin xyz="0 0 0" />
-			<geometry>
-				<mesh filename="textured_objs/new-4.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="button-part[&quot;id]">
-			<origin xyz="0 0 0" />
-			<geometry>
-				<mesh filename="textured_objs/new-3.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="base_frame-part[&quot;id]">
-			<origin xyz="0 0 0" />
-			<geometry>
-				<mesh filename="textured_objs/new-2.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-	</link>
-	<joint name="joint_0" type="fixed">
-		<origin rpy="1.570796326794897 0 -1.570796326794897" xyz="0 0 0" />
-		<child link="link_0" />
-		<parent link="base" />
-	</joint>
-	<link name="link_1">
-		<inertial>
-			<mass value="0.2" />  <!-- 假设 link_1 的质量为 0.2 kg -->
-			<origin xyz="0 0 0" />  <!-- 质心位于几何中心 -->
-			<inertia ixx="0.005" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005" />  <!-- 转动惯量 -->
-		</inertial>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_0.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_6.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_2.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_3.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_4.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_1.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_5.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<collision>
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="new_objs/11586_link_1_7.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</collision>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-2.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-3.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-5.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-4.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-9.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-10.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-8.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="other_leaf-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/original-7.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="screen-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/new-5.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="screen_frame-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/new-7.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-		<visual name="camera-part[&quot;id]">
-			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
-			<geometry>
-				<mesh filename="textured_objs/new-6.obj" scale="0.3 0.3 0.3" />
-			</geometry>
-		</visual>
-	</link>
-	<joint name="joint_1" type="revolute">
-		<origin xyz="0.1262880137608796 -0.0432546 -0.06599939011091995" />
-		<axis xyz="-1 0 0" />
-		<child link="link_1" />
-		<parent link="link_0" />
-		<limit lower="-1.832595714594046" upper="0.9" effort="10.0" velocity="3.0" />
-		<dynamics damping="0.8" friction="5.0" />
-	</joint>
+<?xml version="1.0"?>
+<robot name="laptop_model_single_hinge_corrected">
+
+  <!-- （可选）全局根节点，用于整体旋转，比如旋转90°以适配环境坐标系 -->
+  <link name="global_base" />
+  <joint name="global_rotation" type="fixed">
+    <!-- 逆时针旋转 90° (1.5708 弧度)，可根据需要去掉 -->
+    <origin xyz="0 0 0" rpy="0 0 1.5708"/>
+    <parent link="global_base"/>
+    <child link="base_link"/>
+  </joint>
+
+  <!-- 
+    1. 底座：尺寸 0.30m x 0.20m x 0.02m
+       这里假设 x=0.30(宽)，y=0.20(深)，z=0.02(厚)。
+       同你原文件一致，在z方向上平移0.01，让底面贴合z=0。
+  -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.30 0.20 0.02"/>
+      </geometry>
+      <material name="gray"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.30 0.20 0.02"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.0"/>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+    </inertial>
+  </link>
+
+  <!-- 
+    2. 铰链：这里给出一个“单铰链”的正确示例。
+       - 如果你坚持“绕y轴转”，请把 axis 改为 xyz="0 1 0"，
+         但要记得去掉原先的 rpy="0 1.57 0" 以免把屏幕拧歪。
+       - 如果想“像一般笔记本一样”从后沿往上翻，则更常见的做法是
+         让铰链绕 x 轴转 (axis="1 0 0")，本示例默认如此。
+       - 关节原点 (origin) 放在底座后沿中点，比如 y=-0.10, z=0.02。
+         这样屏幕在关节角度=0时是“闭合”贴在底座上，角度变大时“打开”。
+  -->
+  <joint name="hinge_joint" type="revolute">
+    <!-- 这里假设绕 x 轴翻开：axis = (1, 0, 0) -->
+    <origin xyz="0 -0.10 0.02" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="screen_link"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-1.57" upper="1.57" effort="4.0" velocity="2.0"/>
+    <dynamics damping="50" friction="300"/>
+  </joint>
+
+  <!-- 
+    3. 屏幕：尺寸 0.30m x 0.005m x 0.20m
+       - 让 x=0.30(宽度)，y=0.005(厚度)，z=0.20(高度)。
+       - bottom edge 在 z=0，因此让可视化/碰撞的 origin 往上平移 0.10m (z=0.10)。
+         这样屏幕的底边正好在 z=0，对应关节处。
+  -->
+  <link name="screen_link">
+    <visual>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.30 0.005 0.20"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.30 0.005 0.20"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0.10" rpy="0 0 0"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
+    </inertial>
+  </link>
+
 </robot>

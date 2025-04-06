@@ -23,13 +23,13 @@ from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
-from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig,SceneConfig
 from mani_skill.utils.building import articulations
 from mani_skill.utils.quater import product
 
 current_dir = os.path.dirname(__file__)
 
-@register_env("OpenFaucet-v1", max_episode_steps=500)
+@register_env("OpenFaucet-v1", max_episode_steps=300)
 
 class OpenFaucetEnv(BaseEnv):
     """
@@ -55,16 +55,16 @@ class OpenFaucetEnv(BaseEnv):
                  XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
                  IIwa7Allegro]                 
-    
+   
     # set some commonly used values
     goal_range = 2   # degrees
         
     
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, reward_mode="sparse" ,sim_backend = "physx_cuda",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, reward_mode="sparse" ,sim_backend = "cpu",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.has_been_successful = False
-        self.faucet_target_angle=1.16   # arc
+        self.faucet_target_angle=1.29   # arc       when collecting data, set this to 1.29 to make your "teaching" data more standard. when eval, set this to 1.16 to make the task easier. 
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,sim_backend=sim_backend, **kwargs)    #
 
     # Specify default simulation/gpu memory configurations to override any default values
@@ -73,7 +73,9 @@ class OpenFaucetEnv(BaseEnv):
         return SimConfig(
             gpu_memory_config=GPUMemoryConfig(
                 found_lost_pairs_capacity=2**25, max_rigid_patch_count=2**18
-            )
+            ),
+            scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
+            solver_velocity_iterations= 1  )
         )
 
     @property
@@ -96,8 +98,9 @@ class OpenFaucetEnv(BaseEnv):
     @property
     def _default_human_render_camera_configs(self):
 
-        top_down = sapien_utils.look_at([-0.18, 0.0, 0.6], [-0.06, 0.0, 0])
-        left_side = sapien_utils.look_at([-0.05, 0.27, 0.15], [-0.05, 0.1, 0.15]) 
+        #top_down = sapien_utils.look_at([-0.05, 0.1, 0.8], [-0.06, 0.0, 0])
+        top_down = sapien_utils.look_at([-0.18, 0.0, 0.7], [-0.06, 0.0, 0])
+        left_side = sapien_utils.look_at([0.4, 0.5, 0.5], [0.0, 0.0, 0.35]) 
 
         cam_config = []
         cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
@@ -186,27 +189,31 @@ class OpenFaucetEnv(BaseEnv):
     def _load_agent(self, options: dict):
         # set a reasonable initial pose for the agent that doesn't intersect other objects
         super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
-
+        
+        
 
     def _load_scene(self, options):
         self.table_scene = TableSceneBuilder(
         env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
         self.table_scene.build()
-        
         loader = self.scene.create_urdf_loader()
-        loader.scale = 0.2 
+        loader.scale = 1.7 
         urdf_relative_path = "../../../assets/my_faucet/faucet_pack/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
-        articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
+        
         # set physical parameters for the faucet
         loader.set_density(5)
         loader.fix_root_link = True
+        #loader.create_collision_from_visual = True
+        #loader.collision_is_visual=True
         loader.load_multiple_collisions_from_file = True
+        articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
         builder = articulation_builders[0]
-        base_pos = np.array([-0.05, 0.1, 0.2])
-        random_offset_x = np.random.uniform(-0.15, 0.15, size=2)
-        random_offset_y = np.random.uniform(-0.3, 0.3, size=2)
+        
+        base_pos = np.array([0.05, 0, 0])
+        random_offset_x = np.random.uniform(-0.05, 0.05, size=1)
+        random_offset_y = np.random.uniform(-0.1, 0.1, size=1)  
         
         new_pos = np.array([base_pos[0] + random_offset_x[0],
                             base_pos[1] + random_offset_y[0],
@@ -215,9 +222,7 @@ class OpenFaucetEnv(BaseEnv):
         
         self.faucet_articulation = builder.build(name="faucet_articulation")
         # set friction for the faucet
-        for j in self.faucet_articulation.get_joints():
-            j.set_friction(0.1)
-
+       
     
     
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
@@ -233,9 +238,11 @@ class OpenFaucetEnv(BaseEnv):
             
             qpos =np.zeros(self.faucet_articulation.dof)
             self.faucet_articulation.set_qpos(qpos)
-            base_pos = np.array([-0.05, 0.1, 0.2])
-            random_offset_x = np.random.uniform(-0.15, 0.15, size=2)
-            random_offset_y = np.random.uniform(-0.3, 0.3, size=2)
+          
+            base_pos = np.array([0.05, 0, 0])
+            random_offset_x = np.random.uniform(-0.05, 0.05, size=1)
+            random_offset_y = np.random.uniform(-0.1, 0.1, size=1)  
+            
             new_pos = np.array([base_pos[0] + random_offset_x[0],
                                 base_pos[1] + random_offset_y[0],
                                 base_pos[2]])  
@@ -249,8 +256,39 @@ class OpenFaucetEnv(BaseEnv):
                     )
                     new_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0]) + noise  
                     self.agent.robot.set_qpos(new_qpos)
-
-
+            if self.robot_uids == "ur5e_allegro_right":    
+                 # panda initial pose
+                if self.robot_init_qpos_noise > 0:
+                    noise = np.random.uniform(
+                        -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
+                    )
+                    new_qpos = np.array([   -0.24955  ,   -1.7031   ,   1.7518   , -0.50697   ,  0.85624  ,   0.29718  ,   0.15545  ,   0.12096 ,
+                                         0.18827   ,  0.32904   ,  0.66978   ,   0.5374  ,   0.74709  , -0.052536, -3.6468e-05   , 0.063846  
+                                         -0.065989   ,   0.9719 ,  -0.014903 , -0.0053921 ,  -0.033205  ,   0.28124,0]) + noise  
+                    self.agent.robot.set_qpos(new_qpos)
+            if self.robot_uids == "xarm6_shadow_right":    
+                 # panda initial pose
+                if self.robot_init_qpos_noise > 0:
+                    noise = np.random.uniform(
+                        -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
+                    )
+                    new_qpos = np.array([   -0.79639 ,   -0.56757  ,  -0.82376   ,   1.3494     ,  1.562    ,  1.2145  ,  0.081409   , -0.20006 ,
+                                         -0.24934 ,    -0.1069 ,  -0.012685   ,  0.38067   ,  0.47479 ,  -0.057781 ,   0.050859  ,   0.13706 ,  
+                                         -0.31211, -0.00099533 ,    0.20491 ,   0.071981 ,  0.0030264  ,  -0.15471 , -0.080778 ,   0.051354   ,
+                                         0.007908 ,  0.0014614 ,  0.0043305  ,   0.10043  ,  0.002212  ,  -0.04348]) + noise  
+                    self.agent.robot.set_qpos(new_qpos)
+                    
+            if self.robot_uids == "xarm7_leap_right":    
+                 # panda initial pose
+                if self.robot_init_qpos_noise > 0:
+                    noise = np.random.uniform(
+                        -self.robot_init_qpos_noise, self.robot_init_qpos_noise, self.agent.robot.dof
+                    )
+                    new_qpos = np.array([    0.17007  ,  -0.21156  ,  -0.22471   ,   1.0581   ,    1.756    ,  1.2238    , 
+                                         3.9243 ,  -0.023651  ,   0.12155 ,    0.31412  ,  0.057673   , -0.20355  ,  -0.14136 ,
+                                         -0.34307  , -0.063874    , 0.23151 ,   0.019688  ,  -0.19046  ,   0.77333  , -0.010055  ,
+                                         0.014319 ,   -0.19212  ,   0.28517]) + noise  
+                    self.agent.robot.set_qpos(new_qpos)
     
     def evaluate(self):
         """
@@ -258,7 +296,7 @@ class OpenFaucetEnv(BaseEnv):
         """
         
         current_angle = self.faucet_articulation.get_qpos()[0]  
-        is_opened = current_angle >= self.faucet_target_angle
+        is_opened = current_angle >= self.faucet_target_angle/0.9         
 
         return {"success": is_opened}
 

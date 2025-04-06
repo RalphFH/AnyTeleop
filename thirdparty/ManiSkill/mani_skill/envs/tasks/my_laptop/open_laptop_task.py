@@ -28,7 +28,7 @@ from mani_skill.utils.quater import product
 
 
 current_dir = os.path.dirname(__file__)
-@register_env("OpenLaptop-v1", max_episode_steps=500)
+@register_env("OpenLaptop-v1", max_episode_steps=300)
 
 class OpenLaptopEnv(BaseEnv):
    
@@ -53,7 +53,7 @@ class OpenLaptopEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,reward_mode="sparse" ,sim_backend = "physx_cuda", **kwargs):
         self.has_been_successful = False
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        self.laptop_target_angle=-0.35
+        self.laptop_target_angle=-0.05         #when collecting the data, set it to -0.05, when eval, set it to -0.2 to make the task easier for the model     
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,sim_backend=sim_backend, **kwargs)
 
     # Specify default simulation/gpu memory configurations to override any default values
@@ -195,7 +195,7 @@ class OpenLaptopEnv(BaseEnv):
         self.table_scene.build()
         
         loader = self.scene.create_urdf_loader()
-        loader.scale = 1 
+        loader.scale = 1.5 
         urdf_relative_path = "../../../assets/my_laptop/laptop_pack2/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
@@ -204,11 +204,10 @@ class OpenLaptopEnv(BaseEnv):
         loader.fix_root_link = True
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
-        
-    
-        base_pos = np.array([0, 0.35, 0.1])
-        random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
-        random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
+
+        base_pos = np.array([0.05, 0.35, 0]) 
+        random_offset_x = np.random.uniform(-0.05, 0.02, size=1)      #for hands embodiment
+        random_offset_y = np.random.uniform(-0.1, 0.15, size=1)       #for hands embodiment
         new_pos = np.array([base_pos[0] + random_offset_x[0],
                             base_pos[1] + random_offset_y[0],
                             base_pos[2]])
@@ -217,14 +216,12 @@ class OpenLaptopEnv(BaseEnv):
         self.laptop_articulation = builder.build(name="laptop_articulation")
         # set friction for the faucet
         for j in self.laptop_articulation.get_joints():
-            j.set_friction(0.1)
-        
+            j.set_friction(1)
     
     #auto called in env.reset() to initialize the episode
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
       
         with torch.device(self.device):
-            
             
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
@@ -233,14 +230,14 @@ class OpenLaptopEnv(BaseEnv):
 
             hinge_idx = 0  
             # qpos[hinge_idx]=0 is 90° open so 10° is -80°
-            laptopqpos[hinge_idx] = -80 * np.pi / 180.0
+            laptopqpos[hinge_idx] = -60 * np.pi / 180.0
 
             self.laptop_articulation.set_qpos(laptopqpos)
 
-             #set according to a lot of experiments.
-            base_pos = np.array([0, 0.35, 0.1])
-            random_offset_x = np.random.uniform(-0.05, 0.075, size=1)
-            random_offset_y = np.random.uniform(-0.25, 0.25, size=1)  
+            base_pos = np.array([0.05, 0.35, 0]) 
+            random_offset_x = np.random.uniform(-0.05, 0.02, size=1)      #for hands embodiment
+            random_offset_y = np.random.uniform(-0.1, 0.15, size=1)       #for hands embodiment
+           
             new_pos = np.array([base_pos[0] + random_offset_x[0],
                                 base_pos[1] + random_offset_y[0],
                                 base_pos[2]])
@@ -261,7 +258,8 @@ class OpenLaptopEnv(BaseEnv):
     def evaluate(self):
         # success is achieved when the cube's xy position on the table is within the
         # goal region's area (a circle centered at the goal region's xy position)
-        current_angle = self.laptop_articulation.get_qpos()[0]  
+        current_angle = self.laptop_articulation.get_qpos()[0]
+      
         is_opened = current_angle > self.laptop_target_angle
 
         return {"success": is_opened}

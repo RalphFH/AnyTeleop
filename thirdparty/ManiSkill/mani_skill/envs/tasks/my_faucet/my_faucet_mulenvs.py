@@ -49,7 +49,7 @@ class OpenFaucetMulEnv(BaseEnv):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.has_been_successful = False
-        self.faucet_target_angle=1.16 
+        self.faucet_target_angle=1.16    #when collecting data, set this to 1.29 to make your "teaching" data more standard. when eval, set this to 1.16 to make the task easier.
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
 
     # Specify default simulation/gpu memory configurations to override any default values
@@ -103,7 +103,7 @@ class OpenFaucetMulEnv(BaseEnv):
         self.table_scene.build()
         
         loader = self.scene.create_urdf_loader()
-        loader.scale = 0.2 
+        loader.scale = 1.7 
         urdf_relative_path = "../../../assets/my_faucet/faucet_pack/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
@@ -112,23 +112,20 @@ class OpenFaucetMulEnv(BaseEnv):
         loader.fix_root_link = True
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
-        
-        base_pos = np.array([-0.05, 0.1, 0.2])
-        random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
-        random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
-        new_pos = np.stack([base_pos[0] + random_offset_x,
+ 
+        base_pos = np.array([0.05, 0.0, 0])
+        random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
+        new_pos = np.array([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
         p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
         batched_pose = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
         builder.initial_pose = batched_pose
         
-        
         self.faucet_articulation = builder.build(name="faucet_articulation")
         # set friction for the faucet
-        for j in self.faucet_articulation.get_joints():
-            j.set_friction(0.1)
-
+       
     
     
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
@@ -148,28 +145,80 @@ class OpenFaucetMulEnv(BaseEnv):
             self.faucet_articulation.set_qpos(qpos_tensor)
 
             #base pos and random offset for the faucet are determined according to experiments, do not change
-            base_pos = np.array([-0.05, 0.1, 0.2])
-            random_offset_x = np.random.uniform(-0.15, 0.15, size=(self.num_envs,))
-            random_offset_y = np.random.uniform(-0.3, 0.3, size=(self.num_envs,))
-            new_pos = np.stack([base_pos[0] + random_offset_x,
+            base_pos = np.array([0.05, 0, 0])
+            random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
+            random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
+            new_pos = np.array([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
                                 base_pos[2]*np.ones(self.num_envs)],axis=1)
             p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
             batched_pose1 = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
             self.faucet_articulation.set_pose(batched_pose1)
                 
-            noise_np = np.random.uniform(
-            low=-self.robot_init_qpos_noise,
-            high=self.robot_init_qpos_noise,
-            size=(b, dof_per_env)
-           )
-            #qpos is the position of every joint of the robot,also determined according to experiments, do not change
-            base_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0])
-            base_qpos_tiled = np.tile(base_qpos, (b, 1))  
-            new_qpos_np = base_qpos_tiled + noise_np 
-            new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
-            self.agent.robot.set_qpos(new_qpos_tensor)
-
+                
+            if self.robot_uids == "panda":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+                
+            if self.robot_uids == "ur5e_allegro_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([   -0.24955  ,   -1.7031   ,   1.7518   , -0.50697   ,  0.85624  ,   0.29718  ,   0.15545  ,   0.12096 ,
+                                         0.18827   ,  0.32904   ,  0.66978   ,   0.5374  ,   0.74709  , -0.052536, -3.6468e-05   , 0.063846  
+                                         -0.065989   ,   0.9719 ,  -0.014903 , -0.0053921 ,  -0.033205  ,   0.28124,0])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+            
+            if self.robot_uids == "xarm6_shadow_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([   -0.79639 ,   -0.56757  ,  -0.82376   ,   1.3494     ,  1.562    ,  1.2145  ,  0.081409   , -0.20006 ,
+                                         -0.24934 ,    -0.1069 ,  -0.012685   ,  0.38067   ,  0.47479 ,  -0.057781 ,   0.050859  ,   0.13706 ,  
+                                         -0.31211, -0.00099533 ,    0.20491 ,   0.071981 ,  0.0030264  ,  -0.15471 , -0.080778 ,   0.051354   ,
+                                         0.007908 ,  0.0014614 ,  0.0043305  ,   0.10043  ,  0.002212  ,  -0.04348])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+            
+            
+            if self.robot_uids == "xarm7_leap_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([    0.17007  ,  -0.21156  ,  -0.22471   ,   1.0581   ,    1.756    ,  1.2238    , 
+                                         3.9243 ,  -0.023651  ,   0.12155 ,    0.31412  ,  0.057673   , -0.20355  ,  -0.14136 ,
+                                         -0.34307  , -0.063874    , 0.23151 ,   0.019688  ,  -0.19046  ,   0.77333  , -0.010055  ,
+                                         0.014319 ,   -0.19212  ,   0.28517])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+            
+            
+            
             
     
     def evaluate(self):

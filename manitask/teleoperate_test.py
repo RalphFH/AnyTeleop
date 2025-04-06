@@ -21,9 +21,13 @@ import torch
 from utils.filter_module import Filter
 from utils.hand_detector import HandDetector
 from utils.reproject import draw_points_on_tiled_image
-    
+
+from mani_skill.utils.wrappers.record import RecordEpisode
+import os
+import shutil
 
 def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: str, config_path: str, robot_uid:str):
+    
     RetargetingConfig.set_default_urdf_dir(str(robot_dir))
     logger.info(f"Start retargeting with config {config_path}")
     
@@ -35,24 +39,48 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     config = RetargetingConfig.load_from_file(config_path,override=override)
     retargeting = config.build()
 
-
     retargeting_type = retargeting.optimizer.retargeting_type
     
-    # Load robot
+    env_id = "OpenFaucet-v1" # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
     env = gym.make(
-        "OpenFaucet-v1", # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+        env_id, # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
         num_envs=1,
         robot_uids=robot_uid,
-        obs_mode="rgb", # there is also "state_dict", "rgbd", ...
+        obs_mode="rgb+depth+segmentation", # there is also "state_dict", "rgbd", ...
         control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
         render_mode="rgb_array", # rgb_array | human | all
     )
 
-    obs,_ = env.reset(seed=0)
+    data_dir = os.path.expanduser("~/robotics/dex-retargeting/manitask/data/h5")
+    os.makedirs(data_dir, exist_ok=True)
+    episode_root = os.path.join(data_dir, env_id, robot_uid, "origin")
+    os.makedirs(episode_root, exist_ok=True)
+
+    idx = 0
+    while True:
+        episode_dir = os.path.join(episode_root, f"episode_{idx}")
+        if not os.path.exists(episode_dir):
+            os.makedirs(episode_dir)
+            break
+        idx += 1
+
+    traj_name = "trajectory"
+    env = RecordEpisode(
+        env,
+        output_dir=episode_dir,
+        trajectory_name=traj_name,
+        save_video=True,
+        video_fps=30,
+        save_on_reset=False,
+        source_type="teleoperating",
+        source_desc="realtime_retarget"
+    )
+
+    obs,_ = env.reset(seed=idx)
     agent = env.unwrapped.agent
     robot = agent.robot
-    root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-    wrist_pose = robot.links_map[LINK_WRIST[hand]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+    root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
+    wrist_pose = robot.links_map[LINK_WRIST[hand]].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
 
     viewer = env.render()
     human_render_cameras = env.unwrapped.scene.human_render_cameras
@@ -79,7 +107,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         )
 
     # Load hand detector
-    trans_scale = 1.1/config.scaling_factor
+    trans_scale = 2/config.scaling_factor
     detector = HandDetector(hand_type=hand_type,trans_scale=trans_scale)
 
     cv2.namedWindow("realtime_retargeting", cv2.WINDOW_NORMAL)
@@ -110,12 +138,8 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             return
 
         # 1. Hand Detection and 3D Pose Estimation
-        # detect_start_time = time.time()
         _, keypoints_pos = detector.detect(rgb)
         
-        # detect_end_time = time.time()
-        # detect_duration = detect_end_time - detect_start_time
-        # logger.info(f"Time taken for detection: {detect_duration:.4f} seconds")
         
         # 2. Drawing skeleton
         detect_img = detector.draw_skeleton_on_image(bgr, style="default")
@@ -152,36 +176,52 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 action = qpos[retargeting_to_sapien]
             # print(f"retarget: {qpos[-1]} action: {action[-1]}")
             obs, reward, terminated, truncated, info = env.step(action)
-            done = terminated 
+            done = torch.logical_or(terminated,truncated)
+            is_success = info["success"] 
 
-        link_pose = None
-        points_robot = []
+        # # visualize the keypoints
+        # link_pose = None
+        # points_robot = []
 
-        for i,target_link in enumerate(config.target_link_names):
-            link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-            points_robot.append(link_pose)
+        # for i,target_link in enumerate(config.target_link_names):
+        #     link_pose = robot.links_map[target_link].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
+        #     points_robot.append(link_pose)
         
         # print("points_robot",points_robot[0])
-        all_points = np.vstack([keypoints_3d, np.array(points_robot)])
-        num_points = len(points_robot)
-        colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
+        # all_points = np.vstack([keypoints_3d, np.array(points_robot)])
+        # num_points = len(points_robot)
+        # colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
 
         img = env.render().squeeze(0).detach().cpu().numpy()
-        img_with_points = draw_points_on_tiled_image(
-                                img, all_points, camera_extrinsics, camera_intrinsics, 
-                                marker_size=5, colors=colors)
-        img = cv2.cvtColor(img_with_points, cv2.COLOR_RGB2BGR)
+        # img = draw_points_on_tiled_image(
+        #                         img, all_points, camera_extrinsics, camera_intrinsics, 
+        #                         marker_size=5, colors=colors)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         
         cv2.imshow("Environment", img)
 
     
 
-        if cv2.waitKey(2) & done :
-            print("done!")
+        if cv2.waitKey(2) & done : 
             isEnd.set()
-            cv2.destroyAllWindows()
-            time.sleep(0.5)
+            if is_success:
+                print("Episode succeeded, saving trajectory and video.")
+                print("steps",info["elapsed_steps"])
+                env.flush_trajectory()
+                env.flush_video()
+                env.close()
+                time.sleep(0.5)
+            else:
+                print("Episode failed, not saving trajectory or video.")
+                print("steps",info["elapsed_steps"])
+                env.flush_trajectory(save=False)
+                env.flush_video(save=False)
+                env.close()
+                time.sleep(0.5)
+                shutil.rmtree(episode_dir, ignore_errors=True)
+        
             break
+        
         
         # End of each frame 
 
@@ -216,7 +256,7 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
             if not success:
                 continue
         
-        time.sleep(1 / 20.0)
+        time.sleep(1 / 30.0)
         try:
             queue.put(image, False)
         except:
@@ -257,21 +297,17 @@ def main(
     producer_process = multiprocessing.Process(target=produce_frame, args=(isStart, isEnd, queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(isStart, isEnd, queue, str(robot_dir), str(config_path),robot_uid))
 
-    try:
-        producer_process.start()
-        consumer_process.start()
 
-        consumer_process.join()
-        
-    except KeyboardInterrupt:
-        logger.info("收到中断信号，停止进程.")
-    finally:
-        producer_process.terminate()
-        consumer_process.terminate()
-        producer_process.join()
-        consumer_process.join()
+
+    producer_process.start()
+    consumer_process.start()
+
+    consumer_process.join()
+    producer_process.terminate()
+    consumer_process.terminate()
+
     
-    print("done")
+    print("collect done")
 
 
 if __name__ == "__main__":

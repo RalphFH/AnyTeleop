@@ -39,10 +39,9 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     config = RetargetingConfig.load_from_file(config_path,override=override)
     retargeting = config.build()
 
-
     retargeting_type = retargeting.optimizer.retargeting_type
     
-    env_id = "LiftPegUpright-v1" # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
+    env_id = "OpenLaptop-v1" # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
     env = gym.make(
         env_id, # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
         num_envs=1,
@@ -108,7 +107,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
         )
 
     # Load hand detector
-    trans_scale = 1.1/config.scaling_factor
+    trans_scale = 2/config.scaling_factor
     detector = HandDetector(hand_type=hand_type,trans_scale=trans_scale)
 
     cv2.namedWindow("realtime_retargeting", cv2.WINDOW_NORMAL)
@@ -176,6 +175,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             else:
                 action = qpos[retargeting_to_sapien]
             # print(f"retarget: {qpos[-1]} action: {action[-1]}")
+            #print("action",action)
             obs, reward, terminated, truncated, info = env.step(action)
             done = torch.logical_or(terminated,truncated)
             is_success = info["success"] 
@@ -258,7 +258,7 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
             if not success:
                 continue
         
-        time.sleep(1 / 20.0)
+        time.sleep(1 / 30.0)
         try:
             queue.put(image, False)
         except:
@@ -298,6 +298,7 @@ def main(
     queue = multiprocessing.Queue(maxsize=5)
     producer_process = multiprocessing.Process(target=produce_frame, args=(isStart, isEnd, queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(isStart, isEnd, queue, str(robot_dir), str(config_path),robot_uid))
+
 
 
     producer_process.start()

@@ -1,0 +1,174 @@
+<robot name="partnet_cc0535a34cdc7d676bf98d15712168f">
+	<link name="base" />
+	<link name="link_0">
+		<inertial>
+			<mass value="0.3" />  <!-- 假设 link_0 的质量为 0.3 kg -->
+			<origin xyz="0 0 0" />  <!-- 质心位于几何中心 -->
+			<inertia ixx="0.01" ixy="0.0" ixz="0.0" iyy="0.01" iyz="0.0" izz="0.01" />  <!-- 转动惯量 -->
+		</inertial>
+		<collision>
+			<origin xyz="0 0 0" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_0_0.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<visual name="keyboard-part[&quot;id]">
+			<origin xyz="0 0 0" />
+			<geometry>
+				<mesh filename="textured_objs/new-1.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="touchpad_surface-part[&quot;id]">
+			<origin xyz="0 0 0" />
+			<geometry>
+				<mesh filename="textured_objs/new-4.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="button-part[&quot;id]">
+			<origin xyz="0 0 0" />
+			<geometry>
+				<mesh filename="textured_objs/new-3.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="base_frame-part[&quot;id]">
+			<origin xyz="0 0 0" />
+			<geometry>
+				<mesh filename="textured_objs/new-2.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+	</link>
+	<joint name="joint_0" type="fixed">
+		<origin rpy="1.570796326794897 0 -1.570796326794897" xyz="0 0 0" />
+		<child link="link_0" />
+		<parent link="base" />
+	</joint>
+	<link name="link_1">
+		<inertial>
+			<mass value="0.2" />  <!-- 假设 link_1 的质量为 0.2 kg -->
+			<origin xyz="0 0 0" />  <!-- 质心位于几何中心 -->
+			<inertia ixx="0.005" ixy="0.0" ixz="0.0" iyy="0.005" iyz="0.0" izz="0.005" />  <!-- 转动惯量 -->
+		</inertial>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_0.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_6.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_2.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_3.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_4.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_1.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_5.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<collision>
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="new_objs/11586_link_1_7.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</collision>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-2.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-3.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-5.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-4.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-9.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-10.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-8.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="other_leaf-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/original-7.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="screen-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/new-5.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="screen_frame-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/new-7.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+		<visual name="camera-part[&quot;id]">
+			<origin xyz="-0.1262880137608796 0.0432546 0.06599939011091995" />
+			<geometry>
+				<mesh filename="textured_objs/new-6.obj" scale="0.3 0.3 0.3" />
+			</geometry>
+		</visual>
+	</link>
+	<joint name="joint_1" type="revolute">
+		<origin xyz="0.1262880137608796 -0.0432546 -0.06599939011091995" />
+		<axis xyz="-1 0 0" />
+		<child link="link_1" />
+		<parent link="link_0" />
+		<limit lower="-1.832595714594046" upper="0.9" effort="10.0" velocity="3.0" />
+		<dynamics damping="0.8" friction="5.0" />
+	</joint>
+</robot>

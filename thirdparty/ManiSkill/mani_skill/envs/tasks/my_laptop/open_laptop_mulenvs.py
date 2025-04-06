@@ -52,7 +52,7 @@ class OpenLaptopMulEnv(BaseEnv):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.num_envs=num_envs
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        self.laptop_target_angle=-0.138
+        self.laptop_target_angle=-0.17
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
         self.has_been_successful = False
 
@@ -107,7 +107,7 @@ class OpenLaptopMulEnv(BaseEnv):
         self.table_scene.build()
         
         loader = self.scene.create_urdf_loader()
-        loader.scale = 1 
+        loader.scale = 1.5 
         urdf_relative_path = "../../../assets/my_laptop/laptop_pack2/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
@@ -117,9 +117,9 @@ class OpenLaptopMulEnv(BaseEnv):
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
         
-        base_pos = np.array([0, 0.35, 0.1])
-        random_offset_x = np.random.uniform(-0.05, 0.075, size=(self.num_envs,))
-        random_offset_y = np.random.uniform(-0.25, 0.25, size=(self.num_envs,))  
+        base_pos = np.array([0.05, 0.35, 0])
+        random_offset_x = np.random.uniform(-0.05, 0.02, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.1, 0.15, size=(self.num_envs,))  
         new_pos = np.stack([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
@@ -131,7 +131,7 @@ class OpenLaptopMulEnv(BaseEnv):
         self.laptop_articulation = builder.build(name="laptop_articulation")
         # set friction for the faucet
         for j in self.laptop_articulation.get_joints():
-            j.set_friction(0.1)
+            j.set_friction(1)
 
     
     
@@ -150,14 +150,14 @@ class OpenLaptopMulEnv(BaseEnv):
             dof_array = self.laptop_articulation.dof  
             dof_per_env = int(dof_array[0].item()) 
             qpos_np = np.zeros((b, dof_per_env), dtype=np.float32)
-            qpos_np[:, hinge_idx] = -80.0 * np.pi / 180.0 
+            qpos_np[:, hinge_idx] = -60.0 * np.pi / 180.0 
             qpos_tensor = torch.from_numpy(qpos_np).to(self.device)
             self.laptop_articulation.set_qpos(qpos_tensor)
             
             #base pose and random offset for the laptop are determined according to experiment, do not change
             base_pos = np.array([0, 0.35, 0.1])
-            random_offset_x = np.random.uniform(-0.05, 0.075, size=(self.num_envs,))
-            random_offset_y = np.random.uniform(-0.25, 0.25, size=(self.num_envs,))  
+            random_offset_x = np.random.uniform(-0.05, 0.02, size=(self.num_envs,))
+            random_offset_y = np.random.uniform(-0.1, 0.15, size=(self.num_envs,))  
             new_pos = np.stack([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
                                 base_pos[2]*np.ones(self.num_envs)],axis=1)
@@ -166,19 +166,19 @@ class OpenLaptopMulEnv(BaseEnv):
             self.laptop_articulation.set_pose(batched_pose1)
            
               
-                
-            noise_np = np.random.uniform(
-            low=-self.robot_init_qpos_noise,
-            high=self.robot_init_qpos_noise,
-            size=(b, dof_per_env)
-           )
-            #qpos is the position of every joint of the robot,also determined according to experiments, do not change
-            base_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0])
-            base_qpos_tiled = np.tile(base_qpos, (b, 1))  
-            new_qpos_np = base_qpos_tiled + noise_np 
-            new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
-            self.agent.robot.set_qpos(new_qpos_tensor)
-
+            if self.robot_uids == "panda":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+                )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+    
                 
     def evaluate(self):
             

@@ -5,14 +5,15 @@ import traceback
 import numpy as np
 from mani_skill.envs.tasks.my_faucet.my_faucet_mulenvs import *
 from mani_skill.utils.wrappers.record import RecordEpisode
-from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve        
-#from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve   
+#from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve        
+from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve   
       
 #change the solve function to solve the different tasks
 
 def main():
-    env_id = "OpenFaucet-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
-    data_dir = "../../../../../../manitask/data/h5" 
+    env_id = "OpenLaptop-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
+    data_dir = "/home/zeyu/manitask/data/h5" 
+    robot_uids="panda"
     os.makedirs(data_dir, exist_ok=True)                            
     obs_mode = "rgb+depth+segmentation"
     control_mode = "pd_joint_pos"
@@ -22,13 +23,14 @@ def main():
     shader = "default"
     vis=True                                                 #if the device has no screen, set vis=False.
     visualize_target_grasp_pose=True 
-    print_env_info=False
+    print_env_info=True
 
 
     env = gym.make(
         env_id,
         obs_mode=obs_mode,
         control_mode=control_mode,
+        robot_uids=robot_uids,
         render_mode=render_mode,
         reward_mode=reward_mode,
         sim_backend=sim_backend,

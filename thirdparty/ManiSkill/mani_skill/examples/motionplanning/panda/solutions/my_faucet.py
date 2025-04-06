@@ -72,7 +72,7 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False, visualize_target
     
     
     # --- Release & Retreat ---
-    retreat_pose = full_open_pose * sapien.Pose([-0.02, -0.02, 0])
+    retreat_pose = full_open_pose * sapien.Pose([0, -0.02, 0])
     res =planner.move_to_pose_with_screw(retreat_pose,refine_steps=10)
     env_unwrapped.has_been_successful=False
     if res == -1:
