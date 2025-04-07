@@ -23,7 +23,7 @@ import torch
 import torch.random
 from transforms3d.euler import euler2quat
 
-from mani_skill.agents.robots import Fetch, FrankaPanda
+from mani_skill.agents.robots import Fetch, Panda
 from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
 from mani_skill.agents.robots import IIwa7Allegro
@@ -53,14 +53,14 @@ class PushCubeEnv(BaseEnv):
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PushCube-v1_rt.mp4"
 
-    SUPPORTED_ROBOTS = ["franka_panda_right", "fetch", 
+    SUPPORTED_ROBOTS = ["panda", "fetch", 
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
                         "xarm6_allegro_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"]
 
     # Specify some supported robot types
-    agent: Union[FrankaPanda, Fetch, 
+    agent: Union[Panda, Fetch, 
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
                  XArm6Allegro,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
@@ -70,7 +70,7 @@ class PushCubeEnv(BaseEnv):
     goal_radius = 0.1
     cube_half_size = 0.02
 
-    def __init__(self, *args, robot_uids="franka_panda_right", robot_init_qpos_noise=0.01, **kwargs):
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.01, **kwargs):
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)

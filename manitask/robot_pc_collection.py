@@ -158,12 +158,17 @@ class LiftPegUprightEnvForPC(LiftPegUprightEnv):
     
 
 if __name__ == "__main__":
-    save_dir = "/home/nus/Projects/aris/AnyTeleop/data/assets/robots/maniskill/panda/body_pc"
+    robot_uid = "ur5e_allegro_right"
+    if robot_uid != "panda" and robot_uid != "panda_wristcam":
+        arm, hand, _ = robot_uid.split("_")
+        save_dir = f"data/assets/robots/maniskill/{arm}/{robot_uid}/body_pc"
+    else:
+        save_dir = "data/assets/robots/maniskill/panda/body_pc"
     n_config = 10
     env = gym.make(
         "LiftPegUprightEnvForPC-v1", # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
         num_envs=1,
-        robot_uids="panda",
+        robot_uids=robot_uid,
         obs_mode="pointcloud", # there is also "state_dict", "rgbd", ...
         control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
         render_mode="rgb_array", # rgb_array | human | all
@@ -177,11 +182,11 @@ if __name__ == "__main__":
     for i in range(n_config):
         print(i)
         obs, reward, terminated, truncated, info = env.step(env.action_space.sample())
-        current_pc = obs["pointcloud"]["xyzw"][0]  # (N, 3)
+        current_pc = obs["pointcloud"]["xyzw"][0]  # (N, 4)
         current_pc_seg = obs["pointcloud"]["segmentation"][0]  # (N, 1)
         current_pc_colors = obs["pointcloud"]["rgb"][0]  # (N, 3)
-        current_valid_pc_mask = current_pc[:, 3] == 1
-        current_pc = current_pc[current_valid_pc_mask]
+        current_valid_pc_mask = current_pc[:, 3] == 1 
+        current_pc = current_pc[current_valid_pc_mask] # (n, 4)
         current_pc = current_pc[:, :3].cpu().numpy()  # (n, 3)
         current_valid_pc_seg = current_pc_seg[current_valid_pc_mask].cpu().numpy()  # (n, 1)
         current_valid_pc_colors = current_pc_colors[current_valid_pc_mask].cpu().numpy()  # (n, 3)
@@ -245,4 +250,4 @@ if __name__ == "__main__":
             point_size=0.003,
             point_shape="circle",
         )
-    breakpoint()
+    input("Press Enter to exit...")

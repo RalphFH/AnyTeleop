@@ -4,7 +4,7 @@ import numpy as np
 import sapien
 import torch
  
-from mani_skill.agents.robots import PandaWristCam,FrankaPanda
+from mani_skill.agents.robots import PandaWristCam
 from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap, XArm6Allegro
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
 from mani_skill.agents.robots import IIwa7Allegro
@@ -68,12 +68,12 @@ class PegInsertionSideEnv(BaseEnv):
     """
 
     _sample_video_link = "https://github.com/haosulab/ManiSkill/raw/main/figures/environment_demos/PegInsertionSide-v1_rt.mp4"
-    SUPPORTED_ROBOTS = ["panda_wristcam","franka_panda_right",
+    SUPPORTED_ROBOTS = ["panda_wristcam",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
                         "xarm6_allegro_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
                         "iiwa7_allegro_right"]
-    agent: Union[PandaWristCam, FrankaPanda,
+    agent: Union[PandaWristCam,
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
                  XArm6Allegro,
                  UR5eShadow, UR5eAllegro, UR5eLeap,

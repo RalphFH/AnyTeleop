@@ -1,11 +1,3 @@
-sapien_joint = { "ur5e_allegro_right":['shoulder_pan_joint', 'shoulder_lift_joint', 'elbow_joint', 'wrist_1_joint', 'wrist_2_joint', 'wrist_3_joint', 
-                                       'joint_0', 'joint_4', 'joint_8', 'joint_12', 'joint_1', 'joint_5', 'joint_9', 'joint_13', 'joint_2', 'joint_6', 'joint_10', 'joint_14', 'joint_3', 'joint_7', 'joint_11', 'joint_15'],
-                 "xarm6_shadow_right":['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 
-                                       'WRJ2', 'WRJ1', 'FFJ4', 'MFJ4', 'RFJ4', 'LFJ5', 'THJ5', 'FFJ3', 'MFJ3', 'RFJ3', 'LFJ4', 'THJ4', 'FFJ2', 'MFJ2', 'RFJ2', 'LFJ3', 'THJ3', 'FFJ1', 'MFJ1', 'RFJ1', 'LFJ2', 'THJ2', 'LFJ1', 'THJ1'],
-                 "xarm7_leap_right": ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 'joint7', 
-                                      '1', '5', '9', '12', '0', '4', '8', '13', '2', '6', '10', '14', '3', '7', '11', '15']
-}
-
 hand_link = {"allegro":[
     "base_link_hand",
     "link_0",
@@ -36,7 +28,7 @@ hand_link = {"allegro":[
     'thbase', 'thhub', 'lfmetacarpal',
     'thproximal', 'ffproximal', 'mfproximal', 'rfproximal', 'lfproximal',
     'thmiddle', 'ffmiddle', 'mfmiddle', 'rfmiddle', 'lfmiddle',
-    'thdistal', 'ffdistal', 'mfdistal', 'rfdistal', 
+    'thdistal', 'ffdistal', 'mfdistal', 'rfdistal', 'lfdistal',
     'ffknuckle', 'mfknuckle', 'rfknuckle', 'lfknuckle',   
 ],
 "leap":[

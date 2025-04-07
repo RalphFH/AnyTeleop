@@ -17,7 +17,7 @@
 ## Commands for running the example 
 ```shell
 
-python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
+python teleoperate.py --arm xarm7 --hand allegro --hand-type right
 
 ```
 
@@ -52,17 +52,23 @@ python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
 以“lift_peg_upright”为例, 不同环境在`teleoperate.py`里修改`env_id`即可
 1. teleoperate采数据
 ```shell
-python3 teleoperate.py --arm xarm7 --hand allegro --hand-type right
+python teleoperate.py --arm xarm7 --hand allegro --hand-type right
 ```
 - 一次采集一个episode,数据存放在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/origin`内，以“episode_{idx}”区分各episode(程序自动命名)
 - success会自动保存，如果超过env的max_step会退出并且不会保存东西
 
 2. 多个episode融合
-- 执行`manitask`中的`merge.bash`(bash里可指定融合的episode序号数 0-9， 10-19之类)
-- 输出在 `manitaskdata/h5/LiftPegUpright-v1/xarm7_allegro_right/merged/0-9`中
+- 执行`manitask/scripts`中的`merge.bash`(bash里可指定融合的episode序号数 0-9， 10-19之类)
+- 输出在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged/0-9`中
 
-3. replay h5 file & convert to zarr (可指定episode序号数)
-- 执行`manitask`中的`tozarr.bash`
+3. 点云采样和降采用(修改对应的robot_uid)
+```shell
+python robot_pc_collection.py
+python robot_pc_downsample.py
+```
+
+4. replay h5 file & convert to zarr (可指定episode序号数)
+- 执行`manitask/scripts`中的`tozarr.bash`
 - replay 输出在 `manitask/data/h5/LiftPegUpright-v1/xarm7_allegro_right/merged/0-9`中，
 - zarr 输出在`manitask/data/zarr/LiftPegUpright-v1/xarm7_allegro_right/0-9`中
 - bash 中可以控制是否replay，replay时是否存储replay视频，是否将replay后的h5转为zarr,转为zarr后是否可视化显示点云等，从而实现 `replay h5 file`和`convert to zarr`的良好解耦。

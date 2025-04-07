@@ -33,7 +33,7 @@ class Args:
 def parse_args():
     return tyro.cli(Args)
 
-def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.ndarray, current_robot_points: np.ndarray, target_robot_points: np.ndarray, interval: float = 0.03):
+def visualize_all_frames_with_viser(server,pointclouds: np.ndarray, colors: np.ndarray, current_robot_points: np.ndarray, target_robot_points: np.ndarray, interval: float = 0.01):
     """
     Visualize all point cloud frames using viser in sequence (like animation).
 
