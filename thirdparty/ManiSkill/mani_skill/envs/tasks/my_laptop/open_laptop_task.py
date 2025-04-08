@@ -20,7 +20,7 @@ from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
-from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig ,SceneConfig
 import time
 import transforms3d as tf3d
 
@@ -61,7 +61,9 @@ class OpenLaptopEnv(BaseEnv):
         return SimConfig(
             gpu_memory_config=GPUMemoryConfig(
                 found_lost_pairs_capacity=2**25, max_rigid_patch_count=2**18
-            )
+            ),
+            scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
+            solver_velocity_iterations= 1  )
         )
 
     @property
@@ -272,6 +274,8 @@ class OpenLaptopEnv(BaseEnv):
 
         return obs
     
+    
+
     #we do not need to use the following functions in this task because it is not RL task.
     def compute_dense_reward(self, obs: Any, action: Array, info: Dict):
         return 0

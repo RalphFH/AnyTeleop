@@ -17,7 +17,7 @@ from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose
-from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig, SceneConfig
 from mani_skill.utils.building import articulations
 from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
 import multiprocessing as mp
@@ -53,7 +53,8 @@ class OpenLaptopMulEnv(BaseEnv):
         self.num_envs=num_envs
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.laptop_target_angle=-0.17
-        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)   
+        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
+        
 
     # Specify default simulation/gpu memory configurations to override any default values
     @property
@@ -65,7 +66,8 @@ class OpenLaptopMulEnv(BaseEnv):
             found_lost_pairs_capacity=2**26,
             max_rigid_patch_count=2**20
         ),
-       
+       scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
+            solver_velocity_iterations= 1  )
     )
 
     @property

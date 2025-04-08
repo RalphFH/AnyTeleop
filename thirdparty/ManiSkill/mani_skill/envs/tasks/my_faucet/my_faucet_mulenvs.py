@@ -17,7 +17,7 @@ from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose as BatchPose
-from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig
+from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig, SceneConfig
 from mani_skill.utils.building import articulations
 
 from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
@@ -61,8 +61,12 @@ class OpenFaucetMulEnv(BaseEnv):
             found_lost_pairs_capacity=2**26,
             max_rigid_patch_count=2**20
         ),
+        scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
+            solver_velocity_iterations= 1  )
+        
+        )
        
-    )
+    
 
     @property
     def _default_sensor_configs(self):
