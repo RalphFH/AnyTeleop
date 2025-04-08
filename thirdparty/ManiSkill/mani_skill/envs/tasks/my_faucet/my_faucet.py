@@ -63,7 +63,6 @@ class OpenFaucetEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, reward_mode="sparse" ,sim_backend = "cpu",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        self.has_been_successful = False
         self.faucet_target_angle=1.29   # arc       when collecting data, set this to 1.29 to make your "teaching" data more standard. when eval, set this to 1.16 to make the task easier. 
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,sim_backend=sim_backend, **kwargs)    #
 
@@ -306,18 +305,7 @@ class OpenFaucetEnv(BaseEnv):
             tcp_pose=self.agent.tcp.pose.raw_pose,
         )
         return obs
-     
-     
-    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        reward=0
-        if self.evaluate()["success"]:
-            if self.has_been_successful==True:
-                reward = 0
-            else:
-                self.has_been_successful = True
-                reward = 1
-        return reward
-                
+                    
                 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return 0

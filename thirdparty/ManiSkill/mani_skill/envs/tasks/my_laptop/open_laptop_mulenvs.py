@@ -53,8 +53,7 @@ class OpenLaptopMulEnv(BaseEnv):
         self.num_envs=num_envs
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.laptop_target_angle=-0.17
-        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
-        self.has_been_successful = False
+        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)   
 
     # Specify default simulation/gpu memory configurations to override any default values
     @property
@@ -194,22 +193,7 @@ class OpenLaptopMulEnv(BaseEnv):
             tcp_pose=self.agent.tcp.pose.raw_pose,
         )
         return obs
-     
-     
-    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-            # success: shape (num_envs,)
-        success = self.evaluate()["success"]  
-        if not isinstance(self.has_been_successful, torch.Tensor):
-            self.has_been_successful = torch.zeros((self.num_envs,), dtype=torch.bool, device=self.device)
-        
-        newly_success = success & (~self.has_been_successful)
-        
-        reward = newly_success.float()
-        
-        self.has_been_successful = self.has_been_successful | success
-        
-        return reward
-                        
+             
                 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return 0

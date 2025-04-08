@@ -40,19 +40,20 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
     
     # Load robot
     env = gym.make(
-        "OpenFaucet-v1", # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
+        "OpenFaucet-v1", # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
         num_envs=1,
         robot_uids=robot_uid,
         obs_mode="rgb", # there is also "state_dict", "rgbd", ...
         control_mode="pd_joint_pos", # there is also "pd_joint_delta_pos", ...
         render_mode="rgb_array", # rgb_array | human | all
+        reward_mode="sparse", # dense | sparse
     )
 
     obs,_ = env.reset(seed=0)
     agent = env.unwrapped.agent
     robot = agent.robot
-    root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-    wrist_pose = robot.links_map[LINK_WRIST[hand]].pose.raw_pose.detach().squeeze(0).numpy()[:3]
+    root_pose=robot.links_map[LINK_BASE[arm]].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
+    wrist_pose = robot.links_map[LINK_WRIST[hand]].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
 
     viewer = env.render()
     human_render_cameras = env.unwrapped.scene.human_render_cameras
@@ -152,31 +153,31 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 action = qpos[retargeting_to_sapien]
             # print(f"retarget: {qpos[-1]} action: {action[-1]}")
             obs, reward, terminated, truncated, info = env.step(action)
-            done = terminated 
+            done = terminated
+            print(f"reward: {reward}") 
 
-        link_pose = None
-        points_robot = []
+        # link_pose = None
+        # points_robot = []
 
-        for i,target_link in enumerate(config.target_link_names):
-            link_pose = robot.links_map[target_link].pose.raw_pose.detach().squeeze(0).numpy()[:3]
-            points_robot.append(link_pose)
+        # for i,target_link in enumerate(config.target_link_names):
+        #     link_pose = robot.links_map[target_link].pose.raw_pose.detach().cpu().squeeze(0).numpy()[:3]
+        #     points_robot.append(link_pose)
         
-        # print("points_robot",points_robot[0])
-        all_points = np.vstack([keypoints_3d, np.array(points_robot)])
-        num_points = len(points_robot)
-        colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
+        # all_points = np.vstack([keypoints_3d, np.array(points_robot)])
+        # num_points = len(points_robot)
+        # colors = [(0, 255, 0)] * num_points + [(255, 0, 0)] * num_points
 
         img = env.render().squeeze(0).detach().cpu().numpy()
-        img_with_points = draw_points_on_tiled_image(
-                                img, all_points, camera_extrinsics, camera_intrinsics, 
-                                marker_size=5, colors=colors)
-        img = cv2.cvtColor(img_with_points, cv2.COLOR_RGB2BGR)
+        # img = draw_points_on_tiled_image(
+        #                         img, all_points, camera_extrinsics, camera_intrinsics, 
+        #                         marker_size=5, colors=colors)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         
         cv2.imshow("Environment", img)
 
     
 
-        if cv2.waitKey(2) & done :
+        if (cv2.waitKey(2) & 0xFF == ord("q")):
             print("done!")
             isEnd.set()
             cv2.destroyAllWindows()
@@ -257,22 +258,11 @@ def main(
     producer_process = multiprocessing.Process(target=produce_frame, args=(isStart, isEnd, queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(isStart, isEnd, queue, str(robot_dir), str(config_path),robot_uid))
 
-    try:
-        producer_process.start()
-        consumer_process.start()
+    producer_process.start()
+    consumer_process.start()
 
-        consumer_process.join()
+    consumer_process.join()
         
-    except KeyboardInterrupt:
-        logger.info("收到中断信号，停止进程.")
-    finally:
-        producer_process.terminate()
-        consumer_process.terminate()
-        producer_process.join()
-        consumer_process.join()
-    
-    print("done")
-
 
 if __name__ == "__main__":
     tyro.cli(main)

@@ -48,7 +48,6 @@ class OpenFaucetMulEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,num_envs= 10,parallel_in_single_scene=True ,reward_mode="sparse" ,sim_backend = "physx_cuda",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        self.has_been_successful = False
         self.faucet_target_angle=1.16    #when collecting data, set this to 1.29 to make your "teaching" data more standard. when eval, set this to 1.16 to make the task easier.
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
 
@@ -116,7 +115,7 @@ class OpenFaucetMulEnv(BaseEnv):
         base_pos = np.array([0.05, 0.0, 0])
         random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
         random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
-        new_pos = np.array([base_pos[0] + random_offset_x,
+        new_pos = np.stack([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
         p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
@@ -148,7 +147,7 @@ class OpenFaucetMulEnv(BaseEnv):
             base_pos = np.array([0.05, 0, 0])
             random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
             random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
-            new_pos = np.array([base_pos[0] + random_offset_x,
+            new_pos = np.stack([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
                                 base_pos[2]*np.ones(self.num_envs)],axis=1)
             p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
@@ -217,9 +216,6 @@ class OpenFaucetMulEnv(BaseEnv):
                 new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
                 self.agent.robot.set_qpos(new_qpos_tensor)
             
-            
-            
-            
     
     def evaluate(self):
         """
@@ -237,22 +233,7 @@ class OpenFaucetMulEnv(BaseEnv):
             tcp_pose=self.agent.tcp.pose.raw_pose,
         )
         return obs
-     
-     
-    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-            # success: shape (num_envs,)
-        success = self.evaluate()["success"]  
-        if not isinstance(self.has_been_successful, torch.Tensor):
-            self.has_been_successful = torch.zeros((self.num_envs,), dtype=torch.bool, device=self.device)
-        
-        newly_success = success & (~self.has_been_successful)
-        
-        reward = newly_success.float()
-        
-        self.has_been_successful = self.has_been_successful | success
-        
-        return reward
-                
+                     
                 
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return 0

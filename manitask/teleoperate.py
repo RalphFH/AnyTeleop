@@ -118,8 +118,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     cv2.moveWindow("realtime_retargeting", 960, 100)  # x=50, y=100
     cv2.moveWindow("Environment", 256, 700)
-
-    # initial_position = np.array([0.48, 0.0, 0.1]).reshape(1, 3) # initial position of the hand in the robot root frame
+    
     initial_position = (wrist_pose - root_pose)
 
     # Different robot loader may have different orders for joints
@@ -137,15 +136,15 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             logger.error(f"Fail to fetch image from camera in 5 secs. Please check your web camera device.")
             return
 
-        # 1. Hand Detection and 3D Pose Estimation
+        """ 1. Hand Detection and 3D Pose Estimation """
         _, keypoints_pos = detector.detect(rgb)
         
         
-        # 2. Drawing skeleton
+        """ 2. Drawing skeleton """
         detect_img = detector.draw_skeleton_on_image(bgr, style="default")
         cv2.imshow("realtime_retargeting", detect_img)
 
-        # 3. Retargeting 
+        """ 3. Retargeting """
         keypoints_3d = None
         done = False
         if keypoints_pos is None:
@@ -180,7 +179,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
             done = torch.logical_or(terminated,truncated)
             is_success = info["success"] 
 
-        # # visualize the keypoints
+        # """ visualize the keypoints """
         # link_pose = None
         # points_robot = []
 
@@ -222,9 +221,6 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
                 time.sleep(0.5)
                 shutil.rmtree(episode_dir, ignore_errors=True)
             break
-
-
-
     # End of each frame 
 
 
@@ -258,7 +254,8 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
             if not success:
                 continue
         
-        time.sleep(1 / 30.0)
+        time.sleep(1 / 30.0) # 30 fps
+
         try:
             queue.put(image, False)
         except:
@@ -266,9 +263,7 @@ def produce_frame(isStart, isEnd, queue: multiprocessing.Queue, camera_path: Opt
                 queue.get_nowait()
                 queue.put(image)
             except:
-                pass
-
-            
+                pass    
 
     if camera_path == "rs":
         pipe.stop()
@@ -299,17 +294,13 @@ def main(
     producer_process = multiprocessing.Process(target=produce_frame, args=(isStart, isEnd, queue, camera_path))
     consumer_process = multiprocessing.Process(target=start_retargeting, args=(isStart, isEnd, queue, str(robot_dir), str(config_path),robot_uid))
 
-
-
     producer_process.start()
     consumer_process.start()
 
     consumer_process.join()
+
     producer_process.terminate()
     consumer_process.terminate()
-
-    
-
 
 
 if __name__ == "__main__":

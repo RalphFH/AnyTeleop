@@ -1,1 +1,2 @@
 from .open_laptop_task import OpenLaptopEnv
+from .open_laptop_mulenvs import OpenLaptopMulEnv

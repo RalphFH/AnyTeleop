@@ -64,7 +64,6 @@ class PullCubeToolEnv(BaseEnv):
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
-        self.has_been_successful = None
 
     @property
     def _default_sim_config(self):
@@ -379,18 +378,3 @@ class PullCubeToolEnv(BaseEnv):
         max_reward = 5.0  # Maximum possible reward from success bonus
         dense_reward = self.compute_dense_reward(obs=obs, action=action, info=info)
         return dense_reward / max_reward
-
-    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        """
-        Computes the sparse reward. By default this function tries to use the success/fail information in
-        returned by the evaluate function and gives +1 if success, -1 if fail, 0 otherwise"""
-        success = info["success"]
-
-        if self.has_been_successful is None:
-            self.has_been_successful = torch.zeros((self.num_envs,), dtype=torch.bool, device=self.device)
-
-        newly_success = success & (~self.has_been_successful)
-        reward = newly_success.float()
-        self.has_been_successful = self.has_been_successful | success
-
-        return reward

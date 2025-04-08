@@ -51,7 +51,6 @@ class OpenLaptopEnv(BaseEnv):
 
     
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,reward_mode="sparse" ,sim_backend = "physx_cuda", **kwargs):
-        self.has_been_successful = False
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.laptop_target_angle=-0.05         #when collecting the data, set it to -0.05, when eval, set it to -0.2 to make the task easier for the model     
         super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,sim_backend=sim_backend, **kwargs)
@@ -273,18 +272,6 @@ class OpenLaptopEnv(BaseEnv):
 
         return obs
     
-    
-    def compute_sparse_reward(self, obs: Any, action: torch.Tensor, info: Dict):
-        reward=0
-        if self.evaluate()["success"]:
-            if self.has_been_successful==True:
-                reward = 0
-            else:
-                self.has_been_successful = True
-                reward = 1
-        return reward
-    
-
     #we do not need to use the following functions in this task because it is not RL task.
     def compute_dense_reward(self, obs: Any, action: Array, info: Dict):
         return 0
