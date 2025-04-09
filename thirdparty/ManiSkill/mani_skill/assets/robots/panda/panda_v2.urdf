@@ -354,4 +354,23 @@
     <mimic joint="panda_finger_joint1"/>
     <dynamics damping="0.3"/>
   </joint>
+  <!-- aux link -->
+  <link name="panda_hand_aux0"/>
+  <joint name="panda_hand_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="panda_hand"/>
+    <child link="panda_hand_aux0"/>
+  </joint>
+  <link name="panda_hand_aux1"/>
+  <joint name="panda_hand_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="panda_hand"/>
+    <child link="panda_hand_aux1"/>
+  </joint>
+  <link name="panda_hand_aux2"/>
+  <joint name="panda_hand_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="panda_hand"/>
+    <child link="panda_hand_aux2"/>
+  </joint>
 </robot>
