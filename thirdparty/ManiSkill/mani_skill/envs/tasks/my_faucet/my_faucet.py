@@ -4,7 +4,6 @@ import numpy as np
 import sapien
 import torch
 import torch.random
-import trimesh
 from gymnasium import spaces
 from gymnasium.vector.utils import batch_space
 from transforms3d.euler import euler2quat
@@ -97,7 +96,6 @@ class OpenFaucetEnv(BaseEnv):
     @property
     def _default_human_render_camera_configs(self):
 
-        #top_down = sapien_utils.look_at([-0.05, 0.1, 0.8], [-0.06, 0.0, 0])
         top_down = sapien_utils.look_at([-0.18, 0.0, 0.7], [-0.06, 0.0, 0])
         left_side = sapien_utils.look_at([0.4, 0.5, 0.5], [0.0, 0.0, 0.35]) 
 
@@ -204,24 +202,19 @@ class OpenFaucetEnv(BaseEnv):
         # set physical parameters for the faucet
         loader.set_density(5)
         loader.fix_root_link = True
-        #loader.create_collision_from_visual = True
-        #loader.collision_is_visual=True
         loader.load_multiple_collisions_from_file = True
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
         builder = articulation_builders[0]
         
         base_pos = np.array([0.05, 0, 0])
         random_offset_x = np.random.uniform(-0.05, 0.05, size=1)
-        random_offset_y = np.random.uniform(-0.1, 0.1, size=1)  
-        
+        random_offset_y = np.random.uniform(-0.1, 0.1, size=1)         
         new_pos = np.array([base_pos[0] + random_offset_x[0],
                             base_pos[1] + random_offset_y[0],
                             base_pos[2]])
         builder.initial_pose = sapien.Pose(p=new_pos.tolist())
-        
         self.faucet_articulation = builder.build(name="faucet_articulation")
-        # set friction for the faucet
-       
+        # the friction for the faucet use the default value in urdf
     
     
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):

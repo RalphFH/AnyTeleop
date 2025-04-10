@@ -34,7 +34,7 @@ def solve(env:OpenFaucetEnv, seed=None, debug=False, vis=False, visualize_target
         base_pose=env_unwrapped.agent.robot.pose,
         visualize_target_grasp_pose=visualize_target_grasp_pose,
         print_env_info=print_env_info,
-        joint_vel_limits=1,
+        joint_vel_limits=2,
         joint_acc_limits=1,
     )
     faucet_pose = env_unwrapped.faucet_articulation.get_pose()

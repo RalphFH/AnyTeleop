@@ -4,12 +4,17 @@ import numpy as np
 import sapien
 import torch
 import torch.random
-import trimesh
 from gymnasium import spaces
 from gymnasium.vector.utils import batch_space
 from transforms3d.euler import euler2quat
 from mani_skill.utils.registration import register_env
+
 from mani_skill.agents.robots import  Panda
+from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap
+from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import XArm6Allegro, XArm6Shadow
+from mani_skill.agents.robots import IIwa7Allegro
+
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
@@ -19,8 +24,10 @@ from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs import Pose as BatchPose
 from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig, SceneConfig
 from mani_skill.utils.building import articulations
-
+from mani_skill.utils.quater import product
 from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
+
+
 current_dir = os.path.dirname(__file__)
 
 @register_env("OpenFaucet_mul-v1", max_episode_steps=500)
@@ -37,10 +44,18 @@ class OpenFaucetMulEnv(BaseEnv):
     the faucet handle is rotated to the target angle
     """
 
-    SUPPORTED_ROBOTS = ["panda"]
+    SUPPORTED_ROBOTS = ["panda",
+                        "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
+                        "xarm6_allegro_right","xarm6_shadow_right",
+                        "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
+                        "iiwa7_allegro_right"]                        
 
     # Specify some supported robot types
-    agent: Panda
+    agent: Union[Panda,
+                 XArm7Allegro, XArm7Shadow, XArm7Leap,
+                 XArm6Allegro, XArm6Shadow,
+                 UR5eShadow, UR5eAllegro, UR5eLeap,
+                 IIwa7Allegro]            
     
     # set some commonly used values
     goal_range = 2   # degrees
@@ -89,10 +104,91 @@ class OpenFaucetMulEnv(BaseEnv):
     @property
     def _default_human_render_camera_configs(self):
         
-        pose = sapien_utils.look_at([0.6, 0.7, 0.6], [0.0, 0.0, 0.35])
-        return CameraConfig(
-            "render_camera", pose=pose, width=512, height=512, fov=1, near=0.01, far=100
-        )
+        top_down = sapien_utils.look_at([-0.18, 0.0, 0.7], [-0.06, 0.0, 0])
+        left_side = sapien_utils.look_at([0.4, 0.5, 0.5], [0.0, 0.0, 0.35]) 
+
+        cam_config = []
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
+
+
+
+        if "xarm7" in self.robot_uids:
+            q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
+
+            cam_config.append(CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[-0.13, 0 , 0.2], q=q2),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="link7",
+                            )
+            )     
+                         
+        if "allegro" in self.robot_uids:
+            q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
+            q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
+            q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
+            q = product(q3,product(q2,q1)) 
+            cam_config.append( CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.018, 0.2 , -0.02], q=q1),
+                                width=512,
+                                height=512,
+                                fov=70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="base_link_hand",
+                            ))
+        elif "shadow" in self.robot_uids:
+            q1 = [0.7044, 0.06166, 0.06166, -0.7044]
+            q2 = [np.cos(-30*np.pi/180), np.sin(-30*np.pi/180), 0, 0]
+            q = product(q2,q1)
+            cam_config.append(CameraConfig(
+                                uid="arm_cam",
+                                pose=sapien.Pose(p=[0, 0.23 , 0.18], q=q),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="forearm",
+                            ))
+            q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
+            q4 = [np.cos(35*np.pi/180), np.sin(35*np.pi/180), 0, 0]
+            q = product(q4,q3)
+            cam_config.append(CameraConfig(  
+                                uid="hand_cam", 
+                                pose=sapien.Pose(p=[0.18, 0.05 , 0.1], q=q),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm",
+                            ))  
+        elif "leap" in self.robot_uids:
+            q1 = [np.cos(45*np.pi/180), 0 , np.sin(45*np.pi/180), 0]
+            q2 = [np.cos(-45*np.pi/180), np.sin(-45*np.pi/180), 0 , 0]
+            q3 = [np.cos(-40*np.pi/180), 0 , np.sin(-40*np.pi/180), 0]
+            q = product(q3,product(q2,q1))
+            cam_config.append(CameraConfig(
+                                uid="hand_cam",
+                                pose=sapien.Pose(p=[-0.01, 0.22 , -0.04], q=q),
+                                width=512,
+                                height=512,
+                                fov= 70*np.pi/180,
+                                near=0.01,
+                                far=100,
+                                entity_uid="palm_lower",
+                            ))
+
+
+        cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))
+
+        return cam_config
 
     def _load_agent(self, options: dict):
         # set a reasonable initial pose for the agent that doesn't intersect other objects
@@ -118,7 +214,7 @@ class OpenFaucetMulEnv(BaseEnv):
  
         base_pos = np.array([0.05, 0.0, 0])
         random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
-        random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.1, 0.1, size=(self.num_envs,))
         new_pos = np.stack([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
@@ -127,7 +223,7 @@ class OpenFaucetMulEnv(BaseEnv):
         builder.initial_pose = batched_pose
         
         self.faucet_articulation = builder.build(name="faucet_articulation")
-        # set friction for the faucet
+       # the friction for the faucet use the default value in urdf
        
     
     
@@ -149,11 +245,11 @@ class OpenFaucetMulEnv(BaseEnv):
 
             #base pos and random offset for the faucet are determined according to experiments, do not change
             base_pos = np.array([0.05, 0, 0])
-            random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
-            random_offset_y = np.random.uniform(-0.2, 0.2, size=(self.num_envs,))
+            random_offset_x = np.random.uniform(-0.05, 0.05, size=(b,))
+            random_offset_y = np.random.uniform(-0.1, 0.1, size=(b,))
             new_pos = np.stack([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
-                                base_pos[2]*np.ones(self.num_envs)],axis=1)
+                                base_pos[2]*np.ones(b)],axis=1)
             p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
             batched_pose1 = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
             self.faucet_articulation.set_pose(batched_pose1)

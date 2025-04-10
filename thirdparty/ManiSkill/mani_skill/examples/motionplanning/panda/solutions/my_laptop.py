@@ -31,7 +31,7 @@ def solve(env: OpenLaptopEnv, seed=None, debug=False, vis=False, visualize_targe
         base_pose=env_unwrapped.agent.robot.pose,
         visualize_target_grasp_pose=visualize_target_grasp_pose,
         print_env_info=print_env_info,
-        joint_vel_limits=1,
+        joint_vel_limits=2,
         joint_acc_limits=1,
     )
 
@@ -77,7 +77,6 @@ def solve(env: OpenLaptopEnv, seed=None, debug=False, vis=False, visualize_targe
  
     
     # --- half open ---
-    print("half open angle" ,env_unwrapped.laptop_articulation.get_qpos())
     grasp_pose = grasp_pose * rot_pose1
     offset3 = np.array([0.25, 0, 0.16])
     half_open_pose = sapien.Pose(
@@ -90,8 +89,7 @@ def solve(env: OpenLaptopEnv, seed=None, debug=False, vis=False, visualize_targe
   
   
     # --- Release & Retreat ---
-    print("full open angle" ,env_unwrapped.laptop_articulation.get_qpos())
-    retreat_pose = half_open_pose * sapien.Pose([-0.03, 0, 0])
+    retreat_pose = half_open_pose * sapien.Pose([-0.08, 0, 0])
     res =planner.move_to_pose_with_screw(retreat_pose,refine_steps=10)
   
     env_unwrapped.has_been_successful=False

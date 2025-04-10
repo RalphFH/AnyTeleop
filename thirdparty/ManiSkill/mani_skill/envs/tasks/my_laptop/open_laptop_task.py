@@ -23,7 +23,6 @@ from mani_skill.utils.structs import Pose
 from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig ,SceneConfig
 import time
 import transforms3d as tf3d
-
 from mani_skill.utils.quater import product
 
 
@@ -31,6 +30,16 @@ current_dir = os.path.dirname(__file__)
 @register_env("OpenLaptop-v1", max_episode_steps=300)
 
 class OpenLaptopEnv(BaseEnv):
+    """
+    **Task Description:**
+    open the laptop by rotating the handle to a target angle.
+
+    **Randomizations:**
+    the pos of the laptop, the initial qpos of the robot
+
+    **Success Conditions:**
+    the laptop screen is rotated to the target angle
+    """
    
     SUPPORTED_ROBOTS = ["panda", "fetch",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
@@ -44,12 +53,7 @@ class OpenLaptopEnv(BaseEnv):
                  XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
                  IIwa7Allegro]        
-
-    # set some commonly used values
-    goal_radius = 0.1
-    cube_half_size = 0.02
-
-    
+  
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,reward_mode="sparse" ,sim_backend = "physx_cuda", **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         self.laptop_target_angle=-0.05         #when collecting the data, set it to -0.05, when eval, set it to -0.2 to make the task easier for the model     
@@ -200,22 +204,22 @@ class OpenLaptopEnv(BaseEnv):
         urdf_relative_path = "../../../assets/my_laptop/laptop_pack2/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
-        # set physical parameters for the faucet
+        # set physical parameters for the laptop
         loader.set_density(5)
         loader.fix_root_link = True
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
 
         base_pos = np.array([0.05, 0.35, 0]) 
-        random_offset_x = np.random.uniform(-0.05, 0.02, size=1)      #for hands embodiment
-        random_offset_y = np.random.uniform(-0.1, 0.15, size=1)       #for hands embodiment
+        random_offset_x = np.random.uniform(-0.05, 0.02, size=1)      
+        random_offset_y = np.random.uniform(-0.1, 0.15, size=1)       
         new_pos = np.array([base_pos[0] + random_offset_x[0],
                             base_pos[1] + random_offset_y[0],
                             base_pos[2]])
         builder.initial_pose = sapien.Pose(p=new_pos.tolist())
         
         self.laptop_articulation = builder.build(name="laptop_articulation")
-        # set friction for the faucet
+        # set friction for the laptop
         for j in self.laptop_articulation.get_joints():
             j.set_friction(1)
     
@@ -234,17 +238,14 @@ class OpenLaptopEnv(BaseEnv):
             laptopqpos[hinge_idx] = -60 * np.pi / 180.0
 
             self.laptop_articulation.set_qpos(laptopqpos)
-
             base_pos = np.array([0.05, 0.35, 0]) 
-            random_offset_x = np.random.uniform(-0.05, 0.02, size=1)      #for hands embodiment
-            random_offset_y = np.random.uniform(-0.1, 0.15, size=1)       #for hands embodiment
-           
+            random_offset_x = np.random.uniform(-0.05, 0.02, size=1)     
+            random_offset_y = np.random.uniform(-0.1, 0.15, size=1)     
             new_pos = np.array([base_pos[0] + random_offset_x[0],
                                 base_pos[1] + random_offset_y[0],
                                 base_pos[2]])
             self.laptop_articulation.set_pose(sapien.Pose(p=new_pos.tolist()))
 
-            
             
             # panda initial pose
             if self.robot_uids == "panda":
@@ -258,7 +259,6 @@ class OpenLaptopEnv(BaseEnv):
             
     def evaluate(self):
         # success is achieved when the cube's xy position on the table is within the
-        # goal region's area (a circle centered at the goal region's xy position)
         current_angle = self.laptop_articulation.get_qpos()[0]
       
         is_opened = current_angle > self.laptop_target_angle
@@ -274,9 +274,6 @@ class OpenLaptopEnv(BaseEnv):
 
         return obs
     
-    
-
-    #we do not need to use the following functions in this task because it is not RL task.
     def compute_dense_reward(self, obs: Any, action: Array, info: Dict):
         return 0
     def compute_normalized_dense_reward(self, obs: Any, action: Array, info: Dict):

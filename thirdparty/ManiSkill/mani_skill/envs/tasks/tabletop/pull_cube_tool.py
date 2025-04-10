@@ -63,6 +63,7 @@ class PullCubeToolEnv(BaseEnv):
 
     def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        self.robot_uids = robot_uids
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
 
     @property
@@ -220,6 +221,16 @@ class PullCubeToolEnv(BaseEnv):
         return builder.build(name="l_shape_tool")
 
     def _load_scene(self, options: dict):
+        if self.robot_uids == "xarm7_leap_right":
+            self.agent.urdf_config["_materials"]["front_finger"]["static_friction"] = 10
+            self.agent.urdf_config["_materials"]["front_finger"]["dynamic_friction"] = 10
+            self.agent.urdf_config["_materials"]["front_finger"]["restitution"] = 0.0
+            
+            self.agent.urdf_config["_materials"]["palm"]["static_friction"] = 6
+            self.agent.urdf_config["_materials"]["palm"]["dynamic_friction"] = 6
+            self.agent.urdf_config["_materials"]["palm"]["restitution"] = 0.0
+
+    
         self.scene_builder = TableSceneBuilder(
             self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
@@ -242,6 +253,7 @@ class PullCubeToolEnv(BaseEnv):
 
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
+            print("env_urdf_config", self.agent.urdf_config)
             b = len(env_idx)
             self.scene_builder.initialize(env_idx)
 

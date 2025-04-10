@@ -5,25 +5,26 @@ import traceback
 import numpy as np
 from mani_skill.envs.tasks.my_faucet.my_faucet_mulenvs import *
 from mani_skill.utils.wrappers.record import RecordEpisode
-#from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve        
-from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve   
-      
+from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve        
+#from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve   
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 #change the solve function to solve the different tasks
 
 def main():
-    env_id = "OpenLaptop-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
-    data_dir = "/home/zeyu/manitask/data/h5" 
+    env_id = "OpenFaucet-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
+    data_dir = "/home/zeyu/robotics/pandadata/h5" 
     robot_uids="panda"
     os.makedirs(data_dir, exist_ok=True)                            
-    obs_mode = "rgb+depth+segmentation"
+    obs_mode = "none"
     control_mode = "pd_joint_pos"
     render_mode = "rgb_array"
     reward_mode = "sparse"
     sim_backend = "auto"
     shader = "default"
-    vis=True                                                 #if the device has no screen, set vis=False.
+    vis=False                                                 #if the device has no screen, set vis=False.
     visualize_target_grasp_pose=True 
-    print_env_info=True
+    print_env_info=False
 
 
     env = gym.make(
@@ -54,13 +55,12 @@ def main():
     )
 
     only_count_success = True  
-    num_episodes = 10
+    num_episodes = 30
     seed = 0
     succeed_count = 0
     # first reset the environment
     env.reset(seed=seed)
     print(f"Motion Planning Running on {env_id}")
-
     try:
         for i in range(num_episodes):
             env.reset()

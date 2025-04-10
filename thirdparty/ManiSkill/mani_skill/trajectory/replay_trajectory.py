@@ -32,7 +32,7 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path="/home/zeyu/robotics/dex-retargeting/manitask/data/h5/OpenLaptop-v1/xarm7_leap_right/origin/episode_62/trajectory.h5" 
+    traj_path="/home/zeyu/robotics/pandadata/h5/OpenFaucet-v1/panda/trajectory_1.h5" 
     """Path to the trajectory .h5 file to replay"""
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = "auto"
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
@@ -56,7 +56,7 @@ class Args:
     """Whether to discard episodes that timeout and are truncated (depends on the max_episode_steps parameter of task)"""
     allow_failure: bool = False
     """Whether to include episodes that fail in saved videos and trajectory data based on the environment's evaluation returned "success" label"""
-    vis: bool = True
+    vis: bool = False
     """Whether to visualize the trajectory replay via the GUI."""
     use_env_states: bool = True
     """Whether to replay by environment states instead of actions. This guarantees that the environment will look exactly

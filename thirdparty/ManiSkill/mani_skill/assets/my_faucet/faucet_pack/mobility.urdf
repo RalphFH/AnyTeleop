@@ -1,18 +1,17 @@
 <?xml version="1.0"?>
 <robot name="faucet_model_rotated">
 
-  <!-- 新的全局根节点，作为旋转后的参考 -->
   <link name="global_base" />
 
-  <!-- 固定关节：将 global_base 与原来的 base_link 连接，同时绕 z 轴旋转 180° -->
+
   <joint name="global_rotation" type="fixed">
-    <!-- 旋转 180°（约 3.14159 弧度），平移为零 -->
+
     <origin xyz="0 0 0" rpy="0 0 3.14159"/>
     <parent link="global_base"/>
     <child link="base_link"/>
   </joint>
 
-  <!-- 1. 基座：直径0.10m，高0.005m -->
+
   <link name="base_link">
     <visual>
       <origin xyz="0 0 0.0025" rpy="0 0 0"/>
@@ -34,7 +33,7 @@
     </inertial>
   </link>
 
-  <!-- 2. 主体：直径0.05m，高0.15m -->
+
   <link name="main_body">
     <visual>
       <origin xyz="0 0 0.075" rpy="0 0 0"/>
@@ -56,14 +55,13 @@
     </inertial>
   </link>
 
-  <!-- 固定关节：base_link 到 main_body -->
   <joint name="joint_base_to_body" type="fixed">
     <origin xyz="0 0 0.005" rpy="0 0 0"/>
     <parent link="base_link"/>
     <child link="main_body"/>
   </joint>
 
-  <!-- 3. 出水部分(spout_link)：包含水平出水管和垂直出水口 -->
+ 
   <link name="spout_link">
     <visual>
       <origin xyz="0.05 0 0" rpy="0 -1.5708 0"/>
@@ -98,14 +96,14 @@
     </inertial>
   </link>
 
-  <!-- 固定关节：将 spout_link 固定在 main_body 上，连接点在 main_body 坐标中距离底部 0.10 m处 -->
+  
   <joint name="joint_body_to_spout" type="fixed">
     <origin xyz="0 0 0.08" rpy="0 0 0"/>
     <parent link="main_body"/>
     <child link="spout_link"/>
   </joint>
 
-  <!-- 4. 顶端旋转部分(top_link)：直径0.05m，高0.04m -->
+
   <link name="top_link">
     <visual>
       <origin xyz="0 0 0.02" rpy="0 0 0"/>
@@ -127,7 +125,7 @@
     </inertial>
   </link>
 
-  <!-- 旋转关节：main_body 到 top_link，绕 z 轴旋转 -->
+ 
   <joint name="joint_body_to_top" type="revolute">
     <origin xyz="0 0 0.13" rpy="0 0 0"/>
     <parent link="main_body"/>
@@ -136,7 +134,7 @@
     <limit lower="-1.7" upper="1.7" effort="5.0" velocity="2.0"/>
   </joint>
 
-  <!-- 5. 把手(handle_link)：直径0.0045m，长度0.11m -->
+
   <link name="handle_link">
     <visual>
       <origin xyz="0.035 0 0" rpy="0 -1.5708 0"/>
@@ -158,7 +156,7 @@
     </inertial>
   </link>
 
-  <!-- 固定关节：top_link 到 handle_link，连接点在 top_link 内距底部 0.025 m处 -->
+ 
   <joint name="joint_top_to_handle" type="fixed">
     <origin xyz="0 0 0.025" rpy="0 0 0"/>
     <parent link="top_link"/>
