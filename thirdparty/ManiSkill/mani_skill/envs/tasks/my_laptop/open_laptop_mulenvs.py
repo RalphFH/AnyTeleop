@@ -4,7 +4,6 @@ import numpy as np
 import sapien
 import torch
 import torch.random
-import trimesh
 from gymnasium import spaces
 from gymnasium.vector.utils import batch_space
 from transforms3d.euler import euler2quat
@@ -254,7 +253,7 @@ class OpenLaptopMulEnv(BaseEnv):
             self.laptop_articulation.set_qpos(qpos_tensor)
             
             #base pose and random offset for the laptop are determined according to experiment, do not change
-            base_pos = np.array([0, 0.35, 0.1])
+            base_pos = np.array([0, 0.35, 0])
             random_offset_x = np.random.uniform(-0.05, 0.02, size=(b,))
             random_offset_y = np.random.uniform(-0.1, 0.15, size=(b,))  
             new_pos = np.stack([base_pos[0] + random_offset_x,
