@@ -141,14 +141,13 @@ class LiftPegUprightEnv(BaseEnv):
         return cam_config
 
     def _load_agent(self, options: dict):
-        if self.robot_uids == "xarm7_leap_right":
-            self.agent.urdf_config["_materials"]["front_finger"]["static_friction"] = 10
-            self.agent.urdf_config["_materials"]["front_finger"]["dynamic_friction"] = 10
-            self.agent.urdf_config["_materials"]["front_finger"]["restitution"] = 0.0
-            
-            self.agent.urdf_config["_materials"]["palm"]["static_friction"] = 6
-            self.agent.urdf_config["_materials"]["palm"]["dynamic_friction"] = 6
-            self.agent.urdf_config["_materials"]["palm"]["restitution"] = 0.0
+        XArm7Leap.urdf_config["_materials"]["front_finger"]["static_friction"] = 10
+        XArm7Leap.urdf_config["_materials"]["front_finger"]["dynamic_friction"] = 10
+        XArm7Leap.urdf_config["_materials"]["front_finger"]["restitution"] = 0.0
+        
+        XArm7Leap.urdf_config["_materials"]["palm"]["static_friction"] = 6
+        XArm7Leap.urdf_config["_materials"]["palm"]["dynamic_friction"] = 6
+        XArm7Leap.urdf_config["_materials"]["palm"]["restitution"] = 0.0        
         super()._load_agent(options, sapien.Pose(p=[-0.615, 0, 0]))
         
     def _load_scene(self, options: dict):
