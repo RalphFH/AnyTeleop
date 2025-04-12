@@ -3,18 +3,18 @@ import gymnasium as gym
 import time
 import traceback
 import numpy as np
-from mani_skill.envs.tasks.my_faucet.my_faucet_mulenvs import *
+from mani_skill.envs.tasks.my_faucet.open_faucet_env import *
+from mani_skill.envs.tasks.my_laptop.open_laptop_env import *
 from mani_skill.utils.wrappers.record import RecordEpisode
 from mani_skill.examples.motionplanning.panda.solutions.my_faucet import solve        
 #from mani_skill.examples.motionplanning.panda.solutions.my_laptop import solve   
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 #change the solve function to solve the different tasks
 
 def main():
     env_id = "OpenFaucet-v1"      #"OpenFaucet-v1" ,"OpenLaptop-v1"
     data_dir = "/home/zeyu/robotics/pandadata/h5" 
     robot_uids="panda"
+    num_envs=1
     os.makedirs(data_dir, exist_ok=True)                            
     obs_mode = "none"
     control_mode = "pd_joint_pos"
@@ -22,13 +22,14 @@ def main():
     reward_mode = "sparse"
     sim_backend = "auto"
     shader = "default"
-    vis=False                                                 #if the device has no screen, set vis=False.
+    vis=True                                                 #if the device has no screen, set vis=False.
     visualize_target_grasp_pose=True 
     print_env_info=False
 
 
     env = gym.make(
         env_id,
+        num_envs=num_envs,
         obs_mode=obs_mode,
         control_mode=control_mode,
         robot_uids=robot_uids,
@@ -55,7 +56,7 @@ def main():
     )
 
     only_count_success = True  
-    num_episodes = 30
+    num_episodes = 33
     seed = 0
     succeed_count = 0
     # first reset the environment

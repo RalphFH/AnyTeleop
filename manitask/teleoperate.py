@@ -41,7 +41,7 @@ def start_retargeting(isStart, isEnd, queue: multiprocessing.Queue, robot_dir: s
 
     retargeting_type = retargeting.optimizer.retargeting_type
     
-    env_id = "OpenLaptop-v1" # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
+    env_id = "OpenFaucet-v1" # LiftPegUpright-v1 | PlaceSphere-v1 | OpenLaptop-v1 | OpenFaucet-v1 | PullCubeTool-v1
     env = gym.make(
         env_id, # there are more tasks e.g. "PushCube-v1", "PegInsertionSide-v1", ...
         num_envs=1,

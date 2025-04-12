@@ -32,11 +32,11 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path: str = "/home/zeyu/robotics/pandadata/h5/OpenFaucet-v1/panda/trajectory_1.h5" 
+    traj_path="/home/zeyu/robotics/dex-retargeting/manitask/data/h5/OpenLaptop-v1/xarm7_leap_right/laptop_xarm7_leap.h5" 
     """Path to the trajectory .h5 file to replay"""
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = "auto"
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
-    obs_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-o"])] = "pointcloud" # "rgb+depth+segmentation" | "point_cloud"
+    obs_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-o"])] = "pointcloud" # "rgb+depth+segmentation" | "pointcloud"
     """Target observation mode to record in the trajectory. See
     https://maniskill.readthedocs.io/en/latest/user_guide/concepts/observation.html for a full list of supported observation modes."""
     target_control_mode: Annotated[Optional[str], tyro.conf.arg(aliases=["-c"])] = "pd_joint_pos"

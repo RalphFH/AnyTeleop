@@ -8,61 +8,63 @@ from gymnasium import spaces
 from gymnasium.vector.utils import batch_space
 from transforms3d.euler import euler2quat
 from mani_skill.utils.registration import register_env
-from mani_skill.agents.robots import Fetch, Panda
+
+from mani_skill.agents.robots import  Panda
 from mani_skill.agents.robots import XArm7Allegro, XArm7Shadow, XArm7Leap
-from mani_skill.agents.robots import XArm6Allegro, XArm6Shadow 
 from mani_skill.agents.robots import UR5eShadow, UR5eAllegro, UR5eLeap
+from mani_skill.agents.robots import XArm6Allegro, XArm6Shadow
 from mani_skill.agents.robots import IIwa7Allegro
+
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
-from mani_skill.utils.structs import Pose
+from mani_skill.utils.structs import Pose as BatchPose
 from mani_skill.utils.structs.types import Array, GPUMemoryConfig, SimConfig, SceneConfig
 from mani_skill.utils.building import articulations
-from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
-import multiprocessing as mp
-from mani_skill.utils.structs.pose import Pose as BatchPose
 from mani_skill.utils.quater import product
+from mani_skill.utils.structs import SimConfig, GPUMemoryConfig
+
 
 current_dir = os.path.dirname(__file__)
 
-@register_env("OpenLaptop_mul-v1", max_episode_steps=500)      #this 500 is used for eval, in single env, 300 is used for collection
+@register_env("OpenFaucet-v1", max_episode_steps=500)
 
-class OpenLaptopMulEnv(BaseEnv):
+class OpenFaucetEnv(BaseEnv):
     """
     **Task Description:**
-    open the laptop by rotating the handle to a target angle.
+    open the faucet by rotating the handle to a target angle.
 
     **Randomizations:**
-    the pos of the laptop, the initial qpos of the robot
+    the pos of the faucet, the initial qpos of the robot
 
     **Success Conditions:**
-    the laptop screen is rotated to the target angle
+    the faucet handle is rotated to the target angle
     """
 
-    SUPPORTED_ROBOTS = ["panda", "fetch",
+    SUPPORTED_ROBOTS = ["panda",
                         "xarm7_allegro_right", "xarm7_shadow_right", "xarm7_leap_right",
-                        "xarm6_allegro_right", "xarm6_shadow_right",
+                        "xarm6_allegro_right","xarm6_shadow_right",
                         "ur5e_shadow_right", "ur5e_allegro_right", "ur5e_leap_right",
-                        "iiwa7_allegro_right"] 
+                        "iiwa7_allegro_right"]                        
 
     # Specify some supported robot types
-    agent: Union[Panda, Fetch,
+    agent: Union[Panda,
                  XArm7Allegro, XArm7Shadow, XArm7Leap,
                  XArm6Allegro, XArm6Shadow,
                  UR5eShadow, UR5eAllegro, UR5eLeap,
-                 IIwa7Allegro]        
+                 IIwa7Allegro]            
     
-    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,num_envs= 10,parallel_in_single_scene=True ,reward_mode="sparse" ,sim_backend = "physx_cuda",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
+    # set some commonly used values
+    goal_range = 2   # degrees
+    
+    def __init__(self, *args, robot_uids="panda", robot_init_qpos_noise=0.02,num_envs= 10,reward_mode="sparse" ,sim_backend = "physx_cuda",  **kwargs):      #num_envs= 5,parallel_in_single_scene=True,
         # specifying robot_uids="panda" as the default means gym.make("PushCube-v1") will default to using the panda arm.
-        self.num_envs=num_envs
         self.robot_init_qpos_noise = robot_init_qpos_noise
-        self.laptop_target_angle=-0.17
-        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,parallel_in_single_scene=parallel_in_single_scene,sim_backend=sim_backend, **kwargs)    #
-        
+        self.faucet_target_angle=1.16    #when collecting data, set this to 1.29 to make your "teaching" data more standard. when eval, set this to 1.16 to make the task easier.
+        super().__init__(*args, robot_uids=robot_uids,reward_mode=reward_mode,num_envs=num_envs,sim_backend=sim_backend, **kwargs)    #
 
     # Specify default simulation/gpu memory configurations to override any default values
     @property
@@ -74,9 +76,12 @@ class OpenLaptopMulEnv(BaseEnv):
             found_lost_pairs_capacity=2**26,
             max_rigid_patch_count=2**20
         ),
-       scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
+        scene_config=SceneConfig(enable_ccd = True, solver_position_iterations= 20,             
             solver_velocity_iterations= 1  )
-    )
+        
+        )
+       
+    
 
     @property
     def _default_sensor_configs(self):
@@ -99,11 +104,11 @@ class OpenLaptopMulEnv(BaseEnv):
     @property
     def _default_human_render_camera_configs(self):
         
-        top_down = sapien_utils.look_at([-0.18, 0.0, 0.4], [-0.06, 0.0, 0])
-        left_side = sapien_utils.look_at([-0.05, 0.27, 0.15], [-0.05, 0.1, 0.15]) 
+        top_down = sapien_utils.look_at([-0.18, 0.0, 0.7], [-0.06, 0.0, 0])
+        left_side = sapien_utils.look_at([0.4, 0.5, 0.5], [0.0, 0.0, 0.35]) 
 
         cam_config = []
-        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 80*np.pi/180, 0.01, 100))
+        cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
 
 
 
@@ -121,19 +126,8 @@ class OpenLaptopMulEnv(BaseEnv):
                                 entity_uid="link7",
                             )
             )     
-
-        if "panda_wrist" in self.robot_uids:
-            cam_config.append(CameraConfig(
-                                uid="hand_cam",
-                                pose=sapien.Pose(p=[0, 0 , 0], q=[1, 0, 0, 0]),
-                                width=512,
-                                height=512,
-                                fov=80*np.pi/180,
-                                near=0.01,
-                                far=100,
-                                entity_uid="camera_link",
-                            ))                           
-        elif "allegro" in self.robot_uids:
+                         
+        if "allegro" in self.robot_uids:
             q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
             q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
             q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
@@ -163,7 +157,7 @@ class OpenLaptopMulEnv(BaseEnv):
                                 entity_uid="forearm",
                             ))
             q3 = [np.cos(-80*np.pi/180), 0 , 0 , np.sin(-80*np.pi/180)]
-            q4 = [np.cos(30*np.pi/180), np.sin(30*np.pi/180), 0, 0]
+            q4 = [np.cos(35*np.pi/180), np.sin(35*np.pi/180), 0, 0]
             q = product(q4,q3)
             cam_config.append(CameraConfig(  
                                 uid="hand_cam", 
@@ -191,6 +185,7 @@ class OpenLaptopMulEnv(BaseEnv):
                                 entity_uid="palm_lower",
                             ))
 
+
         cam_config.append( CameraConfig("scene_left_camera", left_side, 512, 512, 80*np.pi/180, 0.01, 100))
 
         return cam_config
@@ -207,82 +202,129 @@ class OpenLaptopMulEnv(BaseEnv):
         self.table_scene.build()
         
         loader = self.scene.create_urdf_loader()
-        loader.scale = 1.5 
-        urdf_relative_path = "../../../assets/my_laptop/laptop_pack2/mobility.urdf"
+        loader.scale = 1.7 
+        urdf_relative_path = "../../../assets/my_faucet/faucet_pack/mobility.urdf"
         urdf_path = os.path.join(current_dir, urdf_relative_path)
         articulation_builders = loader.parse(str(urdf_path))["articulation_builders"]
-        # set physical parameters for the laptop
+        # set physical parameters for the faucet
         loader.set_density(5)
         loader.fix_root_link = True
         loader.load_multiple_collisions_from_file = True
         builder = articulation_builders[0]
-        
-        base_pos = np.array([0.05, 0.35, 0])
-        random_offset_x = np.random.uniform(-0.05, 0.02, size=(self.num_envs,))
-        random_offset_y = np.random.uniform(-0.1, 0.15, size=(self.num_envs,))  
+ 
+        base_pos = np.array([0.05, 0.0, 0])
+        random_offset_x = np.random.uniform(-0.05, 0.05, size=(self.num_envs,))
+        random_offset_y = np.random.uniform(-0.1, 0.1, size=(self.num_envs,))
         new_pos = np.stack([base_pos[0] + random_offset_x,
                             base_pos[1] + random_offset_y,
                             base_pos[2]*np.ones(self.num_envs)],axis=1)
         p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
         batched_pose = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
         builder.initial_pose = batched_pose
-      
         
-        self.laptop_articulation = builder.build(name="laptop_articulation")
-        # set friction for the laptop
-        for j in self.laptop_articulation.get_joints():
-            j.set_friction(1)
-
-    
-    #auto called in env.reset() to initialize the episode
-    def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
+        self.faucet_articulation = builder.build(name="faucet_articulation")
+       # the friction for the faucet use the default value in urdf
        
+    
+    
+    def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
+        """
+        every time a new episode is started, this method is called to reset the environment to its initial state
+        """
         with torch.device(self.device):
             
             super()._initialize_episode(env_idx, options)
-            # a little randomization for the initial position
+            # a little randomization for the faucet's initial position
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
-      
-            hinge_idx = 0
-            dof_array = self.laptop_articulation.dof  
-            dof_per_env = int(dof_array[0].item()) 
-            qpos_np = np.zeros((b, dof_per_env), dtype=np.float32)
-            qpos_np[:, hinge_idx] = -60.0 * np.pi / 180.0 
-            qpos_tensor = torch.from_numpy(qpos_np).to(self.device)
-            self.laptop_articulation.set_qpos(qpos_tensor)
             
-            #base pose and random offset for the laptop are determined according to experiment, do not change
-            base_pos = np.array([0, 0.35, 0])
-            random_offset_x = np.random.uniform(-0.05, 0.02, size=(b,))
-            random_offset_y = np.random.uniform(-0.1, 0.15, size=(b,))  
+            dof_array = self.faucet_articulation.dof  
+            dof_per_env = int(dof_array[0].item()) 
+            qpos_tensor = torch.zeros((b, dof_per_env), device=self.device, dtype=torch.float32)
+            self.faucet_articulation.set_qpos(qpos_tensor)
+
+            #base pos and random offset for the faucet are determined according to experiments, do not change
+            base_pos = np.array([0.05, 0, 0])
+            random_offset_x = np.random.uniform(-0.05, 0.05, size=(b,))
+            random_offset_y = np.random.uniform(-0.1, 0.1, size=(b,))
             new_pos = np.stack([base_pos[0] + random_offset_x,
                                 base_pos[1] + random_offset_y,
                                 base_pos[2]*np.ones(b)],axis=1)
             p_tensor = torch.tensor(new_pos, dtype=torch.float32, device=self.device)
             batched_pose1 = BatchPose.create_from_pq(p=p_tensor, q=None, device=self.device)
-            self.laptop_articulation.set_pose(batched_pose1)
-           
-              
+            self.faucet_articulation.set_pose(batched_pose1)
+                
+                
             if self.robot_uids == "panda":        
                 noise_np = np.random.uniform(
                 low=-self.robot_init_qpos_noise,
                 high=self.robot_init_qpos_noise,
                 size=(b, dof_per_env)
-                )
+               )
                 #qpos is the position of every joint of the robot,also determined according to experiments, do not change
                 base_qpos = np.array([0.09, -0.85, -0.04, -2, -0.07, 1.2, -0.7, 0 ,0])
                 base_qpos_tiled = np.tile(base_qpos, (b, 1))  
                 new_qpos_np = base_qpos_tiled + noise_np 
                 new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
                 self.agent.robot.set_qpos(new_qpos_tensor)
-    
                 
-    def evaluate(self):
+            if self.robot_uids == "ur5e_allegro_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([   -0.24955  ,   -1.7031   ,   1.7518   , -0.50697   ,  0.85624  ,   0.29718  ,   0.15545  ,   0.12096 ,
+                                         0.18827   ,  0.32904   ,  0.66978   ,   0.5374  ,   0.74709  , -0.052536, -3.6468e-05   , 0.063846  
+                                         -0.065989   ,   0.9719 ,  -0.014903 , -0.0053921 ,  -0.033205  ,   0.28124,0])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
             
-        current_angle = self.laptop_articulation.get_qpos()  # shape: (num_envs, dof)
+            if self.robot_uids == "xarm6_shadow_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([   -0.79639 ,   -0.56757  ,  -0.82376   ,   1.3494     ,  1.562    ,  1.2145  ,  0.081409   , -0.20006 ,
+                                         -0.24934 ,    -0.1069 ,  -0.012685   ,  0.38067   ,  0.47479 ,  -0.057781 ,   0.050859  ,   0.13706 ,  
+                                         -0.31211, -0.00099533 ,    0.20491 ,   0.071981 ,  0.0030264  ,  -0.15471 , -0.080778 ,   0.051354   ,
+                                         0.007908 ,  0.0014614 ,  0.0043305  ,   0.10043  ,  0.002212  ,  -0.04348])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+            
+            
+            if self.robot_uids == "xarm7_leap_right":        
+                noise_np = np.random.uniform(
+                low=-self.robot_init_qpos_noise,
+                high=self.robot_init_qpos_noise,
+                size=(b, dof_per_env)
+               )
+                #qpos is the position of every joint of the robot,also determined according to experiments, do not change
+                base_qpos = np.array([    0.17007  ,  -0.21156  ,  -0.22471   ,   1.0581   ,    1.756    ,  1.2238    , 
+                                         3.9243 ,  -0.023651  ,   0.12155 ,    0.31412  ,  0.057673   , -0.20355  ,  -0.14136 ,
+                                         -0.34307  , -0.063874    , 0.23151 ,   0.019688  ,  -0.19046  ,   0.77333  , -0.010055  ,
+                                         0.014319 ,   -0.19212  ,   0.28517])
+                base_qpos_tiled = np.tile(base_qpos, (b, 1))  
+                new_qpos_np = base_qpos_tiled + noise_np 
+                new_qpos_tensor = torch.from_numpy(new_qpos_np).float().to(self.device)
+                self.agent.robot.set_qpos(new_qpos_tensor)
+            
+    
+    def evaluate(self):
+        """
+        if the faucet handle is rotated to the target angle, the task is considered successful
+        """
+            
+        current_angle = self.faucet_articulation.get_qpos()  # shape: (num_envs, dof)
         hinge_angles = current_angle[:, 0]  # shape: (num_envs,)
-        is_opened = hinge_angles > self.laptop_target_angle  # shape: (num_envs,)
+        is_opened = hinge_angles > self.faucet_target_angle  # shape: (num_envs,), bool
         return {"success": is_opened}
 
 
@@ -291,7 +333,8 @@ class OpenLaptopMulEnv(BaseEnv):
             tcp_pose=self.agent.tcp.pose.raw_pose,
         )
         return obs
-             
+                     
+                
     def compute_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return 0
     

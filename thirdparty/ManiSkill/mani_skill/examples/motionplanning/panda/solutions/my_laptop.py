@@ -3,7 +3,7 @@ import numpy as np
 import sapien
 from transforms3d.euler import euler2quat
 import transforms3d as tf3d
-from mani_skill.envs.tasks.my_laptop.open_laptop_task import OpenLaptopEnv
+from mani_skill.envs.tasks import OpenLaptopEnv
 from mani_skill.examples.motionplanning.panda.motionplanner import \
     PandaArmMotionPlanningSolver
 from mani_skill.utils.wrappers.record import RecordEpisode

@@ -9,7 +9,8 @@ import numpy as np
 import gymnasium as gym
 from pathlib import Path
 from dataclasses import dataclass
-
+import sys
+sys.path.insert(0, "/home/zeyu/POV_newer_master")
 from mani_skill.utils import sapien_utils
 from mani_skill.utils.structs import Link
 from pov.utils.camera.pc import fpsample_pc
