@@ -28,32 +28,30 @@ def maniskill_pc_downsample(robot_name = "xarm7_leap_right"):
     all_points = []
     all_body_indices = []
 
+    # hand, finger for the robot
+    if robot_name == "panda":
+        hands = ["hand"]
+        fingers = ["finger"]
+    elif robot_name == "xarm6_shadow_right":
+        hands = ["palm", "wrist"]
+        fingers = ["ff", "lf", "mf", "rf", "th"]
+    elif robot_name == "xarm7_leap_right":
+        hands = ["joint"]
+        fingers = ["finger","dip", "pip", "thumb"]
+    elif robot_name == "ur5e_allegro_right":
+        hands = []
+        fingers = ["link_0", "link_1", "link_2", "link_3", "link_4", "link_5", "link_6", "link_7", "link_8", "link_9"]
+
     for i, body_name in enumerate(all_body_names):
         points = body_name_to_pc_canonical[body_name]
         # Determine downsampling ratio based on body part
-            # hand, finger for the robot
-        if robot_name == "panda":
-            hands = ["hand"]
-            fingers = ["finger"]
-        elif robot_name == "xarm6_shadow_right":
-            hands = ["palm", "wrist"]
-            fingers = ["ff", "lf", "mf", "rf", "th"]
-        elif robot_name == "xarm7_leap_right":
-            hands = ["joint"]
-            fingers = ["finger","dip", "pip", "thumb"]
-        elif robot_name == "ur5e_allegro_right":
-            hands = []
-            fingers = ["link_0", "link_1", "link_2", "link_3", "link_4", "link_5", "link_6", "link_7", "link_8", "link_9"]
+        if any(hand in body_name for hand in hands):
+            n_body_keep_pc = points.shape[0] // 20
+        elif any(finger in body_name for finger in fingers):  # For both leftpad and rightpad
+            n_body_keep_pc = points.shape[0] // 7
+        else:
+            n_body_keep_pc = points.shape[0] // 100
 
-        for i, body_name in enumerate(all_body_names):
-            points = body_name_to_pc_canonical[body_name]
-            # Determine downsampling ratio based on body part
-            if any(hand in body_name for hand in hands):
-                n_body_keep_pc = points.shape[0] // 20
-            elif any(finger in body_name for finger in fingers):  # For both leftpad and rightpad
-                n_body_keep_pc = points.shape[0] // 7
-            else:
-                n_body_keep_pc = points.shape[0] // 100
 
         # Perform FPS downsampling
         body_fps_samples_idx = fpsample.fps_npdu_kdtree_sampling(points, n_body_keep_pc)
@@ -85,5 +83,4 @@ def maniskill_pc_downsample(robot_name = "xarm7_leap_right"):
 
 
 if __name__ == "__main__":
-    robot_name = input("Robot name (panda/xarm6_shadow_right/xarm7_leap_right/ur5e_allegro_right): ")
-    maniskill_pc_downsample(robot_name=robot_name)
+    maniskill_pc_downsample()

@@ -32,7 +32,7 @@ from mani_skill.utils.wrappers.record import RecordEpisode
 
 @dataclass
 class Args:
-    traj_path="/home/zeyu/robotics/pandadata/h5/OpenFaucet-v1/panda/trajectory_1.h5" 
+    traj_path: str = "/home/zeyu/robotics/pandadata/h5/OpenFaucet-v1/panda/trajectory_1.h5" 
     """Path to the trajectory .h5 file to replay"""
     sim_backend: Annotated[Optional[str], tyro.conf.arg(aliases=["-b"])] = "auto"
     """Which simulation backend to use. Can be 'physx_cpu', 'physx_gpu'. If not specified the backend used is the same as the one used to collect the trajectory data."""
