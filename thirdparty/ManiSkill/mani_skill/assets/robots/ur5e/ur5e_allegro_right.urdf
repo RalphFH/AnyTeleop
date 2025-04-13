@@ -762,4 +762,100 @@
     <child link="link_15_tip"/>
     <origin rpy="0 0 0" xyz="0 0 0.0423"/>
   </joint>
+
+  <!-- aux link -->
+  <link name="base_link_hand_aux0"/>
+  <joint name="base_link_hand_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="base_link_hand"/>
+    <child link="base_link_hand_aux0"/>
+  </joint>
+  <link name="base_link_hand_aux1"/>
+  <joint name="base_link_hand_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="base_link_hand"/>
+    <child link="base_link_hand_aux1"/>
+  </joint>
+  <link name="base_link_hand_aux2"/>
+  <joint name="base_link_hand_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="base_link_hand"/>
+    <child link="base_link_hand_aux2"/>
+  </joint>
+
+  <link name="link_3_tip_aux0"/>
+  <joint name="link_3_tip_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="link_3_tip"/>
+    <child link="link_3_tip_aux0"/>
+  </joint>
+  <link name="link_3_tip_aux1"/>
+  <joint name="link_3_tip_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="link_3_tip"/>
+    <child link="link_3_tip_aux1"/>
+  </joint>
+  <link name="link_3_tip_aux2"/>
+  <joint name="link_3_tip_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="link_3_tip"/>
+    <child link="link_3_tip_aux2"/>
+  </joint>
+
+  <link name="link_7_tip_aux0"/>
+  <joint name="link_7_tip_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="link_7_tip"/>
+    <child link="link_7_tip_aux0"/>
+  </joint>
+  <link name="link_7_tip_aux1"/>
+  <joint name="link_7_tip_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="link_7_tip"/>
+    <child link="link_7_tip_aux1"/>
+  </joint>
+  <link name="link_7_tip_aux2"/>
+  <joint name="link_7_tip_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="link_7_tip"/>
+    <child link="link_7_tip_aux2"/>
+  </joint>
+
+  <link name="link_11_tip_aux0"/>
+  <joint name="link_11_tip_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="link_11_tip"/>
+    <child link="link_11_tip_aux0"/>
+  </joint>
+  <link name="link_11_tip_aux1"/>
+  <joint name="link_11_tip_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="link_11_tip"/>
+    <child link="link_11_tip_aux1"/>
+  </joint>
+  <link name="link_11_tip_aux2"/>
+  <joint name="link_11_tip_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="link_11_tip"/>
+    <child link="link_11_tip_aux2"/>
+  </joint>
+
+  <link name="link_15_tip_aux0"/>
+  <joint name="link_15_tip_aux0_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 0 0"/>
+    <parent link="link_15_tip"/>
+    <child link="link_15_tip_aux0"/>
+  </joint>
+  <link name="link_15_tip_aux1"/>
+  <joint name="link_15_tip_aux1_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.2 0"/>
+    <parent link="link_15_tip"/>
+    <child link="link_15_tip_aux1"/>
+  </joint>
+  <link name="link_15_tip_aux2"/>
+  <joint name="link_15_tip_aux2_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.2"/>
+    <parent link="link_15_tip"/>
+    <child link="link_15_tip_aux2"/>
+  </joint>  
 </robot>
