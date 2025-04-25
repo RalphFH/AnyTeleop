@@ -11,11 +11,13 @@ class ArmName(enum.Enum):
     xarm6 = enum.auto()
     ur5e = enum.auto()
     iiwa7 = enum.auto()
+    franka = enum.auto()
 
 class HandName(enum.Enum):
     allegro = enum.auto() # 4 fingers
     shadow = enum.auto() # 5 fingers
     leap = enum.auto() # 4 fingers
+    panda = enum.auto() # 2 fingers
 
 
 class RetargetingType(enum.Enum):
@@ -34,12 +36,14 @@ ARM_NAME_MAP = {
     ArmName.xarm6: "xarm6",
     ArmName.ur5e: "ur5e",
     ArmName.iiwa7: "iiwa7",
+    ArmName.franka: "franka",
 }
 
 HAND_NAME_MAP = {
     HandName.allegro: "allegro",
     HandName.shadow: "shadow",
     HandName.leap: "leap",
+    HandName.panda: "panda",
 }
 
 LINK_BASE = {
@@ -47,12 +51,14 @@ LINK_BASE = {
     "xarm6": "world",
     "ur5e": "base_link",
     "iiwa7": "link_0_arm",
+    "franka": "panda_link0",
 }
 
 LINK_WRIST = {
     "allegro":"palm",
     "shadow":"palm",
     "leap":"base_hand",
+    "panda":"panda_hand",
 }
 
 # ROBOT_NAMES = list(HAND_NAME_MAP.keys())
@@ -69,7 +75,10 @@ def get_default_config_path(
     hand_type_str = hand_type.name
     
     config_name = f"{hand_name_str}_{hand_type_str}.yml"
-    robot_uid = f"{arm_name_str}_{hand_name_str}_{hand_type_str}"
+    if hand_name_str == "panda":
+        robot_uid = "panda"
+    else:
+        robot_uid = f"{arm_name_str}_{hand_name_str}_{hand_type_str}"
 
     return config_path / config_name, robot_uid
 

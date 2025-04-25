@@ -99,7 +99,6 @@ class BookWallEnv(BaseEnv):
         cam_config.append(CameraConfig("top_down", top_down, 512, 512, 70*np.pi/180, 0.01, 100))
 
 
-
         if "xarm7" in self.robot_uids:
             q2 = [np.cos(15*np.pi/180), 0, np.sin(15*np.pi/180),0]
 
@@ -114,8 +113,19 @@ class BookWallEnv(BaseEnv):
                                 entity_uid="link7",
                             )
             )     
-                         
-        if "allegro" in self.robot_uids:
+
+        if self.robot_uids== "panda":
+            cam_config.append(CameraConfig(
+                                uid="panda_hand",
+                                pose=sapien.Pose(p=[0, 0 , 0.06], q=[0, 0.70710678, 0, 0.70710678]),
+                                width=512,
+                                height=512,
+                                fov=1.57,
+                                near=0.01,
+                                far=100,
+                                entity_uid="panda_hand",
+                            ))                            
+        elif "allegro" in self.robot_uids:
             q1 = [np.cos(35*np.pi/180), 0 , 0 , -np.sin(35*np.pi/180)]
             q2 = [np.cos(30*np.pi/180), 0 , -np.sin(30*np.pi/180),0]
             q3 = [np.cos(10*np.pi/180), np.sin(10*np.pi/180),0,0]
