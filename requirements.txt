@@ -340,7 +340,7 @@ typer==0.15.1
 typing_extensions==4.12.2
 tyro==0.9.14
 tzdata==2025.1
-ultralytics==8.1.34
+ultralytics
 urdf_parser_py==0.0.4
 urllib3==2.3.0
 uvicorn==0.34.0
@@ -351,7 +351,7 @@ webdataset==0.2.100
 websockets==15.0.1
 Werkzeug==3.0.6
 widgetsnbextension==4.0.13
-wilor_mini @ git+https://github.com/warmshao/WiLoR-mini@a20fc482e68d17c0c8fa19c64f3f4544b6a310cf
+# wilor_mini @ git+https://github.com/warmshao/WiLoR-mini@a20fc482e68d17c0c8fa19c64f3f4544b6a310cf
 xacro==1.14.19
 xatlas==0.0.9
 xtcocotools==1.14.3

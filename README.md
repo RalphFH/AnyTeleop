@@ -1,50 +1,86 @@
 <div align="center">
-  <h1 align="center"> AnyTeleoperate </h1>
+
+# AnyTeleoperate
+
+**A Robust, Single-Camera Teleoperation Framework for Dexterous Hands**
+
+[![Python 3.9](https://img.shields.io/badge/python-3.9-blue.svg)](https://www.python.org/downloads/release/python-390/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 </div>
 
+---
 
+## 📖 Overview
 
-## Installation
+This project builds upon and enhances the dexterous hand teleoperation capabilities of [AnyTeleop](https://arxiv.org/pdf/2307.04577). By integrating advanced pose estimation and retargeting optimizations, it offers a accessible and stable solution for robotic hand control.
+
+### ✨ Key Features
+
+- 🚀 **Robust to Occlusion**: Handles partial hand occlusions effectively during operation.
+- 🦾 **6-DoF Wrist Pose**: Supports accurate calculation and mapping of wrist pose.
+- 💻 **Minimal Hardware**: Requires only a single RGB camera and a standard laptop.
+
+---
+
+## 🛠️ Installation
+
+### 1. Create Environment
+Create a clean conda environment with Python 3.9:
 ```shell
 conda create -n retarget python=3.9
+conda activate retarget
 ```
-The [dex-retargeting project](https://github.com/dexsuite/dex-retargeting) provides three types of optimizer which help to compute the qpos given the 3D information of the keypoints of our hand. The command of installing it is as follows.
+
+### 2. Install Core Optimizer
+Install `dex-retargeting` which provides the optimization solvers for retargeting hand keypoints to robot joint positions:
 ```shell
 pip install dex_retargeting loguru
 ```
 
-Then clone this repository and install some dependecies about dex-retargeting.
-
+### 3. Install Project & Dependencies
+Clone this repository and install the required dependencies:
 ```shell
-git clone https://github.com/Ralph-cong/AnyTeleop.git
+git clone --recursive https://github.com/Ralph-cong/AnyTeleop.git
+cd AnyTeleop
 pip install -e ".[example]"
 pip install tyro pyyaml sapien==3.0.0b0 pyrealsense2 numpy-quaternion
 ```
-For the hand detector and 3D estimation part, I implement with [WiLor-mini](https://github.com/warmshao/WiLoR-mini), so you should install some package about it.
 
+### 4. Install Local Submodules
+This project uses modified versions of **WiLoR-mini** (for hand detection/3D estimation) and **Ultralytics**.
+
+**Install WiLoR-mini:**
 ```shell
-pip install git+https://github.com/warmshao/WiLoR-mini
-```
-Then in line 716 and line 736 of "~/anaconda3/envs/anytele/lib/python3.9/site-packages/ultralytics/nn/tasks.py", add `weights_only` param
-```shell
-ckpt = torch.load(file, map_location="cpu"，weights_only=False)
+# Clone into thirdparty directory
+git clone https://github.com/warmshao/WiLoR-mini.git thirdparty/WiLoR-mini
+# Install in editable mode
+pip install -e thirdparty/WiLoR-mini
 ```
 
-And during my experiment, I met an error message, but I just remember its solution ( In my second installation trial from scatch this one is not need ):
+
+### 4. Troubleshooting
+If you encounter library linking errors during execution, you may need to export the library path:
 ```shell
 export LD_LIBRARY_PATH=$HOME/anaconda3/envs/retarget/lib/python3.9/site-packages/cmeel.prefix/lib:$LD_LIBRARY_PATH
 ```
 
-## Examples
+---
 
-### Teleoperating For a single fly robot hand
-[Tutorial on retargeting from human hand to a single fly robot hand](wilor_mini/README.md)
+## 🎮 Usage Examples
 
+### 1. Single Robot Hand Teleoperation
+Retarget human hand motion to a floating robot hand.
+👉 **[View Tutorial](wilor_mini/README.md)**
 
-### Teleoperating task in the maniskill env (recommended)
-[Tutorial on retargeting from human hand to the maniskill robot to complete some tasks](manitask/README.md)
+### 2. ManiSkill Task Teleoperation (Recommended)
+Retarget human hand motion to control a robot arm + hand system to complete manipulation tasks in ManiSkill.
+👉 **[View Tutorial](manitask/README.md)**
 
+---
 
-## Declaration
+## 📜 Acknowledgements
 
-Developed based on [dex-retargeting project](https://github.com/yzqin/dex-hand-teleop) and [wilor-mini project](https://github.com/warmshao/WiLoR-mini).
+This project is developed based on:
+*   [dex-retargeting](https://github.com/yzqin/dex-hand-teleop)
+*   [WiLoR-mini](https://github.com/warmshao/WiLoR-mini)
