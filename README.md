@@ -16,7 +16,7 @@
 This project builds upon and enhances the dexterous hand teleoperation capabilities of [AnyTeleop](https://arxiv.org/pdf/2307.04577). By integrating advanced pose estimation and retargeting optimizations, it offers a accessible and stable solution for robotic hand control.
 
 <div align="center">
-  <video src="manitask/docs/pick%26place.mp4" width="80%" controls autoplay loop></video>
+  <img src="manitask/docs/pick&place.gif" width="80%">
 </div>
 
 
