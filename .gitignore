@@ -17,3 +17,14 @@ imgui.ini
 *.egg-info
 WiLoR
 /example/
+
+# Rebuildable local environment and editor caches
+__pycache__/
+*.py[cod]
+.eggs/
+*.egg-info/
+.venv/
+.vscode/*.db
+.vscode/*.db-*
+.vscode/*.db.lock
+__MACOSX/
